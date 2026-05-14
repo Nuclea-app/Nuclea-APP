@@ -36,7 +36,7 @@ export default function DashboardError({
 
       <div className="flex flex-col gap-4 w-full max-w-[280px]">
         <PrimaryButton onClick={() => reset()}>
-          ✦ Intentar de nuevo
+          Intentar de nuevo
         </PrimaryButton>
         <button 
           onClick={handleBack}
