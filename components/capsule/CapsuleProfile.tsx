@@ -19,6 +19,7 @@ import { Memory, MemoryGrid } from "./MemoryGrid";
 import { useUploadCover } from "@/lib/hooks/useUploadCover";
 import { useRef, useState } from "react";
 import { updateCapsuleName } from "@/lib/actions/capsuleActions";
+import ArrowBackButton from "../arrow-back-button";
 
 interface CapsuleProfileProps {
   capsule: {
@@ -92,12 +93,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
 
       {/* Header */}
       <div className="w-full flex items-center justify-between mb-8">
-        <Link
-          href="/capsulas"
-          className="flex items-center justify-center hover:opacity-60 transition-opacity"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
+        <ArrowBackButton />
         <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">
           <span>NUCLEA</span>
           <SparkIcon className="text-[10px]" />
