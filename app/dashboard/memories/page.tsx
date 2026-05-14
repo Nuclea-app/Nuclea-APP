@@ -3,8 +3,9 @@ import { getUserCapsule, getAllMemories } from "@/lib/actions/capsule.actions";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, FileText, Image as ImageIcon, Mic, Play } from "lucide-react";
+import { FileText, Image as ImageIcon, Mic, Play } from "lucide-react";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
+import ArrowBackButton from "@/components/arrow-back-button";
 import { FavoriteButton } from "@/components/capsule/FavoriteButton";
 
 interface MemoriesPageProps {
@@ -29,13 +30,11 @@ export default async function MemoriesPage({ searchParams }: MemoriesPageProps) 
     <div className="flex flex-col pb-12 px-6 pt-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <Link href={backHref} className="flex items-center justify-center hover:opacity-60 transition-opacity">
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">
+        <ArrowBackButton />
+        <Link href="/" className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px] hover:opacity-70 transition-opacity">
           <span>NUCLEA</span>
           <SparkIcon className="text-[10px]" />
-        </div>
+        </Link>
         <div className="w-9" />
       </div>
 

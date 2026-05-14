@@ -2,6 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { LogOut } from "lucide-react";
+import Link from "next/link";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import ArrowBackButton from "@/components/arrow-back-button";
 
@@ -11,10 +12,10 @@ export default function ConfigPage() {
       {/* Header */}
       <div className="flex items-center justify-between p-6">
         <ArrowBackButton />
-        <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">
-          <span>CONFIGURACIÓN</span>
+        <Link href="/" className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px] hover:opacity-70 transition-opacity">
+          <span>NUCLEA</span>
           <SparkIcon className="text-[10px]" />
-        </div>
+        </Link>
         <div className="w-10" />
       </div>
 

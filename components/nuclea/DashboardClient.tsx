@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Bell, MoveRight, Search, Plus, PawPrint, Sprout, MoreVertical, Trash2 } from "lucide-react";
 import Link from "next/link";
+import ArrowBackButton from "@/components/arrow-back-button";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
@@ -115,10 +116,14 @@ export const DashboardClient = ({
     <div className="flex flex-col min-h-screen pb-20 px-6 pt-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">
+        <ArrowBackButton />
+        <Link
+          href="/"
+          className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px] hover:opacity-70 transition-opacity"
+        >
           <span>NUCLEA</span>
           <SparkIcon className="text-[10px]" />
-        </div>
+        </Link>
         <div className="relative">
           <Bell className="h-6 w-6 text-foreground/40" />
           <div className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-background" />

@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ArrowLeft,
   Mic,
   Video,
   FileText,
@@ -18,6 +17,7 @@ import {
   Square,
 } from "lucide-react";
 import Link from "next/link";
+import ArrowBackButton from "@/components/arrow-back-button";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -205,16 +205,11 @@ export default function MensajeFuturoPage() {
     <div className="flex flex-col pb-16 px-6 pt-8 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <Link
-          href={backHref}
-          className="flex items-center justify-center hover:opacity-60 transition-opacity"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">
+        <ArrowBackButton />
+        <Link href="/" className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px] hover:opacity-70 transition-opacity">
           <span>NUCLEA</span>
           <SparkIcon className="text-[10px]" />
-        </div>
+        </Link>
         <div className="w-9" />
       </div>
 

@@ -14,10 +14,11 @@ import {
   Eye,
   EyeOff,
   Send,
+  LogOut,
 } from "lucide-react";
+import Link from "next/link";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { es } from "date-fns/locale";
 import {
   updateUserName,
@@ -25,7 +26,7 @@ import {
   updateUserBirthdate,
 } from "@/lib/actions/user.actions";
 import { signOut } from "next-auth/react";
-import { LogOut } from "lucide-react";
+import ArrowBackButton from "@/components/arrow-back-button";
 
 interface UserProfileClientProps {
   userId: string;
@@ -61,7 +62,9 @@ export const UserProfileClient = ({
   const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
-  const [showPwd, setShowPwd] = useState(false);
+  const [showCurrentPwd, setShowCurrentPwd] = useState(false);
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [userHasPassword, setUserHasPassword] = useState(hasPassword);
 
   const openEdit = (field: EditField) => {
     setError("");
@@ -88,10 +91,12 @@ export const UserProfileClient = ({
 
   const savePassword = async () => {
     if (newPwd !== confirmPwd) { setError("Las contraseñas no coinciden"); return; }
+    if (newPwd.length < 8) { setError("Mínimo 8 caracteres"); return; }
     setIsSaving(true);
     const res = await updateUserPassword(userId, currentPwd, newPwd);
     setIsSaving(false);
     if ("error" in res) { setError(res.error ?? ""); return; }
+    setUserHasPassword(true);
     closeEdit();
   };
 
@@ -107,62 +112,33 @@ export const UserProfileClient = ({
   const formatBirthdate = (d: Date | null) => {
     if (!d) return null;
     return new Date(d).toLocaleDateString("es-ES", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
+      day: "numeric", month: "long", year: "numeric",
     });
   };
 
   const initial = (name || email || "?").charAt(0).toUpperCase();
 
   const rows = [
-    {
-      id: "email",
-      icon: Mail,
-      label: "Email",
-      value: email,
-      editable: false,
-    },
-    {
-      id: "contraseña",
-      icon: Lock,
-      label: "Contraseña",
-      value: hasPassword ? "••••••••" : "—",
-      editable: hasPassword,
-    },
-    {
-      id: "nombre",
-      icon: User,
-      label: "Nombre",
-      value: name || "Mi nombre",
-      editable: true,
-    },
-    {
-      id: "fecha",
-      icon: Calendar,
-      label: "Fecha de nacimiento",
-      value: formatBirthdate(birthdate) ?? "—",
-      editable: true,
-    },
-    {
-      id: "idioma",
-      icon: Globe,
-      label: "Idioma",
-      value: "Español",
-      editable: false,
-    },
+    { id: "email",     icon: Mail,     label: "Email",               value: email,               editable: false },
+    { id: "contraseña",icon: Lock,     label: "Contraseña",          value: userHasPassword ? "••••••••" : "Añadir contraseña", editable: true },
+    { id: "nombre",    icon: User,     label: "Nombre",              value: name || "Mi nombre", editable: true },
+    { id: "fecha",     icon: Calendar, label: "Fecha de nacimiento", value: formatBirthdate(birthdate) ?? "—", editable: true },
+    { id: "idioma",    icon: Globe,    label: "Idioma",              value: "Español",            editable: false },
   ] as const;
 
   return (
     <>
-      <div className="flex flex-col pb-20 px-6 pt-8 min-h-screen">
+      <div className="flex flex-col pb-24 px-6 pt-8 min-h-screen">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="w-9" />
-          <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">
+          <ArrowBackButton />
+          <Link
+            href="/"
+            className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px] hover:opacity-70 transition-opacity"
+          >
             <span>NUCLEA</span>
             <SparkIcon className="text-[10px]" />
-          </div>
+          </Link>
           <div className="relative">
             <Bell className="h-6 w-6 text-foreground/40" />
             <div className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-background" />
@@ -196,42 +172,39 @@ export const UserProfileClient = ({
                 key={row.id}
                 disabled={!row.editable}
                 onClick={() => row.editable && openEdit(row.id as EditField)}
-                className={`w-full flex items-center gap-3 px-4 py-4 text-left transition-colors ${
-                  !isLast ? "border-b border-border" : ""
-                } ${row.editable ? "hover:bg-surface active:bg-surface/50" : "opacity-60 cursor-default"}`}
+                className={`w-full flex items-center gap-3 px-4 py-4 text-left transition-colors ${!isLast ? "border-b border-border" : ""} ${row.editable ? "hover:bg-surface active:bg-surface/50" : "opacity-60 cursor-default"}`}
               >
                 <Icon className="h-4 w-4 text-foreground/30 shrink-0" strokeWidth={1.5} />
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-medium text-foreground">{row.label}</p>
                   <p className="text-[12px] text-foreground/40 truncate">{row.value}</p>
                 </div>
-                {row.editable && (
-                  <ChevronRight className="h-4 w-4 text-foreground/20 shrink-0" />
-                )}
+                {row.editable && <ChevronRight className="h-4 w-4 text-foreground/20 shrink-0" />}
               </button>
             );
           })}
         </div>
 
-        {/* Mis cápsulas stats */}
+        {/* Stats */}
         <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-3">
           MIS CÁPSULAS
         </p>
         <div className="grid grid-cols-2 gap-3 mb-10">
-          <div className="rounded-2xl border border-border bg-background p-4 flex flex-col gap-2">
-            <div className="h-9 w-9 rounded-full bg-surface flex items-center justify-center">
-              <Pencil className="h-4 w-4 text-foreground/40" strokeWidth={1.5} />
+          {[
+            { icon: Pencil, count: capsulesCreated, label: "Cápsulas creadas" },
+            { icon: Send, count: capsulesDelivered, label: "Cápsulas enviadas" },
+          ].map(({ icon: Icon, count, label }) => (
+            <div key={label} className="rounded-2xl border border-border bg-background p-4 flex flex-col gap-3">
+              {/* Icon + number side by side */}
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-surface flex items-center justify-center shrink-0">
+                  <Icon className="h-4 w-4 text-foreground/40" strokeWidth={1.5} />
+                </div>
+                <span className="font-serif text-4xl text-foreground leading-none">{count}</span>
+              </div>
+              <p className="text-[11px] text-foreground/40">{label}</p>
             </div>
-            <p className="font-serif text-4xl text-foreground leading-none">{capsulesCreated}</p>
-            <p className="text-[11px] text-foreground/40">Cápsulas creadas</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-background p-4 flex flex-col gap-2">
-            <div className="h-9 w-9 rounded-full bg-surface flex items-center justify-center">
-              <Send className="h-4 w-4 text-foreground/40" strokeWidth={1.5} />
-            </div>
-            <p className="font-serif text-4xl text-foreground leading-none">{capsulesDelivered}</p>
-            <p className="text-[11px] text-foreground/40">Cápsulas enviadas</p>
-          </div>
+          ))}
         </div>
 
         {/* Logout */}
@@ -244,7 +217,9 @@ export const UserProfileClient = ({
         </button>
       </div>
 
-      {/* Edit drawer — Nombre */}
+      {/* ── Edit Drawers ── */}
+
+      {/* Nombre */}
       {editField === "nombre" && (
         <EditDrawer title="Cambiar nombre" onClose={closeEdit} onSave={saveName} isSaving={isSaving} error={error}>
           <input
@@ -258,29 +233,36 @@ export const UserProfileClient = ({
         </EditDrawer>
       )}
 
-      {/* Edit drawer — Contraseña */}
+      {/* Contraseña */}
       {editField === "contraseña" && (
-        <EditDrawer title="Cambiar contraseña" onClose={closeEdit} onSave={savePassword} isSaving={isSaving} error={error}>
+        <EditDrawer title={userHasPassword ? "Cambiar contraseña" : "Añadir contraseña"} onClose={closeEdit} onSave={savePassword} isSaving={isSaving} error={error}>
           <div className="space-y-3">
+            {userHasPassword && (
+              <div className="relative">
+                <input
+                  type={showCurrentPwd ? "text" : "password"}
+                  value={currentPwd}
+                  onChange={(e) => setCurrentPwd(e.target.value)}
+                  placeholder="Contraseña actual"
+                  className="w-full rounded-2xl border border-border bg-background px-4 py-3 pr-11 text-[15px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
+                />
+                <button type="button" onClick={() => setShowCurrentPwd(!showCurrentPwd)} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/30">
+                  {showCurrentPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            )}
             <div className="relative">
               <input
-                type={showPwd ? "text" : "password"}
-                value={currentPwd}
-                onChange={(e) => setCurrentPwd(e.target.value)}
-                placeholder="Contraseña actual"
+                type={showNewPwd ? "text" : "password"}
+                value={newPwd}
+                onChange={(e) => setNewPwd(e.target.value)}
+                placeholder="Nueva contraseña"
                 className="w-full rounded-2xl border border-border bg-background px-4 py-3 pr-11 text-[15px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
               />
-              <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/30">
-                {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <button type="button" onClick={() => setShowNewPwd(!showNewPwd)} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/30">
+                {showNewPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <input
-              type="password"
-              value={newPwd}
-              onChange={(e) => setNewPwd(e.target.value)}
-              placeholder="Nueva contraseña"
-              className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-[15px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
-            />
             <input
               type="password"
               value={confirmPwd}
@@ -292,27 +274,21 @@ export const UserProfileClient = ({
         </EditDrawer>
       )}
 
-      {/* Edit drawer — Fecha de nacimiento */}
+      {/* Fecha de nacimiento — inline calendar, no popover */}
       {editField === "fecha" && (
         <EditDrawer title="Fecha de nacimiento" onClose={closeEdit} hideSave>
-          <Popover defaultOpen>
-            <PopoverTrigger asChild>
-              <button className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-left text-[15px] text-foreground">
-                {birthdate ? formatBirthdate(birthdate) : "Selecciona una fecha"}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="center">
-              <CalendarPicker
-                mode="single"
-                locale={es}
-                selected={birthdate ?? undefined}
-                captionLayout="dropdown"
-                fromYear={1920}
-                toYear={new Date().getFullYear()}
-                onSelect={(d) => d && saveBirthdate(d)}
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="flex justify-center">
+            <CalendarPicker
+              mode="single"
+              locale={es}
+              selected={birthdate ?? undefined}
+              captionLayout="dropdown"
+              fromYear={1920}
+              toYear={new Date().getFullYear()}
+              onSelect={(d) => d && saveBirthdate(d)}
+              className="rounded-2xl border border-border p-2"
+            />
+          </div>
         </EditDrawer>
       )}
     </>
@@ -331,9 +307,9 @@ interface EditDrawerProps {
 }
 
 const EditDrawer = ({ title, onClose, onSave, isSaving, error, hideSave, children }: EditDrawerProps) => (
-  <div className="fixed inset-0 z-50 flex flex-col justify-end">
-    <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-    <div className="relative bg-background rounded-t-[32px] px-6 pt-6 pb-10 max-w-[430px] w-full mx-auto">
+  <div className="fixed inset-0 z-[70] flex flex-col justify-end">
+    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+    <div className="relative bg-background rounded-t-[32px] px-6 pt-6 pb-12 max-w-[430px] w-full mx-auto shadow-2xl">
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-serif text-xl text-foreground">{title}</h3>
         <button onClick={onClose} className="p-2 rounded-full hover:bg-surface">

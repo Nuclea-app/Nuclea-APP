@@ -94,10 +94,10 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
       {/* Header */}
       <div className="w-full flex items-center justify-between mb-8">
         <ArrowBackButton />
-        <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">
+        <Link href="/" className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px] hover:opacity-70 transition-opacity">
           <span>NUCLEA</span>
           <SparkIcon className="text-[10px]" />
-        </div>
+        </Link>
         <div className="relative">
           <Bell className="h-6 w-6 text-foreground/40" />
           <div className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-background" />

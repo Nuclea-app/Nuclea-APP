@@ -26,10 +26,13 @@ export async function updateUserPassword(
 
   try {
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user?.password) return { error: "Esta cuenta no usa contraseña" };
+    if (!user) return { error: "Usuario no encontrado" };
 
-    const valid = await bcrypt.compare(currentPassword, user.password);
-    if (!valid) return { error: "La contraseña actual es incorrecta" };
+    // Si ya tiene contraseña, verificar la actual
+    if (user.password) {
+      const valid = await bcrypt.compare(currentPassword, user.password);
+      if (!valid) return { error: "La contraseña actual es incorrecta" };
+    }
 
     const hashed = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({ where: { id: userId }, data: { password: hashed } });
