@@ -115,19 +115,23 @@ export const MemoryUploader = ({ capsuleId, type, isOpen, onClose }: MemoryUploa
                   {!file ? (
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full flex flex-col items-center justify-center py-16 gap-4 rounded-3xl border-2 border-dashed border-border bg-surface/10 hover:bg-surface/30 transition-all"
+                      className="w-full flex flex-col items-center justify-center py-12 gap-4 rounded-3xl border-2 border-dashed border-foreground/20 bg-surface hover:bg-surface/60 active:scale-[0.99] transition-all"
                     >
-                      <div className="h-14 w-14 rounded-full bg-surface flex items-center justify-center">
-                        {type === MemoryType.PHOTO && <ImageIcon className="h-6 w-6 opacity-40" />}
-                        {type === MemoryType.VIDEO && <Video className="h-6 w-6 opacity-40" />}
-                        {type === MemoryType.AUDIO && <Mic className="h-6 w-6 opacity-40" />}
+                      <div className="h-14 w-14 rounded-full bg-background shadow-sm flex items-center justify-center">
+                        {type === MemoryType.PHOTO && <ImageIcon className="h-6 w-6 text-foreground/50" />}
+                        {type === MemoryType.VIDEO && <Video className="h-6 w-6 text-foreground/50" />}
+                        {type === MemoryType.AUDIO && <Mic className="h-6 w-6 text-foreground/50" />}
                       </div>
-                      <p className="text-[14px] font-medium text-foreground/60">
-                        Selecciona un archivo
-                      </p>
-                      {type === MemoryType.VIDEO && (
-                        <p className="text-[11px] text-foreground/40">Máximo 100MB</p>
-                      )}
+                      <div className="text-center">
+                        <p className="text-[14px] font-semibold text-foreground/80">
+                          Toca para seleccionar
+                        </p>
+                        <p className="text-[12px] text-foreground/40 mt-1">
+                          {type === MemoryType.PHOTO && "JPG, PNG, HEIC"}
+                          {type === MemoryType.VIDEO && "MP4, MOV — Máximo 100MB"}
+                          {type === MemoryType.AUDIO && "MP3, M4A, WAV"}
+                        </p>
+                      </div>
                     </button>
                   ) : (
                     <div className="relative w-full aspect-square rounded-3xl overflow-hidden bg-surface group">

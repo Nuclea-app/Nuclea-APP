@@ -33,13 +33,14 @@ export default function EntregarPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const hasEmail = useEmail && email.trim().length > 0;
+  const hasPhone = usePhone && phone.trim().length > 0;
+
   const canSubmit =
     recipientName.trim().length > 0 &&
     relation.length > 0 &&
     (relation !== "otro" || relationCustom.trim().length > 0) &&
-    (useEmail || usePhone) &&
-    (!useEmail || email.trim().length > 0) &&
-    (!usePhone || phone.trim().length > 0);
+    (hasEmail || hasPhone);
 
   const handleSubmit = async () => {
     if (!canSubmit || !capsuleId) return;
@@ -51,8 +52,8 @@ export default function EntregarPage() {
       recipientName: recipientName.trim(),
       relation,
       relationCustom: relation === "otro" ? relationCustom.trim() : undefined,
-      email: useEmail ? email.trim() : undefined,
-      phone: usePhone ? phone.trim() : undefined,
+      email: hasEmail ? email.trim() : undefined,
+      phone: hasPhone ? phone.trim() : undefined,
     });
 
     setIsLoading(false);
@@ -124,14 +125,14 @@ export default function EntregarPage() {
             <button
               key={id}
               onClick={() => setRelation(id)}
-              className={`flex flex-col items-center gap-2 rounded-2xl border-2 py-3 px-2 transition-all duration-200 ${
+              className={`flex items-center gap-2 rounded-2xl border-2 py-3 px-3 transition-all duration-200 ${
                 relation === id
                   ? "border-foreground bg-foreground text-background"
                   : "border-border bg-background text-foreground hover:bg-surface"
               }`}
             >
-              <Icon className="h-5 w-5" strokeWidth={1.5} />
-              <span className="text-[11px] font-medium">{label}</span>
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+              <span className="text-[12px] font-medium">{label}</span>
             </button>
           ))}
         </div>
@@ -148,64 +149,72 @@ export default function EntregarPage() {
 
       {/* Sección: Cómo recibirla */}
       <div className="mb-8">
-        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-3">
+        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-1">
           ¿CÓMO QUIERES QUE LA RECIBA?
         </p>
-        {/* Grid 3 cols — selector */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
+        <p className="text-[13px] text-foreground/50 mb-3">Puedes elegir una o más opciones.</p>
+        <div className="rounded-2xl border border-border overflow-hidden">
           {/* Email */}
-          <button
-            onClick={() => setUseEmail(!useEmail)}
-            className={`flex items-center gap-2 rounded-2xl border-2 px-3 py-3 transition-all duration-200 ${
-              useEmail ? "border-foreground bg-foreground text-background" : "border-border bg-background text-foreground hover:bg-surface"
-            }`}
-          >
-            <Mail className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-            <span className="text-[13px] font-medium">Email</span>
-          </button>
+          <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface">
+              <Mail className="h-4 w-4 text-foreground/50" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-medium text-foreground">Email</p>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ejemplo@correo.com"
+                className="text-[13px] text-foreground/60 bg-transparent border-none outline-none w-full placeholder:text-foreground/30"
+              />
+            </div>
+            <button
+              onClick={() => setUseEmail(!useEmail)}
+              className={`h-6 w-6 shrink-0 rounded-full border-2 transition-colors ${useEmail ? "border-foreground bg-foreground" : "border-foreground/20 bg-background"}`}
+            />
+          </div>
+
           {/* Teléfono */}
-          <button
-            onClick={() => setUsePhone(!usePhone)}
-            className={`flex items-center gap-2 rounded-2xl border-2 px-3 py-3 transition-all duration-200 ${
-              usePhone ? "border-foreground bg-foreground text-background" : "border-border bg-background text-foreground hover:bg-surface"
-            }`}
-          >
-            <Phone className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-            <span className="text-[13px] font-medium">Teléfono</span>
-          </button>
-          {/* Postal — próximamente */}
-          <div className="flex items-center gap-2 rounded-2xl border-2 border-border px-3 py-3 opacity-40 cursor-not-allowed relative">
-            <MapPin className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-            <span className="text-[13px] font-medium">Postal</span>
-            <span className="absolute -top-1.5 -right-1 text-[8px] font-bold tracking-wider uppercase bg-foreground text-background rounded-full px-1.5 py-0.5">
-              Pronto
-            </span>
+          <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface">
+              <Phone className="h-4 w-4 text-foreground/50" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-medium text-foreground">Teléfono</p>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+34 600 000 000"
+                className="text-[13px] text-foreground/60 bg-transparent border-none outline-none w-full placeholder:text-foreground/30"
+              />
+            </div>
+            <button
+              onClick={() => setUsePhone(!usePhone)}
+              className={`h-6 w-6 shrink-0 rounded-full border-2 transition-colors ${usePhone ? "border-foreground bg-foreground" : "border-foreground/20 bg-background"}`}
+            />
+          </div>
+
+          {/* Dirección postal — próximamente */}
+          <div className="flex items-center gap-3 px-4 py-4 opacity-50 cursor-not-allowed">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface">
+              <MapPin className="h-4 w-4 text-foreground/50" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-[14px] font-medium text-foreground">Dirección postal</p>
+                <span className="text-[9px] font-bold tracking-wider uppercase bg-surface border border-border rounded-full px-2 py-0.5 text-foreground/50">
+                  Próximamente
+                </span>
+              </div>
+              <p className="text-[12px] text-foreground/40 mt-0.5">
+                Muy pronto podrás enviar también por correo postal.
+              </p>
+            </div>
+            <Lock className="h-5 w-5 text-foreground/30 shrink-0" />
           </div>
         </div>
-
-        {/* Inputs expandibles */}
-        {useEmail && (
-          <div className="mb-2">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="ejemplo@correo.com"
-              className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-[14px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
-            />
-          </div>
-        )}
-        {usePhone && (
-          <div>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+34 600 000 000"
-              className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-[14px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
-            />
-          </div>
-        )}
       </div>
 
       {/* Card informativa */}

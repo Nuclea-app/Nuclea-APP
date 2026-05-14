@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Mic, Video, FileText, Calendar, Lock, ChevronRight } from "lucide-react";
+import { ArrowLeft, Mic, Video, FileText, Calendar, Lock, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { createFutureMessage } from "@/lib/actions/futureMessage.actions";
@@ -37,28 +37,72 @@ export default function MensajeFuturoPage() {
 
   const [selectedType, setSelectedType] = useState<MemoryType | null>(null);
   const [noteContent, setNoteContent] = useState("");
-  const [fileUrl, setFileUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [unlocksAt, setUnlocksAt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const today = new Date().toISOString().split("T")[0];
 
   const canSubmit =
     selectedType !== null &&
     unlocksAt.length > 0 &&
-    (selectedType !== "NOTE" || noteContent.trim().length > 0);
+    (selectedType === "NOTE"
+      ? noteContent.trim().length > 0
+      : file !== null);
+
+  const uploadToR2 = async (f: File, tipo: MemoryType): Promise<string> => {
+    const res = await fetch("/api/upload/presigned", {
+      method: "POST",
+      body: JSON.stringify({
+        capsuleId,
+        tipo: tipo.toUpperCase(),
+        filename: f.name,
+        contentType: f.type,
+      }),
+    });
+    const { uploadUrl, key, error: apiError } = await res.json();
+    if (apiError) throw new Error(apiError);
+
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", uploadUrl);
+      xhr.setRequestHeader("Content-Type", f.type);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => (xhr.status === 200 ? resolve() : reject(new Error("Upload failed")));
+      xhr.onerror = () => reject(new Error("Error de red"));
+      xhr.send(f);
+    });
+
+    return `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`;
+  };
 
   const handleSubmit = async () => {
     if (!canSubmit || !capsuleId) return;
     setIsLoading(true);
     setError("");
 
+    let fileUrl: string | undefined;
+
+    if ((selectedType === "AUDIO" || selectedType === "VIDEO") && file) {
+      try {
+        fileUrl = await uploadToR2(file, selectedType);
+      } catch {
+        setError("Error al subir el archivo. Intentá de nuevo.");
+        setIsLoading(false);
+        return;
+      }
+    }
+
     const result = await createFutureMessage({
       capsuleId,
       type: selectedType!,
       content: selectedType === "NOTE" ? noteContent.trim() : undefined,
-      fileUrl: fileUrl || undefined,
+      fileUrl,
       unlocksAt: new Date(unlocksAt),
     });
 
@@ -146,17 +190,57 @@ export default function MensajeFuturoPage() {
         )}
 
         {(selectedType === "AUDIO" || selectedType === "VIDEO") && (
-          <div className="mt-4 rounded-2xl border border-dashed border-border bg-surface/30 p-6 text-center">
-            <p className="text-[13px] text-foreground/40 italic mb-2">
-              {selectedType === "AUDIO" ? "Adjunta tu nota de audio" : "Adjunta tu vídeo"}
-            </p>
+          <div className="mt-4">
             <input
-              type="url"
-              value={fileUrl}
-              onChange={(e) => setFileUrl(e.target.value)}
-              placeholder="URL del archivo (sube a R2 y pega el enlace)"
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
+              ref={fileInputRef}
+              type="file"
+              accept={selectedType === "AUDIO" ? "audio/*" : "video/*"}
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setFile(f);
+                setUploadProgress(0);
+              }}
             />
+            {!file ? (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex flex-col items-center justify-center py-12 gap-4 rounded-3xl border-2 border-dashed border-foreground/20 bg-surface hover:bg-surface/60 transition-all"
+              >
+                <div className="h-14 w-14 rounded-full bg-background shadow-sm flex items-center justify-center">
+                  {selectedType === "AUDIO" ? <Mic className="h-6 w-6 text-foreground/50" /> : <Video className="h-6 w-6 text-foreground/50" />}
+                </div>
+                <div className="text-center">
+                  <p className="text-[14px] font-semibold text-foreground/80">Toca para seleccionar</p>
+                  <p className="text-[12px] text-foreground/40 mt-1">
+                    {selectedType === "AUDIO" ? "MP3, M4A, WAV" : "MP4, MOV — Máx. 100MB"}
+                  </p>
+                </div>
+              </button>
+            ) : (
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background shadow-sm">
+                  {selectedType === "AUDIO" ? <Mic className="h-5 w-5 text-foreground/50" /> : <Video className="h-5 w-5 text-foreground/50" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-medium text-foreground truncate">{file.name}</p>
+                  <p className="text-[11px] text-foreground/40">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                </div>
+                <button onClick={() => setFile(null)} className="shrink-0 p-1 hover:opacity-60 transition-opacity">
+                  <X className="h-4 w-4 text-foreground/40" />
+                </button>
+              </div>
+            )}
+            {isLoading && uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="mt-3 space-y-1">
+                <div className="flex justify-between text-[11px] text-foreground/40">
+                  <span>Subiendo...</span><span>{uploadProgress}%</span>
+                </div>
+                <div className="h-1 w-full rounded-full bg-surface overflow-hidden">
+                  <div className="h-full bg-foreground transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
