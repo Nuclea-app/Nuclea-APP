@@ -4,34 +4,60 @@ import prisma from "@/lib/prisma";
 import { CapsuleType } from "@/lib/capsule-data";
 import { MemoryType, CapsuleType as PrismaCapsuleType } from "@prisma/client";
 
-export async function getUserCapsule(userId: string) {
+export async function getUserCapsule(userId: string, capsuleId?: string) {
   try {
-    const capsule = await prisma.capsule.findFirst({
-      where: { userId },
-      include: {
-        _count: {
-          select: { memories: true }
-        },
-        memories: {
-          take: 4,
-          orderBy: { createdAt: 'desc' }
-        }
-      }
-    });
+    const capsule = capsuleId
+      ? await prisma.capsule.findUnique({
+          where: { id: capsuleId, userId },
+          include: {
+            _count: { select: { memories: true } },
+            memories: { take: 4, orderBy: { createdAt: "desc" } },
+          },
+        })
+      : await prisma.capsule.findFirst({
+          where: { userId },
+          orderBy: { createdAt: "desc" },
+          include: {
+            _count: { select: { memories: true } },
+            memories: { take: 4, orderBy: { createdAt: "desc" } },
+          },
+        });
 
     if (!capsule) return null;
 
     const favoritesCount = await prisma.memory.count({
-      where: { capsuleId: capsule.id, isFavorite: true }
+      where: { capsuleId: capsule.id, isFavorite: true },
     });
 
-    return {
-      ...capsule,
-      favoritesCount
-    };
+    return { ...capsule, favoritesCount };
   } catch (error) {
     console.error("Error fetching capsule:", error);
     return null;
+  }
+}
+
+export async function getUserCapsules(userId: string) {
+  try {
+    return await prisma.capsule.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: { _count: { select: { memories: true } } },
+    });
+  } catch (error) {
+    console.error("Error fetching capsules:", error);
+    return [];
+  }
+}
+
+export async function getAllMemories(capsuleId: string) {
+  try {
+    return await prisma.memory.findMany({
+      where: { capsuleId },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("Error fetching memories:", error);
+    return [];
   }
 }
 
@@ -50,7 +76,7 @@ export async function createCapsule(data: { type: CapsuleType; name: string; use
     try {
       const cookieStore = await cookies();
       cookieStore.delete("capsule_type");
-    } catch (e) {
+    } catch {
       // Ignorar si falla al borrar en algunos contextos
     }
 

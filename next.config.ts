@@ -1,11 +1,16 @@
 import type { NextConfig } from "next";
 
+const r2PublicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? "";
+const r2Hostname = r2PublicUrl
+  ? new URL(r2PublicUrl).hostname
+  : "pub-f62833d355404cd483c56b2e2cbc38da.r2.dev";
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "pub-f62833d355404cd483c56b2e2cbc38da.r2.dev",
+        hostname: r2Hostname,
       },
     ],
   },

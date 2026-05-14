@@ -13,12 +13,14 @@ export interface Memory {
   isFavorite?: boolean;
 }
 
-export const MemoryGrid = ({ memories }: { memories: Memory[] }) => {
+export const MemoryGrid = ({ memories, capsuleId }: { memories: Memory[]; capsuleId?: string }) => {
+  const allHref = capsuleId ? `/dashboard/memories?capsule=${capsuleId}` : "/dashboard/memories";
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-sans text-[17px] font-semibold text-foreground">Últimos recuerdos</h3>
-        <Link href="/dashboard/memories" className="text-[12px] font-medium text-foreground/40 hover:text-foreground">
+        <Link href={allHref} className="text-[12px] font-medium text-foreground/40 hover:text-foreground">
           Ver todos →
         </Link>
       </div>

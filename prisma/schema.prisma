@@ -54,15 +54,17 @@ model User {
 }
 
 model Capsule {
-  id          String      @id @default(cuid())
-  type        CapsuleType
-  name        String
-  description String?
-  coverUrl    String?
-  userId      String
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  memories    Memory[]
-  createdAt   DateTime    @default(now())
+  id             String            @id @default(cuid())
+  type           CapsuleType
+  name           String
+  description    String?
+  coverUrl       String?
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memories       Memory[]
+  deliveries     CapsuleDelivery[]
+  futureMessages FutureMessage[]
+  createdAt      DateTime          @default(now())
 
   @@map("capsules")
 }
@@ -93,6 +95,36 @@ enum MemoryType {
   VIDEO
   AUDIO
   NOTE
+}
+
+model CapsuleDelivery {
+  id             String    @id @default(cuid())
+  capsuleId      String
+  capsule        Capsule   @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+  token          String    @unique @default(cuid())
+  recipientName  String
+  relation       String
+  relationCustom String?
+  email          String?
+  phone          String?
+  deliveredAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@map("capsule_deliveries")
+}
+
+model FutureMessage {
+  id         String     @id @default(cuid())
+  capsuleId  String
+  capsule    Capsule    @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+  type       MemoryType
+  content    String?    @db.Text
+  fileUrl    String?
+  unlocksAt  DateTime
+  isUnlocked Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+
+  @@map("future_messages")
 }
 
 model VerificationToken {

@@ -14,12 +14,12 @@ El producto no es una red social ni un álbum de fotos. Es una **herencia emocio
 
 El producto gira en torno al concepto de **cápsula** — una cápsula metálica plateada que visualmente representa un contenedor de memorias. Cada tipo de cápsula tiene su propósito:
 
-| Cápsula | Nombre | Descripción |
-|---|---|---|
-| ✦ | **Legacy Capsule** | Lo que quieres preservar para siempre. Para cuando más importe. |
-| ◎ | **Together Capsule** | Historias que compartes y construyes con otros. Un regalo para alguien importante. |
-| 🐾 | **Pet Capsule** | La memoria de quienes también forman tu familia. Sus momentos, aventuras, rutinas. |
-| 🌱 | **Origin Capsule** | El comienzo de una historia. Primeros momentos para que algún día puedan entender quiénes son. |
+| Cápsula | Nombre               | Descripción                                                                                    |
+| ------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| ✦       | **Legacy Capsule**   | Lo que quieres preservar para siempre. Para cuando más importe.                                |
+| ◎       | **Together Capsule** | Historias que compartes y construyes con otros. Un regalo para alguien importante.             |
+| 🐾      | **Pet Capsule**      | La memoria de quienes también forman tu familia. Sus momentos, aventuras, rutinas.             |
+| 🌱      | **Origin Capsule**   | El comienzo de una historia. Primeros momentos para que algún día puedan entender quiénes son. |
 
 ---
 
@@ -35,6 +35,7 @@ Pantalla de bienvenida (Manifiesto)
 ```
 
 ### Detalle del flujo:
+
 1. **Manifiesto**: Logo NUCLEA clickeable. Texto emocional. Features básicos. Botón "Continuar".
 2. **Elegir cápsula**: 4 opciones con iconos. Cada una tiene un tono gris claro al seleccionarse.
 3. **Detalle de cápsula**: Pantalla explicativa por tipo de cápsula seleccionada (con imagen de la cápsula plateada).
@@ -46,21 +47,25 @@ Pantalla de bienvenida (Manifiesto)
 ## Stack Tecnológico
 
 ### Frontend
-- **Next.js 14+** (App Router)
+
+- **Next.js 16+** (App Router)
 - **TailwindCSS** — utilidades de estilo
 - **shadcn/ui** — componentes base
 - **Playfair Display** — tipografía de titulares
 - **Inter** — tipografía de cuerpo y subtítulos
 
 ### Backend / Base de datos
+
 - **Prisma ORM** — modelado y migraciones
 - **NeonDB** (PostgreSQL serverless) — base de datos principal
 - **Auth.js (NextAuth v5)** — autenticación con email/password
 
 ### Almacenamiento
+
 - **Cloudflare R2** — almacenamiento de archivos multimedia (fotos, videos, audios)
 
 ### Deploy
+
 - **Vercel** — deploy continuo, previews, dominio
 
 ---
@@ -68,6 +73,7 @@ Pantalla de bienvenida (Manifiesto)
 ## Funcionalidades Beta (MVP)
 
 ### ✅ Incluido en esta fase
+
 - Onboarding (manifiesto + selección de cápsula)
 - Registro y login con email/contraseña
 - Creación de perfil de cápsula (nombre, foto de portada)
@@ -77,6 +83,7 @@ Pantalla de bienvenida (Manifiesto)
 - Deploy en Vercel accesible desde móvil
 
 ### ❌ No incluido en esta fase
+
 - Pagos o suscripciones
 - App móvil nativa
 - Sistemas de notificaciones complejos

@@ -1,8 +1,9 @@
 "use client";
 
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
-import { Bell, Heart, Pencil, BookOpen, Send, Share2, Loader2 } from "lucide-react";
+import { Bell, Heart, Pencil, BookOpen, Send, Clock, Loader2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { ActionGrid } from "./ActionGrid";
 import { MemoryCalendar } from "./MemoryCalendar";
 import { Memory, MemoryGrid } from "./MemoryGrid";
@@ -25,8 +26,7 @@ interface CapsuleProfileProps {
 export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
   const { uploadCover, isUploading } = useUploadCover(capsule.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // States for immediate feedback (Fix 3 & 5)
+
   const [coverUrl, setCoverUrl] = useState(capsule.coverUrl);
   const [capsuleName, setCapsuleName] = useState(capsule.name);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -38,7 +38,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
       try {
         const result = await uploadCover(file);
         if (result.success) {
-          setCoverUrl(result.url); // Update local state immediately (Fix 3)
+          setCoverUrl(result.url);
         }
       } catch (err) {
         console.error("Cover upload failed:", err);
@@ -57,7 +57,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
       setCapsuleName(tempName);
       setIsEditingName(false);
     } else {
-      setTempName(capsuleName); // Revert on error
+      setTempName(capsuleName);
       setIsEditingName(false);
       alert(result.error);
     }
@@ -73,15 +73,22 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
 
   return (
     <div className="flex flex-col items-center pt-8 pb-12 px-6">
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        className="hidden" 
-        accept="image/*" 
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
         onChange={handleFileChange}
       />
+
       {/* Header */}
       <div className="w-full flex items-center justify-between mb-8">
+        <Link
+          href="/capsulas"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-border hover:bg-surface transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
         <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">
           <span>NUCLEA</span>
           <SparkIcon className="text-[10px]" />
@@ -115,7 +122,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
             </div>
           )}
         </div>
-        <button 
+        <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
           className="absolute bottom-1 right-1 h-8 w-8 rounded-full bg-foreground text-background flex items-center justify-center border-2 border-background hover:scale-105 transition-transform shadow-lg disabled:opacity-50"
@@ -124,7 +131,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
         </button>
       </div>
 
-      {/* Name (Fix 5) */}
+      {/* Name */}
       <div className="group relative mb-4">
         {isEditingName ? (
           <input
@@ -137,7 +144,10 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
             className="font-serif text-3xl font-semibold text-foreground text-center bg-transparent border-none outline-none focus:ring-0 w-full max-w-[320px]"
           />
         ) : (
-          <div className="flex items-center justify-center gap-2 cursor-pointer" onClick={() => setIsEditingName(true)}>
+          <div
+            className="flex items-center justify-center gap-2 cursor-pointer"
+            onClick={() => setIsEditingName(true)}
+          >
             <h1 className="font-serif text-3xl font-semibold text-foreground">{capsuleName}</h1>
             <Pencil className="h-4 w-4 text-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
@@ -158,7 +168,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
         <ActionGrid capsuleId={capsule.id} />
       </div>
 
-      {/* Stats (Fix 2) */}
+      {/* Stats */}
       <div className="w-full border border-border rounded-3xl p-6 mb-12 bg-surface/30">
         <div className="flex w-full items-center justify-between mb-4">
           <div className="flex flex-col items-center gap-1 flex-1 border-r border-border">
@@ -186,26 +196,30 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
 
       {/* Calendar */}
       <div className="w-full mb-12">
-        <MemoryCalendar 
-          memories={capsule.memories} 
-        />
+        <MemoryCalendar memories={capsule.memories} />
       </div>
 
       {/* Memories */}
       <div className="w-full mb-12">
-        <MemoryGrid memories={capsule.memories} />
+        <MemoryGrid memories={capsule.memories} capsuleId={capsule.id} />
       </div>
 
-      {/* Final Actions (Fix 1) */}
-      <div className="w-full flex gap-3 mb-8">
-        <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:opacity-90">
+      {/* Bottom Actions */}
+      <div className="w-full flex flex-col gap-3 mb-8">
+        <Link
+          href={`/dashboard/entregar?capsule=${capsule.id}`}
+          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:opacity-90"
+        >
           <Send className="h-4 w-4" />
-          <span>Entregar cápsula</span>
-        </button>
-        <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:opacity-90">
-          <Share2 className="h-4 w-4" />
-          <span>Compartir con</span>
-        </button>
+          <span>ENTREGAR CÁPSULA</span>
+        </Link>
+        <Link
+          href={`/dashboard/mensaje-futuro?capsule=${capsule.id}`}
+          className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-foreground text-foreground py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:bg-surface"
+        >
+          <Clock className="h-4 w-4" />
+          <span>MENSAJE FUTURO</span>
+        </Link>
       </div>
     </div>
   );
