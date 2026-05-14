@@ -71,7 +71,7 @@ export default function EntregarPage() {
       <div className="flex items-center justify-between mb-8">
         <Link
           href={backHref}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border hover:bg-surface transition-colors"
+          className="flex items-center justify-center hover:opacity-60 transition-opacity"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
@@ -99,7 +99,7 @@ export default function EntregarPage() {
 
       {/* Sección: Nombre */}
       <div className="mb-8">
-        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-3">
+        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-3">
           NOMBRE DE LA PERSONA
         </p>
         <div className="relative">
@@ -116,7 +116,7 @@ export default function EntregarPage() {
 
       {/* Sección: Relación */}
       <div className="mb-8">
-        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-3">
+        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-3">
           TU RELACIÓN CON ELLA
         </p>
         <div className="grid grid-cols-3 gap-2">
@@ -148,80 +148,64 @@ export default function EntregarPage() {
 
       {/* Sección: Cómo recibirla */}
       <div className="mb-8">
-        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-3">
+        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-3">
           ¿CÓMO QUIERES QUE LA RECIBA?
         </p>
-        <div className="space-y-3">
+        {/* Grid 3 cols — selector */}
+        <div className="grid grid-cols-3 gap-2 mb-3">
           {/* Email */}
-          <div className={`rounded-2xl border-2 transition-all duration-200 overflow-hidden ${useEmail ? "border-foreground/40" : "border-border"}`}>
-            <button
-              onClick={() => setUseEmail(!useEmail)}
-              className="w-full flex items-center gap-3 px-4 py-3"
-            >
-              <div className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${useEmail ? "border-foreground bg-foreground" : "border-foreground/30"}`}>
-                {useEmail && <div className="h-2 w-2 rounded-sm bg-background" />}
-              </div>
-              <Mail className="h-4 w-4 text-foreground/50" />
-              <span className="text-[14px] font-medium">Email</span>
-            </button>
-            {useEmail && (
-              <div className="px-4 pb-3">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ejemplo@correo.com"
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[14px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
-                />
-              </div>
-            )}
-          </div>
-
+          <button
+            onClick={() => setUseEmail(!useEmail)}
+            className={`flex items-center gap-2 rounded-2xl border-2 px-3 py-3 transition-all duration-200 ${
+              useEmail ? "border-foreground bg-foreground text-background" : "border-border bg-background text-foreground hover:bg-surface"
+            }`}
+          >
+            <Mail className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+            <span className="text-[13px] font-medium">Email</span>
+          </button>
           {/* Teléfono */}
-          <div className={`rounded-2xl border-2 transition-all duration-200 overflow-hidden ${usePhone ? "border-foreground/40" : "border-border"}`}>
-            <button
-              onClick={() => setUsePhone(!usePhone)}
-              className="w-full flex items-center gap-3 px-4 py-3"
-            >
-              <div className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${usePhone ? "border-foreground bg-foreground" : "border-foreground/30"}`}>
-                {usePhone && <div className="h-2 w-2 rounded-sm bg-background" />}
-              </div>
-              <Phone className="h-4 w-4 text-foreground/50" />
-              <span className="text-[14px] font-medium">Teléfono</span>
-            </button>
-            {usePhone && (
-              <div className="px-4 pb-3">
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+34 600 000 000"
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[14px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Dirección postal — próximamente */}
-          <div className="rounded-2xl border-2 border-border opacity-50 cursor-not-allowed">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <div className="flex h-5 w-5 items-center justify-center rounded border-2 border-foreground/30" />
-              <MapPin className="h-4 w-4 text-foreground/50" />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[14px] font-medium">Dirección postal</span>
-                  <div className="flex items-center gap-1 rounded-full bg-surface border border-border px-2 py-0.5">
-                    <Lock className="h-2.5 w-2.5 text-foreground/40" />
-                    <span className="text-[9px] font-bold tracking-wider uppercase text-foreground/40">Próximamente</span>
-                  </div>
-                </div>
-                <p className="text-[11px] text-foreground/40 mt-0.5">
-                  Muy pronto podrás enviar también por correo postal.
-                </p>
-              </div>
-            </div>
+          <button
+            onClick={() => setUsePhone(!usePhone)}
+            className={`flex items-center gap-2 rounded-2xl border-2 px-3 py-3 transition-all duration-200 ${
+              usePhone ? "border-foreground bg-foreground text-background" : "border-border bg-background text-foreground hover:bg-surface"
+            }`}
+          >
+            <Phone className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+            <span className="text-[13px] font-medium">Teléfono</span>
+          </button>
+          {/* Postal — próximamente */}
+          <div className="flex items-center gap-2 rounded-2xl border-2 border-border px-3 py-3 opacity-40 cursor-not-allowed relative">
+            <MapPin className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+            <span className="text-[13px] font-medium">Postal</span>
+            <span className="absolute -top-1.5 -right-1 text-[8px] font-bold tracking-wider uppercase bg-foreground text-background rounded-full px-1.5 py-0.5">
+              Pronto
+            </span>
           </div>
         </div>
+
+        {/* Inputs expandibles */}
+        {useEmail && (
+          <div className="mb-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="ejemplo@correo.com"
+              className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-[14px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
+            />
+          </div>
+        )}
+        {usePhone && (
+          <div>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+34 600 000 000"
+              className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-[14px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
+            />
+          </div>
+        )}
       </div>
 
       {/* Card informativa */}
@@ -236,7 +220,7 @@ export default function EntregarPage() {
           </p>
         </div>
         <div className="relative h-24 w-16 shrink-0">
-          <Image src="/capsula-derecha.png" alt="Cápsula" fill className="object-contain" />
+          <Image src="/nuclea-logo.png" alt="Cápsula" fill className="object-contain" />
         </div>
       </div>
 

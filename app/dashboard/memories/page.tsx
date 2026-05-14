@@ -29,7 +29,7 @@ export default async function MemoriesPage({ searchParams }: MemoriesPageProps) 
     <div className="flex flex-col pb-12 px-6 pt-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <Link href={backHref} className="flex h-9 w-9 items-center justify-center rounded-full border border-border hover:bg-surface transition-colors">
+        <Link href={backHref} className="flex items-center justify-center hover:opacity-60 transition-opacity">
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">

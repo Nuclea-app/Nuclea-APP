@@ -83,7 +83,7 @@ export default function MensajeFuturoPage() {
       <div className="flex items-center justify-between mb-8">
         <Link
           href={backHref}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border hover:bg-surface transition-colors"
+          className="flex items-center justify-center hover:opacity-60 transition-opacity"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
@@ -111,7 +111,7 @@ export default function MensajeFuturoPage() {
 
       {/* Sección: Qué dejar */}
       <div className="mb-8">
-        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-3">
+        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-3">
           ¿QUÉ QUIERES DEJAR?
         </p>
         <div className="grid grid-cols-3 gap-2">
@@ -163,7 +163,7 @@ export default function MensajeFuturoPage() {
 
       {/* Sección: Cuándo */}
       <div className="mb-8">
-        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-3">
+        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-3">
           ¿CUÁNDO QUIERES QUE LO RECIBA?
         </p>
         <div className="rounded-2xl border-2 border-border bg-background overflow-hidden">

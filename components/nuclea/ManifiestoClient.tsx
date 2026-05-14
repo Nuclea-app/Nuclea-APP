@@ -81,7 +81,7 @@ export function ManifiestoClient({ isLoggedIn }: ManifiestoClientProps) {
             Palabras para otro momento
           </p>
         </div>
-        <div className="flex flex-col items-center gap-2 border-x border-border px-2">
+        <div className="flex flex-col items-center gap-2">
           <Heart className="h-6 w-6 text-foreground/40" />
           <h3 className="text-[10px] font-bold tracking-wider uppercase">
             Herencia Emocional

@@ -85,7 +85,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
       <div className="w-full flex items-center justify-between mb-8">
         <Link
           href="/capsulas"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border hover:bg-surface transition-colors"
+          className="flex items-center justify-center hover:opacity-60 transition-opacity"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
