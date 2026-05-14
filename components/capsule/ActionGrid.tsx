@@ -21,17 +21,19 @@ export const ActionGrid = ({ capsuleId }: ActionGridProps) => {
 
   return (
     <>
-      <div className="grid grid-cols-4 gap-4 w-full">
+      <div className="grid grid-cols-4 gap-4 w-full ">
         {actions.map((action) => (
           <button
             key={action.name}
             onClick={() => setActiveType(action.type)}
-            className="flex flex-col items-center gap-2 group"
+            className="cursor-pointer border border-border flex flex-col items-center group rounded-2xl bg-background shadow-sm py-2 hover:bg-surface"
           >
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-background shadow-sm transition-all duration-200 group-hover:bg-surface group-active:scale-[0.95]">
+            <div className="flex h-12 w-14 items-center justify-center group-active:scale-[0.95]">
               <action.icon className="h-6 w-6 text-foreground/60" />
             </div>
-            <span className="text-[12px] font-medium text-foreground/60">{action.name}</span>
+            <span className="text-[12px] font-medium text-foreground/60">
+              {action.name}
+            </span>
           </button>
         ))}
       </div>

@@ -1,20 +1,21 @@
 import { auth } from "@/auth";
-import { getUserCapsule, createCapsule } from "@/lib/actions/capsule.actions";
+import { getUserCapsules, createCapsule } from "@/lib/actions/capsule.actions";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { CapsuleType } from "@/lib/capsule-data";
+import { DashboardClient } from "@/components/nuclea/DashboardClient";
 
 export default async function DashboardPage() {
   const session = await auth();
-  
+
   if (!session?.user?.id) {
     redirect("/login");
   }
 
   const userId = session.user.id;
-  const capsule = await getUserCapsule(userId);
+  const capsules = await getUserCapsules(userId);
 
-  if (!capsule) {
+  if (capsules.length === 0) {
     const cookieStore = await cookies();
     const type = cookieStore.get("capsule_type")?.value as CapsuleType | undefined;
 
@@ -22,14 +23,18 @@ export default async function DashboardPage() {
       await createCapsule({
         type,
         name: `Mi Cápsula ${type.charAt(0).toUpperCase() + type.slice(1)}`,
-        userId: userId
+        userId: userId,
       });
       redirect("/dashboard/perfil");
     }
-    
+
     redirect("/capsulas");
   }
 
-  // Redirect to the profile view by default as requested in Step 3
-  redirect(`/dashboard/perfil`);
+  return (
+    <DashboardClient
+      capsules={capsules}
+      userName={session.user.name ?? ""}
+    />
+  );
 }

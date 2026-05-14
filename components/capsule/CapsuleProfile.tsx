@@ -1,7 +1,16 @@
 "use client";
 
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
-import { Bell, Heart, Pencil, BookOpen, Send, Clock, Loader2, ArrowLeft } from "lucide-react";
+import {
+  Bell,
+  Heart,
+  Pencil,
+  BookOpen,
+  Send,
+  Clock,
+  Loader2,
+  ArrowLeft,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ActionGrid } from "./ActionGrid";
@@ -115,7 +124,12 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
             </div>
           )}
           {coverUrl ? (
-            <Image src={coverUrl} alt={capsuleName} fill className="object-cover" />
+            <Image
+              src={coverUrl}
+              alt={capsuleName}
+              fill
+              className="object-cover"
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-3xl font-serif text-foreground/20 uppercase">
               {capsuleName.charAt(0)}
@@ -148,13 +162,19 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
             className="flex items-center justify-center gap-2 cursor-pointer"
             onClick={() => setIsEditingName(true)}
           >
-            <h1 className="font-serif text-3xl font-semibold text-foreground">{capsuleName}</h1>
+            <h1 className="font-serif text-3xl font-semibold text-foreground">
+              {capsuleName}
+            </h1>
             <Pencil className="h-4 w-4 text-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         )}
       </div>
 
-      <Heart className="h-4 w-4 text-foreground/20 mb-4" />
+      <div className="flex gap-2 items-center justify-center w-full mb-4">
+        <div className="w-[35%] h-px bg-gray-300" />
+        <Heart className="h-4 w-4 text-foreground/20" />
+        <div className="w-[35%] h-px bg-gray-300" />
+      </div>
 
       {/* Description */}
       <p className="font-sans italic text-[15px] text-foreground/60 text-center leading-relaxed max-w-[280px] mb-4">
@@ -164,26 +184,37 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
       <Heart className="h-4 w-4 text-foreground/20 mb-10" />
 
       {/* Actions */}
-      <div className="w-full mb-12">
+      <div className="w-full mb-6">
         <ActionGrid capsuleId={capsule.id} />
       </div>
 
       {/* Stats */}
-      <div className="w-full rounded-3xl p-6 mb-12 bg-background shadow-sm">
+      <div className="w-full rounded-3xl p-6 mb-6 border-border border bg-background shadow-sm">
         <div className="flex w-full items-center justify-between mb-4">
           <div className="flex flex-col items-center gap-1 flex-1 border-r border-border">
             <div className="flex items-center gap-2 mb-1">
-              <BookOpen className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
-              <span className="text-xl font-serif">{capsule._count.memories}</span>
+              <BookOpen
+                className="h-5 w-5 text-foreground/40"
+                strokeWidth={1.5}
+              />
+              <span className="text-xl font-serif">
+                {capsule._count.memories}
+              </span>
             </div>
-            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">Recuerdos</span>
+            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">
+              Recuerdos
+            </span>
           </div>
           <div className="flex flex-col items-center gap-1 flex-1">
             <div className="flex items-center gap-2 mb-1">
               <Heart className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
-              <span className="text-xl font-serif">{capsule.favoritesCount || 0}</span>
+              <span className="text-xl font-serif">
+                {capsule.favoritesCount || 0}
+              </span>
             </div>
-            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">Momentos clave</span>
+            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">
+              Momentos clave
+            </span>
           </div>
         </div>
         <div className="flex flex-col items-center gap-3 mt-4">
@@ -195,12 +226,12 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
       </div>
 
       {/* Calendar */}
-      <div className="w-full mb-12">
+      <div className="w-full mb-6">
         <MemoryCalendar memories={capsule.memories} />
       </div>
 
       {/* Memories */}
-      <div className="w-full mb-12">
+      <div className="w-full mb-8">
         <MemoryGrid memories={capsule.memories} capsuleId={capsule.id} />
       </div>
 

@@ -2,9 +2,25 @@
 
 import { useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Mic, Video, FileText, Calendar, Lock, ChevronRight, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Mic,
+  Video,
+  FileText,
+  Calendar as CalendarIcon,
+  Lock,
+  ChevronRight,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { es } from "date-fns/locale";
 import { createFutureMessage } from "@/lib/actions/futureMessage.actions";
 import { MemoryType } from "@prisma/client";
 
@@ -33,7 +49,9 @@ export default function MensajeFuturoPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const capsuleId = searchParams.get("capsule") ?? "";
-  const backHref = capsuleId ? `/dashboard/perfil?capsule=${capsuleId}` : "/dashboard/perfil";
+  const backHref = capsuleId
+    ? `/dashboard/perfil?capsule=${capsuleId}`
+    : "/dashboard/perfil";
 
   const [selectedType, setSelectedType] = useState<MemoryType | null>(null);
   const [noteContent, setNoteContent] = useState("");
@@ -44,14 +62,10 @@ export default function MensajeFuturoPage() {
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const today = new Date().toISOString().split("T")[0];
-
   const canSubmit =
     selectedType !== null &&
     unlocksAt.length > 0 &&
-    (selectedType === "NOTE"
-      ? noteContent.trim().length > 0
-      : file !== null);
+    (selectedType === "NOTE" ? noteContent.trim().length > 0 : file !== null);
 
   const uploadToR2 = async (f: File, tipo: MemoryType): Promise<string> => {
     const res = await fetch("/api/upload/presigned", {
@@ -71,9 +85,11 @@ export default function MensajeFuturoPage() {
       xhr.open("PUT", uploadUrl);
       xhr.setRequestHeader("Content-Type", f.type);
       xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+        if (e.lengthComputable)
+          setUploadProgress(Math.round((e.loaded / e.total) * 100));
       };
-      xhr.onload = () => (xhr.status === 200 ? resolve() : reject(new Error("Upload failed")));
+      xhr.onload = () =>
+        xhr.status === 200 ? resolve() : reject(new Error("Upload failed"));
       xhr.onerror = () => reject(new Error("Error de red"));
       xhr.send(f);
     });
@@ -169,10 +185,17 @@ export default function MensajeFuturoPage() {
                   : "border-border bg-background hover:bg-surface"
               }`}
             >
-              <Icon className={`h-5 w-5 ${selectedType === id ? "text-foreground" : "text-foreground/50"}`} strokeWidth={1.5} />
+              <Icon
+                className={`h-5 w-5 ${selectedType === id ? "text-foreground" : "text-foreground/50"}`}
+                strokeWidth={1.5}
+              />
               <div>
-                <p className="text-[12px] font-semibold text-foreground">{label}</p>
-                <p className="text-[10px] text-foreground/50 leading-snug">{description}</p>
+                <p className="text-[12px] font-semibold text-foreground">
+                  {label}
+                </p>
+                <p className="text-[10px] text-foreground/50 leading-snug">
+                  {description}
+                </p>
               </div>
             </button>
           ))}
@@ -208,25 +231,44 @@ export default function MensajeFuturoPage() {
                 className="w-full flex flex-col items-center justify-center py-12 gap-4 rounded-3xl border-2 border-dashed border-foreground/20 bg-surface hover:bg-surface/60 transition-all"
               >
                 <div className="h-14 w-14 rounded-full bg-background shadow-sm flex items-center justify-center">
-                  {selectedType === "AUDIO" ? <Mic className="h-6 w-6 text-foreground/50" /> : <Video className="h-6 w-6 text-foreground/50" />}
+                  {selectedType === "AUDIO" ? (
+                    <Mic className="h-6 w-6 text-foreground/50" />
+                  ) : (
+                    <Video className="h-6 w-6 text-foreground/50" />
+                  )}
                 </div>
                 <div className="text-center">
-                  <p className="text-[14px] font-semibold text-foreground/80">Toca para seleccionar</p>
+                  <p className="text-[14px] font-semibold text-foreground/80">
+                    Toca para seleccionar
+                  </p>
                   <p className="text-[12px] text-foreground/40 mt-1">
-                    {selectedType === "AUDIO" ? "MP3, M4A, WAV" : "MP4, MOV — Máx. 100MB"}
+                    {selectedType === "AUDIO"
+                      ? "MP3, M4A, WAV"
+                      : "MP4, MOV — Máx. 100MB"}
                   </p>
                 </div>
               </button>
             ) : (
               <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background shadow-sm">
-                  {selectedType === "AUDIO" ? <Mic className="h-5 w-5 text-foreground/50" /> : <Video className="h-5 w-5 text-foreground/50" />}
+                  {selectedType === "AUDIO" ? (
+                    <Mic className="h-5 w-5 text-foreground/50" />
+                  ) : (
+                    <Video className="h-5 w-5 text-foreground/50" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-foreground truncate">{file.name}</p>
-                  <p className="text-[11px] text-foreground/40">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                  <p className="text-[13px] font-medium text-foreground truncate">
+                    {file.name}
+                  </p>
+                  <p className="text-[11px] text-foreground/40">
+                    {(file.size / 1024 / 1024).toFixed(1)} MB
+                  </p>
                 </div>
-                <button onClick={() => setFile(null)} className="shrink-0 p-1 hover:opacity-60 transition-opacity">
+                <button
+                  onClick={() => setFile(null)}
+                  className="shrink-0 p-1 hover:opacity-60 transition-opacity"
+                >
                   <X className="h-4 w-4 text-foreground/40" />
                 </button>
               </div>
@@ -234,10 +276,14 @@ export default function MensajeFuturoPage() {
             {isLoading && uploadProgress > 0 && uploadProgress < 100 && (
               <div className="mt-3 space-y-1">
                 <div className="flex justify-between text-[11px] text-foreground/40">
-                  <span>Subiendo...</span><span>{uploadProgress}%</span>
+                  <span>Subiendo...</span>
+                  <span>{uploadProgress}%</span>
                 </div>
                 <div className="h-1 w-full rounded-full bg-surface overflow-hidden">
-                  <div className="h-full bg-foreground transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                  <div
+                    className="h-full bg-foreground transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
                 </div>
               </div>
             )}
@@ -250,35 +296,55 @@ export default function MensajeFuturoPage() {
         <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-3">
           ¿CUÁNDO QUIERES QUE LO RECIBA?
         </p>
-        <div className="rounded-2xl border-2 border-border bg-background overflow-hidden">
-          <label className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-            <Calendar className="h-5 w-5 text-foreground/40 shrink-0" />
-            <div className="flex-1">
-              <p className="text-[14px] font-medium">Elegir fecha</p>
-              {unlocksAt && (
-                <p className="text-[12px] text-foreground/50">
-                  {new Date(unlocksAt + "T12:00:00").toLocaleDateString("es-ES", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </p>
-              )}
-            </div>
-            <ChevronRight className="h-4 w-4 text-foreground/30" />
-            <input
-              type="date"
-              min={today}
-              value={unlocksAt}
-              onChange={(e) => setUnlocksAt(e.target.value)}
-              className="absolute opacity-0 w-0 h-0"
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="w-full rounded-2xl border-2 border-border bg-background flex items-center gap-3 px-4 py-3"
+            >
+              <CalendarIcon className="h-5 w-5 text-foreground/40 shrink-0" />
+              <div className="flex-1 text-left">
+                <p className="text-[14px] font-medium">Elegir fecha</p>
+                {unlocksAt && (
+                  <p className="text-[12px] text-foreground/50">
+                    {new Date(unlocksAt + "T12:00:00").toLocaleDateString(
+                      "es-ES",
+                      {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      },
+                    )}
+                  </p>
+                )}
+              </div>
+              <ChevronRight className="h-4 w-4 text-foreground/30" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 bg-background" align="center">
+            <Calendar
+              mode="single"
+              locale={es}
+              selected={
+                unlocksAt ? new Date(unlocksAt + "T12:00:00") : undefined
+              }
+              disabled={{ before: new Date() }}
+              onSelect={(date) => {
+                if (date) {
+                  const y = date.getFullYear();
+                  const m = String(date.getMonth() + 1).padStart(2, "0");
+                  const d = String(date.getDate()).padStart(2, "0");
+                  setUnlocksAt(`${y}-${m}-${d}`);
+                }
+              }}
             />
-          </label>
-        </div>
+          </PopoverContent>
+        </Popover>
         <div className="mt-3 flex items-start gap-3 px-1">
           <Lock className="h-4 w-4 text-foreground/30 shrink-0 mt-0.5" />
           <p className="text-[11px] text-foreground/40 leading-relaxed">
-            Este mensaje permanecerá privado y solo se abrirá en la fecha elegida.
+            Este mensaje permanecerá privado y solo se abrirá en la fecha
+            elegida.
           </p>
         </div>
       </div>
