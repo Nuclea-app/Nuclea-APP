@@ -17,7 +17,7 @@ const capsuleOptions = [
     id: "legacy",
     label: "LEGACY CAPSULE",
     title: "Lo que quieres preservar para siempre",
-    icon: <SparkIcon className="w-5 h-5" />,
+    icon: <SparkIcon className="text-lg leading-none" />,
   },
   {
     id: "together",
@@ -40,7 +40,7 @@ const capsuleOptions = [
 ];
 
 const capsuleTypeIconMap: Record<string, React.ReactNode> = {
-  LEGACY: <SparkIcon className="w-5 h-5" />,
+  LEGACY: <SparkIcon className="text-lg leading-none" />,
   TOGETHER: <TogetherIcon />,
   PET: <PawPrint className="w-5 h-5" strokeWidth={1.5} />,
   ORIGIN: <Sprout className="w-5 h-5" strokeWidth={1.5} />,

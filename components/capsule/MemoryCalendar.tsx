@@ -69,7 +69,7 @@ export const MemoryCalendar = ({ memories }: MemoryCalendarProps) => {
   const days = ["L", "M", "X", "J", "V", "S", "D"];
 
   return (
-    <div className="w-full bg-surface/30 rounded-3xl p-6 border border-border">
+    <div className="w-full bg-background rounded-3xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-8">
         <h3 className="font-serif text-xl">
           {monthNames[month]} {year}

@@ -169,7 +169,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
       </div>
 
       {/* Stats */}
-      <div className="w-full border border-border rounded-3xl p-6 mb-12 bg-surface/30">
+      <div className="w-full rounded-3xl p-6 mb-12 bg-background shadow-sm">
         <div className="flex w-full items-center justify-between mb-4">
           <div className="flex flex-col items-center gap-1 flex-1 border-r border-border">
             <div className="flex items-center gap-2 mb-1">

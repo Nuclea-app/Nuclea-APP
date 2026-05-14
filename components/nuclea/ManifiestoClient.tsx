@@ -71,7 +71,7 @@ export function ManifiestoClient({ isLoggedIn }: ManifiestoClientProps) {
         <p>Para que lo más valioso de tu historia permanezca en el tiempo.</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 w-full border border-border rounded-2xl p-4 mb-10 bg-surface/30">
+      <div className="grid grid-cols-3 gap-4 w-full mb-10">
         <div className="flex flex-col items-center gap-2">
           <MessageCircle className="h-6 w-6 text-foreground/40" />
           <h3 className="text-[10px] font-bold tracking-wider uppercase">

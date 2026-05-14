@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, User, Heart, Users, Star, UserRound, Plus, Mail, Phone, MapPin, Lock, Send } from "lucide-react";
+import { ArrowLeft, User, Heart, Users, Star, UserRound, MoreHorizontal, Mail, Phone, MapPin, Lock, Send } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
@@ -14,7 +14,7 @@ const RELATIONS = [
   { id: "pareja", label: "Pareja", icon: Users },
   { id: "hija", label: "Hija/o", icon: Star },
   { id: "amigo", label: "Amigo/a", icon: UserRound },
-  { id: "otro", label: "Otro", icon: Plus },
+  { id: "otro", label: "Otro", icon: MoreHorizontal },
 ];
 
 export default function EntregarPage() {
@@ -226,18 +226,16 @@ export default function EntregarPage() {
 
       {/* Card informativa */}
       <div className="mb-8 rounded-3xl border border-border bg-surface/30 p-5 flex items-center gap-4">
+        <Lock className="h-5 w-5 text-foreground shrink-0" strokeWidth={1.5} />
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <Lock className="h-4 w-4 text-foreground/40" strokeWidth={1.5} />
-            <span className="text-[12px] font-semibold tracking-wide text-foreground">
-              Solo tú decides cuándo llegará.
-            </span>
-          </div>
+          <p className="text-[12px] font-semibold tracking-wide text-foreground mb-1">
+            Solo tú decides cuándo llegará.
+          </p>
           <p className="text-[11px] text-foreground/50 leading-relaxed">
             Tu cápsula se mantiene privada y segura hasta ese momento.
           </p>
         </div>
-        <div className="relative h-16 w-12 shrink-0">
+        <div className="relative h-24 w-16 shrink-0">
           <Image src="/capsula-derecha.png" alt="Cápsula" fill className="object-contain" />
         </div>
       </div>

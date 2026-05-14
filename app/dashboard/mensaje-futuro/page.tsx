@@ -114,25 +114,21 @@ export default function MensajeFuturoPage() {
         <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-3">
           ¿QUÉ QUIERES DEJAR?
         </p>
-        <div className="space-y-3">
+        <div className="grid grid-cols-3 gap-2">
           {CONTENT_TYPES.map(({ id, icon: Icon, label, description }) => (
             <button
               key={id}
               onClick={() => setSelectedType(id)}
-              className={`w-full flex items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+              className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-3 text-center transition-all duration-200 ${
                 selectedType === id
                   ? "border-foreground bg-foreground/5"
                   : "border-border bg-background hover:bg-surface"
               }`}
             >
-              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${
-                selectedType === id ? "bg-foreground text-background" : "bg-surface text-foreground/60"
-              }`}>
-                <Icon className="h-5 w-5" strokeWidth={1.5} />
-              </div>
+              <Icon className={`h-5 w-5 ${selectedType === id ? "text-foreground" : "text-foreground/50"}`} strokeWidth={1.5} />
               <div>
-                <p className="text-[14px] font-semibold text-foreground">{label}</p>
-                <p className="text-[12px] text-foreground/50">{description}</p>
+                <p className="text-[12px] font-semibold text-foreground">{label}</p>
+                <p className="text-[10px] text-foreground/50 leading-snug">{description}</p>
               </div>
             </button>
           ))}

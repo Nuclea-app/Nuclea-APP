@@ -28,7 +28,7 @@ export const ActionGrid = ({ capsuleId }: ActionGridProps) => {
             onClick={() => setActiveType(action.type)}
             className="flex flex-col items-center gap-2 group"
           >
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface transition-all duration-200 group-hover:bg-accent-subtle group-active:scale-[0.95]">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-background shadow-sm transition-all duration-200 group-hover:bg-surface group-active:scale-[0.95]">
               <action.icon className="h-6 w-6 text-foreground/60" />
             </div>
             <span className="text-[12px] font-medium text-foreground/60">{action.name}</span>
