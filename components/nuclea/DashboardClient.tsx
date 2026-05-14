@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Bell, MoveRight, Search, Plus, PawPrint, Sprout } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Bell, MoveRight, Search, Plus, PawPrint, Sprout, MoreVertical, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
+import { deleteCapsule } from "@/lib/actions/user.actions";
 
 const TogetherIcon = () => (
   <div className="relative flex items-center justify-center w-5 h-5">
@@ -53,16 +55,43 @@ interface DashboardClientProps {
 }
 
 export const DashboardClient = ({
-  capsules,
+  capsules: initialCapsules,
   userName,
 }: DashboardClientProps) => {
+  const router = useRouter();
+  const [capsules, setCapsules] = useState(initialCapsules);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 300);
     return () => clearTimeout(t);
   }, [query]);
+
+  // Cerrar dropdown al click fuera
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    if (openMenuId) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [openMenuId]);
+
+  const handleDelete = async (capsuleId: string) => {
+    setDeletingId(capsuleId);
+    setOpenMenuId(null);
+    const res = await deleteCapsule(capsuleId);
+    if (!("error" in res)) {
+      setCapsules((prev) => prev.filter((c) => c.id !== capsuleId));
+      router.refresh();
+    }
+    setDeletingId(null);
+  };
 
   const filtered = useMemo(() => {
     const q = debouncedQuery.toLowerCase().trim();
@@ -129,50 +158,68 @@ export const DashboardClient = ({
 
       {/* Capsule list */}
       {filtered.length > 0 ? (
-        <div className="space-y-3 mb-10">
+        <div className="space-y-3 mb-10" ref={menuRef}>
           {filtered.map((capsule) => {
             const config = TYPE_CONFIG[capsule.type] ?? TYPE_CONFIG.LEGACY;
+            const isDeleting = deletingId === capsule.id;
+            const menuOpen = openMenuId === capsule.id;
             return (
-              <Link
-                key={capsule.id}
-                href={`/dashboard/perfil?capsule=${capsule.id}`}
-                className="group flex w-full items-center gap-4 rounded-3xl border-2 border-foreground/10 bg-background p-4 text-left transition-all duration-200 hover:border-foreground/30 hover:bg-surface active:scale-[0.99]"
-              >
-                {/* Avatar */}
-                <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-surface border-2 border-background shadow-sm">
-                  {capsule.coverUrl ? (
-                    <Image
-                      src={capsule.coverUrl}
-                      alt={capsule.name}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center">
-                      {config.icon}
-                    </div>
-                  )}
-                </div>
+              <div key={capsule.id} className="relative">
+                <Link
+                  href={`/dashboard/perfil?capsule=${capsule.id}`}
+                  className={`group flex w-full items-center gap-4 rounded-3xl border-2 border-foreground/10 bg-background p-4 text-left transition-all duration-200 hover:border-foreground/30 hover:bg-surface ${isDeleting ? "opacity-40 pointer-events-none" : "active:scale-[0.99]"}`}
+                >
+                  {/* Avatar */}
+                  <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-surface border-2 border-background shadow-sm">
+                    {capsule.coverUrl ? (
+                      <Image src={capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        {config.icon}
+                      </div>
+                    )}
+                  </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <span className="text-[10px] font-light tracking-widest uppercase text-foreground/40">
-                    {config.label}
-                  </span>
-                  <h3 className="font-serif text-[18px] leading-tight text-foreground truncate">
-                    {capsule.name}
-                  </h3>
-                  <p className="text-[11px] text-foreground/40 mt-0.5">
-                    {capsule._count.memories} recuerdo
-                    {capsule._count.memories !== 1 ? "s" : ""}
-                  </p>
-                </div>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-light tracking-widest uppercase text-foreground/40">
+                      {config.label}
+                    </span>
+                    <h3 className="font-serif text-[18px] leading-tight text-foreground truncate">
+                      {capsule.name}
+                    </h3>
+                    <p className="text-[11px] text-foreground/40 mt-0.5">
+                      {capsule._count.memories} recuerdo{capsule._count.memories !== 1 ? "s" : ""}
+                    </p>
+                  </div>
 
-                {/* Arrow */}
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border opacity-40 group-hover:opacity-100 transition-opacity">
-                  <MoveRight className="h-4 w-4" />
-                </div>
-              </Link>
+                  {/* Arrow */}
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border opacity-40 group-hover:opacity-100 transition-opacity">
+                    <MoveRight className="h-4 w-4" />
+                  </div>
+                </Link>
+
+                {/* Dropdown trigger */}
+                <button
+                  onClick={(e) => { e.preventDefault(); setOpenMenuId(menuOpen ? null : capsule.id); }}
+                  className="absolute top-3 right-14 flex h-8 w-8 items-center justify-center rounded-full text-foreground/30 hover:text-foreground hover:bg-surface transition-colors z-10"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+
+                {/* Dropdown menu */}
+                {menuOpen && (
+                  <div className="absolute top-12 right-4 z-20 min-w-[160px] rounded-2xl bg-background border border-border shadow-lg overflow-hidden">
+                    <button
+                      onClick={() => handleDelete(capsule.id)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left text-[13px] text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4 shrink-0" />
+                      <span>Eliminar cápsula</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>

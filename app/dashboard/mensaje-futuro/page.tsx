@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -11,6 +11,11 @@ import {
   Lock,
   ChevronRight,
   X,
+  Upload,
+  Play,
+  Pause,
+  RotateCcw,
+  Square,
 } from "lucide-react";
 import Link from "next/link";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
@@ -61,6 +66,65 @@ export default function MensajeFuturoPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Audio recorder
+  type AudioMode = "choose" | "record" | "upload";
+  const [audioMode, setAudioMode] = useState<AudioMode>("choose");
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      mediaRecorderRef.current = mr;
+      chunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        setFile(new File([blob], `grabacion-${Date.now()}.webm`, { type: "audio/webm" }));
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      mr.start();
+      setIsRecording(true);
+      setRecordingSeconds(0);
+      timerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000);
+    } catch { alert("No se pudo acceder al micrófono."); }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current?.state === "recording") mediaRecorderRef.current.stop();
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setIsRecording(false);
+  };
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) { audioRef.current.pause(); setIsPlaying(false); }
+    else { audioRef.current.play(); setIsPlaying(true); }
+  };
+
+  const resetAudio = () => {
+    setAudioUrl(null); setFile(null); setAudioMode("choose"); setIsPlaying(false); setRecordingSeconds(0);
+  };
+
+  const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
   const canSubmit =
     selectedType !== null &&
@@ -212,78 +276,119 @@ export default function MensajeFuturoPage() {
           />
         )}
 
-        {(selectedType === "AUDIO" || selectedType === "VIDEO") && (
+        {selectedType === "VIDEO" && (
           <div className="mt-4">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={selectedType === "AUDIO" ? "audio/*" : "video/*"}
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0] ?? null;
-                setFile(f);
-                setUploadProgress(0);
-              }}
-            />
+            <input ref={fileInputRef} type="file" accept="video/*" className="hidden"
+              onChange={(e) => { setFile(e.target.files?.[0] ?? null); setUploadProgress(0); }} />
             {!file ? (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full flex flex-col items-center justify-center py-12 gap-4 rounded-3xl border-2 border-dashed border-foreground/20 bg-surface hover:bg-surface/60 transition-all"
-              >
+              <button onClick={() => fileInputRef.current?.click()}
+                className="w-full flex flex-col items-center justify-center py-12 gap-4 rounded-3xl border-2 border-dashed border-foreground/20 bg-surface hover:bg-surface/60 transition-all">
                 <div className="h-14 w-14 rounded-full bg-background shadow-sm flex items-center justify-center">
-                  {selectedType === "AUDIO" ? (
-                    <Mic className="h-6 w-6 text-foreground/50" />
-                  ) : (
-                    <Video className="h-6 w-6 text-foreground/50" />
-                  )}
+                  <Video className="h-6 w-6 text-foreground/50" />
                 </div>
                 <div className="text-center">
-                  <p className="text-[14px] font-semibold text-foreground/80">
-                    Toca para seleccionar
-                  </p>
-                  <p className="text-[12px] text-foreground/40 mt-1">
-                    {selectedType === "AUDIO"
-                      ? "MP3, M4A, WAV"
-                      : "MP4, MOV — Máx. 100MB"}
-                  </p>
+                  <p className="text-[14px] font-semibold text-foreground/80">Toca para seleccionar</p>
+                  <p className="text-[12px] text-foreground/40 mt-1">MP4, MOV — Máx. 100MB</p>
                 </div>
               </button>
             ) : (
               <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background shadow-sm">
-                  {selectedType === "AUDIO" ? (
-                    <Mic className="h-5 w-5 text-foreground/50" />
-                  ) : (
-                    <Video className="h-5 w-5 text-foreground/50" />
-                  )}
+                  <Video className="h-5 w-5 text-foreground/50" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-foreground truncate">
-                    {file.name}
-                  </p>
-                  <p className="text-[11px] text-foreground/40">
-                    {(file.size / 1024 / 1024).toFixed(1)} MB
-                  </p>
+                  <p className="text-[13px] font-medium text-foreground truncate">{file.name}</p>
+                  <p className="text-[11px] text-foreground/40">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
                 </div>
-                <button
-                  onClick={() => setFile(null)}
-                  className="shrink-0 p-1 hover:opacity-60 transition-opacity"
-                >
+                <button onClick={() => setFile(null)} className="shrink-0 p-1 hover:opacity-60">
                   <X className="h-4 w-4 text-foreground/40" />
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {selectedType === "AUDIO" && (
+          <div className="mt-4 space-y-3">
+            <input ref={fileInputRef} type="file" accept="audio/*" className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setFile(f);
+                setAudioUrl(f ? URL.createObjectURL(f) : null);
+                setUploadProgress(0);
+              }} />
+
+            {/* Elegir modo */}
+            {audioMode === "choose" && !audioUrl && (
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => setAudioMode("record")}
+                  className="flex flex-col items-center gap-3 rounded-3xl border-2 border-dashed border-foreground/20 bg-surface py-8 transition-all hover:bg-surface/60">
+                  <div className="h-12 w-12 rounded-full bg-background shadow-sm flex items-center justify-center">
+                    <Mic className="h-5 w-5 text-foreground/50" />
+                  </div>
+                  <span className="text-[12px] font-semibold text-foreground/70">Grabar audio</span>
+                </button>
+                <button onClick={() => { setAudioMode("upload"); fileInputRef.current?.click(); }}
+                  className="flex flex-col items-center gap-3 rounded-3xl border-2 border-dashed border-foreground/20 bg-surface py-8 transition-all hover:bg-surface/60">
+                  <div className="h-12 w-12 rounded-full bg-background shadow-sm flex items-center justify-center">
+                    <Upload className="h-5 w-5 text-foreground/50" />
+                  </div>
+                  <span className="text-[12px] font-semibold text-foreground/70">Subir archivo</span>
+                </button>
+              </div>
+            )}
+
+            {/* Grabando */}
+            {audioMode === "record" && !audioUrl && (
+              <div className="flex flex-col items-center gap-5 py-4">
+                <div className={`h-20 w-20 rounded-full flex items-center justify-center shadow-lg ${isRecording ? "bg-red-500 animate-pulse" : "bg-foreground"}`}>
+                  <Mic className="h-8 w-8 text-white" />
+                </div>
+                {isRecording && <p className="font-mono text-xl text-foreground tabular-nums">{formatTime(recordingSeconds)}</p>}
+                <div className="flex gap-3">
+                  {!isRecording ? (
+                    <button onClick={startRecording} className="flex items-center gap-2 rounded-2xl bg-foreground text-background px-5 py-3 text-[12px] font-semibold">
+                      <Mic className="h-4 w-4" /> Iniciar
+                    </button>
+                  ) : (
+                    <button onClick={stopRecording} className="flex items-center gap-2 rounded-2xl bg-red-500 text-white px-5 py-3 text-[12px] font-semibold">
+                      <Square className="h-4 w-4" fill="white" /> Detener
+                    </button>
+                  )}
+                  <button onClick={() => { setAudioMode("choose"); setRecordingSeconds(0); }} className="rounded-2xl border border-border px-4 py-3 text-[12px] text-foreground/50">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Preview */}
+            {audioUrl && (
+              <>
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <audio ref={audioRef} src={audioUrl} onEnded={() => setIsPlaying(false)} className="hidden" />
+                <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface px-4 py-4">
+                  <button onClick={togglePlay} className="h-11 w-11 shrink-0 rounded-full bg-foreground text-background flex items-center justify-center shadow-sm">
+                    {isPlaying ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-medium text-foreground truncate">{file?.name ?? "Grabación"}</p>
+                    <p className="text-[11px] text-foreground/40">{file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : formatTime(recordingSeconds)}</p>
+                  </div>
+                  <button onClick={resetAudio} className="shrink-0 p-2 hover:opacity-60">
+                    <RotateCcw className="h-4 w-4 text-foreground/40" />
+                  </button>
+                </div>
+              </>
+            )}
+
             {isLoading && uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="mt-3 space-y-1">
+              <div className="space-y-1">
                 <div className="flex justify-between text-[11px] text-foreground/40">
-                  <span>Subiendo...</span>
-                  <span>{uploadProgress}%</span>
+                  <span>Subiendo...</span><span>{uploadProgress}%</span>
                 </div>
                 <div className="h-1 w-full rounded-full bg-surface overflow-hidden">
-                  <div
-                    className="h-full bg-foreground transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
+                  <div className="h-full bg-foreground transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                 </div>
               </div>
             )}

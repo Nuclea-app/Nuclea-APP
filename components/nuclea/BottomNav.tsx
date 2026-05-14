@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const tabs = [
   { name: "Inicio", icon: Home, href: "/dashboard" },
-  { name: "Perfil", icon: User, href: "/dashboard/perfil" },
+  { name: "Perfil", icon: User, href: "/dashboard/usuario" },
   { name: "Configuración", icon: Settings, href: "/dashboard/configuracion" },
 ];
 
