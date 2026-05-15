@@ -67,7 +67,7 @@ export function buildCapsuleEmailHtml(params: {
           <!-- Imagen de la cápsula -->
           <tr>
             <td align="center" style="padding-bottom:34px;">
-              <img src="${capsuleImageUrl}" alt="Cápsula Nuclea" width="230" style="display:block;width:230px;max-width:78%;height:auto;border:0;outline:none;" />
+              <img src="${capsuleImageUrl}" alt="Cápsula Nuclea" width="400" style="display:block;width:280px;max-width:90%;height:auto;border:0;outline:none;" />
             </td>
           </tr>
 
