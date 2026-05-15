@@ -111,9 +111,17 @@ export function ManifiestoClient({ isLoggedIn }: ManifiestoClientProps) {
           </Link>
         </div>
       ) : (
-        <Link href="/capsulas" className="w-full">
-          <PrimaryButton>Continuar</PrimaryButton>
-        </Link>
+        <div className="w-full flex flex-col gap-3">
+          <Link href="/capsulas" className="w-full">
+            <PrimaryButton>Continuar</PrimaryButton>
+          </Link>
+          <Link
+            href="/login"
+            className="w-full text-center text-[12px] text-foreground/40 hover:text-foreground transition-colors py-2"
+          >
+            Ya tengo cuenta · Iniciar sesión
+          </Link>
+        </div>
       )}
 
       <footer className="mt-12 opacity-30 flex items-center gap-2 text-[10px] tracking-[0.3em] font-sans">

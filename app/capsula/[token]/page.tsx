@@ -6,7 +6,14 @@ import Image from "next/image";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { CapsuleOpening } from "@/components/capsule/CapsuleOpening";
 import { getDeliveryByToken } from "@/lib/actions/delivery.actions";
-import { FileText, Image as ImageIcon, Mic, Play, Lock, Heart } from "lucide-react";
+import {
+  FileText,
+  Image as ImageIcon,
+  Mic,
+  Play,
+  Lock,
+  Heart,
+} from "lucide-react";
 
 type Memory = {
   id: string;
@@ -106,7 +113,7 @@ export default function CapsuleTokenPage() {
             )}
           </div>
           <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-background border border-border shadow-sm">
-            <Heart className="h-4 w-4 text-foreground/30" strokeWidth={1.5} />
+            <Heart className="h-4 w-4 text-foreground" strokeWidth={2.5} />
           </div>
         </div>
 
