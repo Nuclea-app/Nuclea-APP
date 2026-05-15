@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Lock, LockOpen, Mic, Video, FileText, Calendar } from "lucide-react";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import ArrowBackButton from "@/components/arrow-back-button";
+import { isFutureMessageUnlocked } from "@/lib/futureMessages";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,7 +25,7 @@ export default async function MensajeFuturoDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const unlocked = message.unlocksAt.getTime() <= Date.now();
+  const unlocked = isFutureMessageUnlocked(message.unlocksAt);
   const formattedDate = message.unlocksAt.toLocaleDateString("es-ES", {
     day: "numeric",
     month: "long",

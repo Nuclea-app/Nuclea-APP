@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma";
 import { resend, buildCapsuleEmailHtml } from "@/lib/resend";
-import { auth } from "@/auth";
 
 export async function createDelivery(data: {
   capsuleId: string;

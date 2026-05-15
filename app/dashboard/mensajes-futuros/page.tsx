@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getUserCapsule } from "@/lib/actions/capsule.actions";
 import { getFutureMessages } from "@/lib/actions/futureMessage.actions";
+import { isFutureMessageUnlocked } from "@/lib/futureMessages";
 import {
   FutureMessagesClient,
   FutureMessageItem,
@@ -20,13 +21,12 @@ export default async function MensajesFuturosPage({ searchParams }: PageProps) {
   if (!capsule) redirect("/capsulas");
 
   const messages = await getFutureMessages(capsule.id);
-  const now = Date.now();
 
   const items: FutureMessageItem[] = messages.map((m) => ({
     id: m.id,
     type: m.type,
     unlocksAt: m.unlocksAt.toISOString(),
-    unlocked: m.unlocksAt.getTime() <= now,
+    unlocked: isFutureMessageUnlocked(m.unlocksAt),
   }));
 
   return <FutureMessagesClient messages={items} capsuleName={capsule.name} />;

@@ -22,10 +22,6 @@ export default async function MemoriesPage({ searchParams }: MemoriesPageProps) 
 
   const memories = await getAllMemories(capsule.id);
 
-  const backHref = capsuleId
-    ? `/dashboard/perfil?capsule=${capsuleId}`
-    : "/dashboard/perfil";
-
   return (
     <div className="flex flex-col pb-12 px-6 pt-8">
       {/* Header */}

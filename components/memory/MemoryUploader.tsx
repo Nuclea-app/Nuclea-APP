@@ -283,7 +283,7 @@ export const MemoryUploader = ({
               {/* AUDIO — preview listo (grabado o subido) */}
               {isAudio && audioUrl && (
                 <div className="space-y-4">
-                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  { }
                   <audio
                     ref={audioRef}
                     src={audioUrl}

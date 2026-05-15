@@ -66,6 +66,7 @@ export const DashboardClient = ({
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const [prevDebouncedQuery, setPrevDebouncedQuery] = useState(debouncedQuery);
   const menuRef = useRef<HTMLDivElement>(null);
   const ITEMS_PER_PAGE = 5;
 
@@ -74,10 +75,12 @@ export const DashboardClient = ({
     return () => clearTimeout(t);
   }, [query]);
 
-  // Reset a página 0 cuando cambia la búsqueda
-  useEffect(() => {
+  // Reset a página 0 cuando cambia la búsqueda (ajuste durante el render,
+  // el patrón recomendado por React en lugar de un useEffect).
+  if (debouncedQuery !== prevDebouncedQuery) {
+    setPrevDebouncedQuery(debouncedQuery);
     setPage(0);
-  }, [debouncedQuery]);
+  }
 
   // Cerrar dropdown al click fuera
   useEffect(() => {

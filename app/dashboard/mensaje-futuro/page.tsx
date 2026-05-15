@@ -54,9 +54,6 @@ export default function MensajeFuturoPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const capsuleId = searchParams.get("capsule") ?? "";
-  const backHref = capsuleId
-    ? `/dashboard/perfil?capsule=${capsuleId}`
-    : "/dashboard/perfil";
 
   const [selectedType, setSelectedType] = useState<MemoryType | null>(null);
   const [noteContent, setNoteContent] = useState("");
@@ -360,7 +357,7 @@ export default function MensajeFuturoPage() {
             {/* Preview */}
             {audioUrl && (
               <>
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                { }
                 <audio ref={audioRef} src={audioUrl} onEnded={() => setIsPlaying(false)} className="hidden" />
                 <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface px-4 py-4">
                   <button onClick={togglePlay} className="h-11 w-11 shrink-0 rounded-full bg-foreground text-background flex items-center justify-center shadow-sm">

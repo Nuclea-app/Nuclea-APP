@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { FavoriteButton } from "@/components/capsule/FavoriteButton";
+import { isFutureMessageUnlocked } from "@/lib/futureMessages";
 
 interface PageProps {
   params: Promise<{ fecha: string }>;
@@ -209,7 +210,7 @@ export default async function DiaPage({ params, searchParams }: PageProps) {
             </p>
             <div className="space-y-3">
               {futureMessagesDelDia.map((fm) => {
-                const unlocked = fm.unlocksAt.getTime() <= Date.now();
+                const unlocked = isFutureMessageUnlocked(fm.unlocksAt);
                 return (
                   <Link
                     key={fm.id}
