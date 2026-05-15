@@ -7,22 +7,30 @@ import { MemoryType } from "@prisma/client";
 
 interface ActionGridProps {
   capsuleId: string;
+  capsuleType: string;
 }
 
-export const ActionGrid = ({ capsuleId }: ActionGridProps) => {
+export const ActionGrid = ({ capsuleId, capsuleType }: ActionGridProps) => {
   const [activeType, setActiveType] = useState<MemoryType | null>(null);
+
+  const isOrigin = capsuleType.toUpperCase() === "ORIGIN";
 
   const actions = [
     { name: "Foto", icon: ImageIcon, type: MemoryType.PHOTO },
     { name: "Vídeo", icon: Video, type: MemoryType.VIDEO },
     { name: "Audio", icon: Mic, type: MemoryType.AUDIO },
     { name: "Notas", icon: FileText, type: MemoryType.NOTE },
-    { name: "Dibujos", icon: Pencil, type: MemoryType.DRAWING },
+    // El bloque "Dibujos" solo está disponible en las cápsulas Origin.
+    ...(isOrigin
+      ? [{ name: "Dibujos", icon: Pencil, type: MemoryType.DRAWING }]
+      : []),
   ];
 
   return (
     <>
-      <div className="grid grid-cols-5 gap-2 w-full">
+      <div
+        className={`grid ${isOrigin ? "grid-cols-5" : "grid-cols-4"} gap-2 w-full`}
+      >
         {actions.map((action) => (
           <button
             key={action.name}

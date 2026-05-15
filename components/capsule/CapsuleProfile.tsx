@@ -247,7 +247,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
 
       {/* Actions */}
       <div className="w-full mb-6">
-        <ActionGrid capsuleId={capsule.id} />
+        <ActionGrid capsuleId={capsule.id} capsuleType={capsule.type} />
       </div>
 
       {/* Stats */}

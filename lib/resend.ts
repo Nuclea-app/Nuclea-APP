@@ -9,15 +9,10 @@ export function buildCapsuleEmailHtml(params: {
 }): string {
   const { capsuleUrl } = params;
 
-  // Los emails requieren URLs absolutas y públicas. Tomamos el origen de la
-  // URL de la cápsula (debe ser el dominio desplegado, no localhost).
-  let origin = "https://nuclea.app";
-  try {
-    origin = new URL(capsuleUrl).origin;
-  } catch {
-    // se mantiene el fallback
-  }
-  const capsuleImageUrl = `${origin}/nuclea-logo.png`;
+  // La imagen del email debe apuntar SIEMPRE a una URL pública y estable.
+  // No se deriva del origen de capsuleUrl porque en dev sería localhost
+  // (inaccesible para los clientes de correo).
+  const capsuleImageUrl = "https://www.nuclea.app/nuclea-logo.png";
 
   // Iconos PNG outline negros (estilo line-icon, compatibles con email).
   const icon = (name: string) =>
