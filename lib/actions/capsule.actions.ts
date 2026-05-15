@@ -61,8 +61,6 @@ export async function getAllMemories(capsuleId: string) {
   }
 }
 
-import { cookies } from "next/headers";
-
 export async function createCapsule(data: { type: CapsuleType; name: string; userId: string }) {
   try {
     const capsule = await prisma.capsule.create({
@@ -72,13 +70,6 @@ export async function createCapsule(data: { type: CapsuleType; name: string; use
         userId: data.userId,
       }
     });
-
-    try {
-      const cookieStore = await cookies();
-      cookieStore.delete("capsule_type");
-    } catch {
-      // Ignorar si falla al borrar en algunos contextos
-    }
 
     return capsule;
   } catch (error) {

@@ -3,14 +3,12 @@
 import { auth } from "@/auth";
 import { createCapsule } from "./capsule.actions";
 import { CapsuleType } from "@/lib/capsule-data";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function createCapsuleAction(tipo: CapsuleType) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    (await cookies()).set("capsule_type", tipo, { maxAge: 3600 });
     redirect(`/register?callbackUrl=/dashboard`);
   }
 
