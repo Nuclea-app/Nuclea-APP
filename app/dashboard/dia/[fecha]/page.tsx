@@ -4,39 +4,63 @@ import { getUserCapsule } from "@/lib/actions/capsule.actions";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Mic, FileText, Image as ImageIcon, Video } from "lucide-react";
+import {
+  ArrowLeft,
+  Mic,
+  FileText,
+  Image as ImageIcon,
+  Video,
+  Lock,
+  LockOpen,
+  ChevronRight,
+} from "lucide-react";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { FavoriteButton } from "@/components/capsule/FavoriteButton";
 
 interface PageProps {
   params: Promise<{ fecha: string }>;
+  searchParams: Promise<{ capsule?: string }>;
 }
 
-export default async function DiaPage({ params }: PageProps) {
+export default async function DiaPage({ params, searchParams }: PageProps) {
   const { fecha } = await params;
+  const { capsule: capsuleId } = await searchParams;
   const session = await auth();
 
   if (!session?.user?.id) {
     redirect("/login");
   }
 
-  const capsule = await getUserCapsule(session.user.id);
+  const capsule = await getUserCapsule(session.user.id, capsuleId);
 
   if (!capsule) {
     redirect("/capsulas");
   }
 
+  const dayStart = new Date(`${fecha}T00:00:00.000Z`);
+  const dayEnd = new Date(`${fecha}T23:59:59.999Z`);
+
   // Buscar todos los recuerdos de ese día exacto (usando createdAt para alinearse con el calendario)
   const memoriesDelDia = await prisma.memory.findMany({
     where: {
       capsuleId: capsule.id,
-      createdAt: {
-        gte: new Date(`${fecha}T00:00:00.000Z`),
-        lte: new Date(`${fecha}T23:59:59.999Z`),
-      },
+      createdAt: { gte: dayStart, lte: dayEnd },
     },
     orderBy: { createdAt: "asc" },
   });
+
+  // Mensajes futuros programados para ese día
+  const futureMessagesDelDia = await prisma.futureMessage.findMany({
+    where: {
+      capsuleId: capsule.id,
+      unlocksAt: { gte: dayStart, lte: dayEnd },
+    },
+    orderBy: { unlocksAt: "asc" },
+  });
+
+  const backHref = capsuleId
+    ? `/dashboard/perfil?capsule=${capsuleId}`
+    : "/dashboard/perfil";
 
   // Formatear la fecha en español de forma elegante
   const formatFechaElegante = (dateStr: string) => {
@@ -60,7 +84,7 @@ export default async function DiaPage({ params }: PageProps) {
       <header className="grid grid-cols-3 w-full items-center py-4 mb-8">
         <div className="flex justify-start">
           <Link
-            href="/dashboard/perfil"
+            href={backHref}
             className="text-foreground hover:text-foreground/80 transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
@@ -107,13 +131,16 @@ export default async function DiaPage({ params }: PageProps) {
                 <div className="flex items-center justify-between border-b border-border/50 pb-3">
                   <div className="flex items-center gap-2">
                     <div className="h-7 w-7 rounded-full bg-surface flex items-center justify-center text-foreground/60">
-                      {memory.type === "PHOTO" && <ImageIcon className="h-4 w-4" />}
+                      {(memory.type === "PHOTO" ||
+                        memory.type === "DRAWING") && (
+                        <ImageIcon className="h-4 w-4" />
+                      )}
                       {memory.type === "VIDEO" && <Video className="h-4 w-4" />}
                       {memory.type === "AUDIO" && <Mic className="h-4 w-4" />}
                       {memory.type === "NOTE" && <FileText className="h-4 w-4" />}
                     </div>
                     <span className="text-[10px] font-bold tracking-widest uppercase text-foreground/60">
-                      {memory.type} ✦
+                      {memory.type === "DRAWING" ? "DIBUJO" : memory.type} ✦
                     </span>
                   </div>
                   <span className="text-[10px] text-foreground/40 font-medium">
@@ -126,17 +153,18 @@ export default async function DiaPage({ params }: PageProps) {
 
                 {/* Contenido según tipo */}
                 <div className="flex-1">
-                  {memory.type === "PHOTO" && memory.fileUrl && (
-                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-surface mb-2">
-                      <Image
-                        src={memory.fileUrl}
-                        alt="Recuerdo guardado"
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 430px) 100vw, 400px"
-                      />
-                    </div>
-                  )}
+                  {(memory.type === "PHOTO" || memory.type === "DRAWING") &&
+                    memory.fileUrl && (
+                      <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-surface mb-2">
+                        <Image
+                          src={memory.fileUrl}
+                          alt="Recuerdo guardado"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 430px) 100vw, 400px"
+                        />
+                      </div>
+                    )}
 
                   {memory.type === "VIDEO" && memory.fileUrl && (
                     <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-surface mb-2">
@@ -170,6 +198,44 @@ export default async function DiaPage({ params }: PageProps) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Mensajes futuros del día */}
+        {futureMessagesDelDia.length > 0 && (
+          <div className="mt-10">
+            <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-4">
+              MENSAJE FUTURO ✦
+            </p>
+            <div className="space-y-3">
+              {futureMessagesDelDia.map((fm) => {
+                const unlocked = fm.unlocksAt.getTime() <= Date.now();
+                return (
+                  <Link
+                    key={fm.id}
+                    href={`/dashboard/mensajes-futuros/${fm.id}`}
+                    className="group flex items-center gap-4 rounded-3xl border border-border bg-surface/30 p-4 transition-all hover:bg-surface active:scale-[0.99]"
+                  >
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-background border border-border">
+                      {unlocked ? (
+                        <LockOpen className="h-5 w-5 text-foreground/60" />
+                      ) : (
+                        <Lock className="h-5 w-5 text-foreground/60" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-foreground/40">
+                        {unlocked ? "Desbloqueado" : "Programado"}
+                      </span>
+                      <p className="text-[14px] text-foreground/70">
+                        Revisar mensaje futuro
+                      </p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-foreground/30 group-hover:text-foreground transition-colors" />
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
       </main>

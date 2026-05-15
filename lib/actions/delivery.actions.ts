@@ -82,6 +82,7 @@ export async function getDeliveryByToken(token: string) {
         capsule: {
           include: {
             memories: { orderBy: { createdAt: "desc" } },
+            user: { select: { name: true, image: true } },
           },
         },
       },

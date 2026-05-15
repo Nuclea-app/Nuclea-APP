@@ -7,10 +7,15 @@ const r2Hostname = r2PublicUrl
 
 const nextConfig: NextConfig = {
   images: {
+    qualities: [75, 100],
     remotePatterns: [
       {
         protocol: "https",
         hostname: r2Hostname,
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
       },
     ],
   },

@@ -3,9 +3,7 @@ import { getUserCapsules } from "@/lib/actions/capsule.actions";
 import { OnboardingHeader } from "@/components/nuclea/OnboardingHeader";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import Link from "next/link";
-import { MoveRight, PawPrint, Sprout, Plus, ChevronLeft, ChevronRight } from "lucide-react";
-
-const ITEMS_PER_PAGE = 5;
+import { MoveRight, PawPrint, Sprout, Package } from "lucide-react";
 
 const TogetherIcon = () => (
   <div className="relative flex items-center justify-center w-5 h-5">
@@ -41,30 +39,11 @@ const capsuleOptions = [
   },
 ];
 
-const capsuleTypeIconMap: Record<string, React.ReactNode> = {
-  LEGACY: <SparkIcon className="text-lg leading-none" />,
-  TOGETHER: <TogetherIcon />,
-  PET: <PawPrint className="w-5 h-5" strokeWidth={1.5} />,
-  ORIGIN: <Sprout className="w-5 h-5" strokeWidth={1.5} />,
-};
-
-interface CapsuleSelectionPageProps {
-  searchParams: Promise<{ page?: string }>;
-}
-
-export default async function CapsuleSelectionPage({ searchParams }: CapsuleSelectionPageProps) {
+export default async function CapsuleSelectionPage() {
   const session = await auth();
   const existingCapsules =
     session?.user?.id ? await getUserCapsules(session.user.id) : [];
-
-  const { page: pageParam } = await searchParams;
-  const page = Math.max(1, Number(pageParam) || 1);
-  const totalPages = Math.ceil(existingCapsules.length / ITEMS_PER_PAGE);
-  const clampedPage = Math.min(page, Math.max(1, totalPages));
-  const paginatedCapsules = existingCapsules.slice(
-    (clampedPage - 1) * ITEMS_PER_PAGE,
-    clampedPage * ITEMS_PER_PAGE,
-  );
+  const hasCapsules = existingCapsules.length > 0;
 
   return (
     <div className="flex flex-col items-center text-center pb-12">
@@ -83,96 +62,7 @@ export default async function CapsuleSelectionPage({ searchParams }: CapsuleSele
         Cada historia merece ser contada.
       </p>
 
-      {existingCapsules.length > 0 && (
-        <div className="w-full mb-12">
-          <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-4 text-left px-2">
-            MIS CÁPSULAS · {existingCapsules.length}
-          </p>
-          <div className="space-y-3 px-2">
-            {paginatedCapsules.map((capsule) => (
-              <Link
-                key={capsule.id}
-                href={`/dashboard/perfil?capsule=${capsule.id}`}
-                className="group flex w-full items-center gap-5 rounded-3xl border-2 border-foreground/20 bg-background p-4 text-left transition-all duration-200 hover:bg-accent-subtle active:bg-accent"
-              >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-foreground group-hover:bg-background">
-                  {capsuleTypeIconMap[capsule.type] ?? <SparkIcon className="w-5 h-5" />}
-                </div>
-                <div className="flex-1 space-y-0.5">
-                  <span className="text-[10px] font-light tracking-widest uppercase text-foreground/50">
-                    {capsule.type} CAPSULE
-                  </span>
-                  <h3 className="font-serif text-[18px] leading-tight text-foreground">
-                    {capsule.name}
-                  </h3>
-                  <span className="text-[11px] text-foreground/40">
-                    {capsule._count.memories} recuerdo{capsule._count.memories !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border opacity-40 group-hover:opacity-100">
-                  <MoveRight className="h-4 w-4" />
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 px-2">
-              <Link
-                href={clampedPage > 1 ? `/capsulas?page=${clampedPage - 1}` : "#"}
-                aria-disabled={clampedPage <= 1}
-                className={`flex items-center gap-1 text-[12px] font-medium transition-colors ${
-                  clampedPage <= 1
-                    ? "text-foreground/25 pointer-events-none"
-                    : "text-foreground/50 hover:text-foreground"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Anterior
-              </Link>
-
-              <div className="flex items-center gap-1.5">
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <Link
-                    key={i}
-                    href={`/capsulas?page=${i + 1}`}
-                    className={`h-2 rounded-full transition-all duration-200 ${
-                      i + 1 === clampedPage
-                        ? "w-5 bg-foreground"
-                        : "w-2 bg-foreground/20 hover:bg-foreground/40"
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <Link
-                href={clampedPage < totalPages ? `/capsulas?page=${clampedPage + 1}` : "#"}
-                aria-disabled={clampedPage >= totalPages}
-                className={`flex items-center gap-1 text-[12px] font-medium transition-colors ${
-                  clampedPage >= totalPages
-                    ? "text-foreground/25 pointer-events-none"
-                    : "text-foreground/50 hover:text-foreground"
-                }`}
-              >
-                Siguiente
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
-
       <div className="w-full">
-        {existingCapsules.length > 0 && (
-          <div className="flex items-center gap-3 mb-6 px-2">
-            <div className="h-px flex-1 bg-border" />
-            <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40">
-              <Plus className="h-3 w-3" />
-              CREAR NUEVA
-            </div>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-        )}
         <div className="space-y-4 px-2">
           {capsuleOptions.map((capsule) => (
             <Link
@@ -197,6 +87,23 @@ export default async function CapsuleSelectionPage({ searchParams }: CapsuleSele
             </Link>
           ))}
         </div>
+
+        {hasCapsules && (
+          <div className="px-2 mt-6">
+            <Link
+              href="/dashboard"
+              className="relative flex w-full items-center justify-center rounded-sm bg-foreground px-6 py-4 text-sm font-semibold tracking-wider text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+            >
+              <span className="absolute left-6">
+                <Package className="h-5 w-5" strokeWidth={1.5} />
+              </span>
+              <span className="uppercase">Ir a mis cápsulas</span>
+              <span className="absolute right-6">
+                <MoveRight className="h-5 w-5" />
+              </span>
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="mt-16 flex flex-col items-center gap-6">

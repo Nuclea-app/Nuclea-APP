@@ -6,11 +6,22 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { Memory } from "./MemoryGrid";
 
-interface MemoryCalendarProps {
-  memories: Memory[];
+export interface FutureMessageMarker {
+  id: string;
+  unlocksAt: string;
 }
 
-export const MemoryCalendar = ({ memories }: MemoryCalendarProps) => {
+interface MemoryCalendarProps {
+  memories: Memory[];
+  futureMessages?: FutureMessageMarker[];
+  capsuleId?: string;
+}
+
+export const MemoryCalendar = ({
+  memories,
+  futureMessages = [],
+  capsuleId,
+}: MemoryCalendarProps) => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -57,9 +68,20 @@ export const MemoryCalendar = ({ memories }: MemoryCalendarProps) => {
       );
     });
 
+  const hasFutureMessageForDay = (day: number) =>
+    futureMessages.some((fm) => {
+      const date = new Date(fm.unlocksAt);
+      return (
+        date.getDate() === day &&
+        date.getMonth() === month &&
+        date.getFullYear() === year
+      );
+    });
+
   const handleDayClick = (day: number) => {
     const fecha = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    router.push(`/dashboard/dia/${fecha}`);
+    const query = capsuleId ? `?capsule=${capsuleId}` : "";
+    router.push(`/dashboard/dia/${fecha}${query}`);
   };
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
@@ -117,6 +139,7 @@ export const MemoryCalendar = ({ memories }: MemoryCalendarProps) => {
           const active = isToday(day);
           const dayMemories = getMemoriesForDay(day);
           const hasMemories = dayMemories.length > 0;
+          const hasFutureMessage = hasFutureMessageForDay(day);
 
           return (
             <div key={day} className="relative flex flex-col items-center">
@@ -127,15 +150,28 @@ export const MemoryCalendar = ({ memories }: MemoryCalendarProps) => {
                   active
                     ? "bg-foreground text-background"
                     : "text-foreground hover:bg-black/20",
-                  hasMemories &&
-                    !active &&
+                  !active &&
+                    hasFutureMessage &&
+                    "bg-foreground/5 hover:bg-accent hover:text-foreground",
+                  !active &&
+                    hasMemories &&
+                    !hasFutureMessage &&
                     "hover:bg-accent hover:text-foreground",
                 )}
               >
                 {day}
               </button>
-              {hasMemories && !active && (
-                <div className="absolute bottom-[-2px] w-1 h-1 bg-foreground/40 rounded-full" />
+              {!active && (hasMemories || hasFutureMessage) && (
+                <div className="absolute bottom-[-3px] flex items-center gap-[3px]">
+                  {hasMemories && (
+                    <span className="w-1 h-1 bg-foreground/40 rounded-full" />
+                  )}
+                  {hasFutureMessage && (
+                    <span className="text-[7px] leading-none text-foreground/50">
+                      ✦
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           );

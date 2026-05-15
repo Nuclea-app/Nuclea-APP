@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { getUserCapsule } from "@/lib/actions/capsule.actions";
+import { getFutureMessages } from "@/lib/actions/futureMessage.actions";
 import { CapsuleProfile } from "@/components/capsule/CapsuleProfile";
 import { redirect } from "next/navigation";
 
@@ -21,9 +22,15 @@ export default async function PerfilPage({ searchParams }: PerfilPageProps) {
     redirect("/capsulas");
   }
 
+  const futureMessages = await getFutureMessages(capsule.id);
+
   const capsuleData = {
     ...capsule,
     type: capsule.type.toLowerCase(),
+    futureMessages: futureMessages.map((fm) => ({
+      id: fm.id,
+      unlocksAt: fm.unlocksAt.toISOString(),
+    })),
   };
 
   return <CapsuleProfile capsule={capsuleData} />;

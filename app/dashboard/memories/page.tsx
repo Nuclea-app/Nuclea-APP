@@ -63,13 +63,13 @@ export default async function MemoriesPage({ searchParams }: MemoriesPageProps) 
             >
               <FavoriteButton memoryId={memory.id} initialIsFavorite={memory.isFavorite} />
 
-              {memory.type === "PHOTO" && (
+              {(memory.type === "PHOTO" || memory.type === "DRAWING") && (
                 memory.fileUrl ? (
                   <>
                     <Image src={memory.fileUrl} alt="Recuerdo" fill className="object-cover" />
                     <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
                     <div className="absolute bottom-2 left-2 text-[9px] text-white font-medium uppercase tracking-wider">
-                      PHOTO ✦
+                      {memory.type === "DRAWING" ? "DIBUJO" : "PHOTO"} ✦
                     </div>
                   </>
                 ) : (

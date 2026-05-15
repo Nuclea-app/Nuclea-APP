@@ -96,6 +96,7 @@ enum MemoryType {
   VIDEO
   AUDIO
   NOTE
+  DRAWING
 }
 
 model CapsuleDelivery {

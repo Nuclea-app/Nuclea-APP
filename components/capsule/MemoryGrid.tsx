@@ -5,7 +5,7 @@ import { FavoriteButton } from "./FavoriteButton";
 
 export interface Memory {
   id: string;
-  type: "PHOTO" | "VIDEO" | "AUDIO" | "NOTE";
+  type: "PHOTO" | "VIDEO" | "AUDIO" | "NOTE" | "DRAWING";
   fileUrl?: string | null;
   content?: string | null;
   duration?: string | null;
@@ -56,7 +56,7 @@ export const MemoryGrid = ({
                 initialIsFavorite={memory.isFavorite || false}
               />
 
-              {memory.type === "PHOTO" &&
+              {(memory.type === "PHOTO" || memory.type === "DRAWING") &&
                 (memory.fileUrl ? (
                   <>
                     <Image
@@ -67,7 +67,7 @@ export const MemoryGrid = ({
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
                     <div className="absolute bottom-2 left-2 text-[9px] text-white font-medium uppercase tracking-wider">
-                      PHOTO ✦
+                      {memory.type === "DRAWING" ? "DIBUJO" : "PHOTO"} ✦
                     </div>
                   </>
                 ) : (

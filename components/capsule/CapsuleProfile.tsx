@@ -9,17 +9,23 @@ import {
   Send,
   Clock,
   Loader2,
-  ArrowLeft,
+  Mail,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ActionGrid } from "./ActionGrid";
-import { MemoryCalendar } from "./MemoryCalendar";
+import { MemoryCalendar, FutureMessageMarker } from "./MemoryCalendar";
 import { Memory, MemoryGrid } from "./MemoryGrid";
 import { useUploadCover } from "@/lib/hooks/useUploadCover";
 import { useRef, useState } from "react";
-import { updateCapsuleName } from "@/lib/actions/capsuleActions";
+import {
+  updateCapsuleName,
+  updateCapsuleDescription,
+} from "@/lib/actions/capsuleActions";
 import ArrowBackButton from "../arrow-back-button";
+
+const DEFAULT_DESCRIPTION =
+  "Elegimos seguir escribiendo nuestra historia, cada día, juntos.";
 
 interface CapsuleProfileProps {
   capsule: {
@@ -27,9 +33,11 @@ interface CapsuleProfileProps {
     name: string;
     type: string;
     coverUrl?: string | null;
+    description?: string | null;
     _count: { memories: number };
     favoritesCount?: number;
     memories: Memory[];
+    futureMessages?: FutureMessageMarker[];
   };
 }
 
@@ -41,6 +49,13 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
   const [capsuleName, setCapsuleName] = useState(capsule.name);
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(capsule.name);
+
+  const initialDescription = capsule.description || DEFAULT_DESCRIPTION;
+  const [description, setDescription] = useState(initialDescription);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [tempDescription, setTempDescription] = useState(initialDescription);
+
+  const futureMessages = capsule.futureMessages ?? [];
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -78,6 +93,36 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
     if (e.key === "Escape") {
       setTempName(capsuleName);
       setIsEditingName(false);
+    }
+  };
+
+  const handleDescriptionSave = async () => {
+    const trimmed = tempDescription.trim();
+    if (!trimmed || trimmed === description) {
+      setTempDescription(description);
+      setIsEditingDescription(false);
+      return;
+    }
+
+    const result = await updateCapsuleDescription(capsule.id, trimmed);
+    if (result.success) {
+      setDescription(trimmed);
+      setIsEditingDescription(false);
+    } else {
+      setTempDescription(description);
+      setIsEditingDescription(false);
+      alert(result.error);
+    }
+  };
+
+  const handleDescriptionKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleDescriptionSave();
+    }
+    if (e.key === "Escape") {
+      setTempDescription(description);
+      setIsEditingDescription(false);
     }
   };
 
@@ -172,10 +217,31 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
         <div className="w-[35%] h-px bg-gray-300" />
       </div>
 
-      {/* Description */}
-      <p className="font-sans italic text-[15px] text-foreground/60 text-center leading-relaxed max-w-[280px] mb-4">
-        Elegimos seguir escribiendo nuestra historia, cada día, juntos.
-      </p>
+      {/* Description (editable) */}
+      <div className="group relative mb-4 w-full max-w-[300px]">
+        {isEditingDescription ? (
+          <textarea
+            autoFocus
+            value={tempDescription}
+            onChange={(e) => setTempDescription(e.target.value)}
+            onBlur={handleDescriptionSave}
+            onKeyDown={handleDescriptionKeyDown}
+            rows={3}
+            maxLength={200}
+            className="w-full resize-none font-sans italic text-[15px] text-foreground/70 text-center leading-relaxed bg-transparent border-none outline-none focus:ring-0"
+          />
+        ) : (
+          <div
+            className="flex items-start justify-center gap-1.5 cursor-pointer"
+            onClick={() => setIsEditingDescription(true)}
+          >
+            <p className="font-sans italic text-[15px] text-foreground/60 text-center leading-relaxed">
+              {description}
+            </p>
+            <Pencil className="h-3.5 w-3.5 shrink-0 mt-1 text-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        )}
+      </div>
 
       <Heart className="h-4 w-4 text-foreground/20 mb-10" />
 
@@ -213,17 +279,32 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
             </span>
           </div>
         </div>
-        <div className="flex flex-col items-center gap-3 mt-4">
-          <SparkIcon className="text-[12px] opacity-20" />
-          <p className="text-center text-[11px] text-foreground/40 font-sans italic">
-            Contigo, cada momento tiene sentido.
-          </p>
+        <div className="flex items-center gap-3 my-1">
+          <div className="h-px flex-1 bg-border" />
+          <SparkIcon className="text-[12px] opacity-30" />
+          <div className="h-px flex-1 bg-border" />
         </div>
+        <Link
+          href={`/dashboard/mensajes-futuros?capsule=${capsule.id}`}
+          className="group flex flex-col items-center gap-1 mt-4"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <Mail className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
+            <span className="text-xl font-serif">{futureMessages.length}</span>
+          </div>
+          <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40 group-hover:text-foreground/70 transition-colors">
+            Mensajes futuros
+          </span>
+        </Link>
       </div>
 
       {/* Calendar */}
       <div className="w-full mb-6">
-        <MemoryCalendar memories={capsule.memories} />
+        <MemoryCalendar
+          memories={capsule.memories}
+          futureMessages={futureMessages}
+          capsuleId={capsule.id}
+        />
       </div>
 
       {/* Memories */}

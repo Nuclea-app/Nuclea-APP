@@ -18,6 +18,7 @@ import {
   Video,
   Mic,
   FileText,
+  Pencil,
   X,
   CheckCircle2,
   Loader2,
@@ -90,7 +91,7 @@ export const MemoryUploader = ({
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      if (type === MemoryType.PHOTO) {
+      if (type === MemoryType.PHOTO || type === MemoryType.DRAWING) {
         setPreview(URL.createObjectURL(selectedFile));
       }
       if (type === MemoryType.AUDIO) {
@@ -189,6 +190,7 @@ export const MemoryUploader = ({
               {type === MemoryType.VIDEO && "Subir vídeo"}
               {type === MemoryType.AUDIO && "Añadir audio"}
               {type === MemoryType.NOTE && "Escribir nota"}
+              {type === MemoryType.DRAWING && "Subir dibujo"}
             </DrawerTitle>
             <DrawerClose onClick={onClose} className="p-2 rounded-full hover:bg-surface">
               <X className="h-6 w-6 opacity-40" />
@@ -324,12 +326,14 @@ export const MemoryUploader = ({
                       <div className="h-14 w-14 rounded-full bg-background shadow-sm flex items-center justify-center">
                         {type === MemoryType.PHOTO && <ImageIcon className="h-6 w-6 text-foreground/50" />}
                         {type === MemoryType.VIDEO && <Video className="h-6 w-6 text-foreground/50" />}
+                        {type === MemoryType.DRAWING && <Pencil className="h-6 w-6 text-foreground/50" />}
                       </div>
                       <div className="text-center">
                         <p className="text-[14px] font-semibold text-foreground/80">Toca para seleccionar</p>
                         <p className="text-[12px] text-foreground/40 mt-1">
                           {type === MemoryType.PHOTO && "JPG, PNG, HEIC"}
                           {type === MemoryType.VIDEO && "MP4, MOV — Máximo 100MB"}
+                          {type === MemoryType.DRAWING && "JPG, PNG, HEIC"}
                         </p>
                       </div>
                     </button>
@@ -362,7 +366,7 @@ export const MemoryUploader = ({
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 accept={
-                  type === MemoryType.PHOTO
+                  type === MemoryType.PHOTO || type === MemoryType.DRAWING
                     ? "image/*"
                     : type === MemoryType.VIDEO
                     ? "video/*"
@@ -407,6 +411,8 @@ export const MemoryUploader = ({
                   "Subir foto"
                 ) : type === MemoryType.VIDEO ? (
                   "Subir vídeo"
+                ) : type === MemoryType.DRAWING ? (
+                  "Subir dibujo"
                 ) : (
                   "Guardar audio"
                 )}

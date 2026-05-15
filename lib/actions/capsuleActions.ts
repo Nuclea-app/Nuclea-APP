@@ -34,3 +34,25 @@ export async function updateCapsuleName(capsuleId: string, name: string) {
     return { success: false, error: "No se pudo actualizar el nombre" };
   }
 }
+
+export async function updateCapsuleDescription(
+  capsuleId: string,
+  description: string,
+) {
+  const trimmed = description.trim();
+  if (trimmed.length > 200) {
+    return { success: false, error: "La frase no puede superar los 200 caracteres" };
+  }
+
+  try {
+    await prisma.capsule.update({
+      where: { id: capsuleId },
+      data: { description: trimmed || null },
+    });
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating capsule description:", error);
+    return { success: false, error: "No se pudo actualizar la frase" };
+  }
+}
