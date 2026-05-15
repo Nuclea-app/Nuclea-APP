@@ -117,9 +117,9 @@ export function ManifiestoClient({ isLoggedIn }: ManifiestoClientProps) {
           </Link>
           <Link
             href="/login"
-            className="w-full text-center text-[12px] text-foreground/40 hover:text-foreground transition-colors py-2"
+            className="w-full flex items-center justify-center rounded-sm border-2 border-foreground/20 py-4 text-sm font-semibold tracking-wider uppercase text-foreground transition-all duration-200 hover:bg-foreground hover:text-background active:scale-[0.98]"
           >
-            Ya tengo cuenta · Iniciar sesión
+            Iniciar sesión
           </Link>
         </div>
       )}
