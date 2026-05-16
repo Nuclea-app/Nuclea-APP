@@ -92,15 +92,3 @@ export async function getDeliveryByToken(token: string) {
     return null;
   }
 }
-
-export async function getDeliveriesForCapsule(capsuleId: string) {
-  try {
-    return await prisma.capsuleDelivery.findMany({
-      where: { capsuleId },
-      orderBy: { createdAt: "desc" },
-    });
-  } catch (error) {
-    console.error("Error fetching deliveries:", error);
-    return [];
-  }
-}
