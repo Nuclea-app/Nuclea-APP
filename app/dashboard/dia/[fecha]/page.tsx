@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { getUserCapsule } from "@/lib/actions/capsule.actions";
+import { toProxiedMediaUrl } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -170,7 +171,7 @@ export default async function DiaPage({ params, searchParams }: PageProps) {
                   {memory.type === "VIDEO" && memory.fileUrl && (
                     <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-surface mb-2">
                       <video
-                        src={memory.fileUrl}
+                        src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
                         controls
                         className="w-full h-full object-cover"
                       />
@@ -187,7 +188,7 @@ export default async function DiaPage({ params, searchParams }: PageProps) {
                         <div className="w-[3px] h-5 bg-foreground/35 rounded-full" />
                         <div className="w-[3px] h-2 bg-foreground/20 rounded-full animate-pulse" />
                       </div>
-                      <audio src={memory.fileUrl} controls className="w-full h-8 mt-1" />
+                      <audio src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl} controls className="w-full h-8 mt-1" />
                     </div>
                   )}
 

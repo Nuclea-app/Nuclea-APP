@@ -6,6 +6,7 @@ import Image from "next/image";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { CapsuleOpening } from "@/components/capsule/CapsuleOpening";
 import { getDeliveryByToken } from "@/lib/actions/delivery.actions";
+import { toProxiedMediaUrl } from "@/lib/utils";
 import {
   FileText,
   Image as ImageIcon,
@@ -202,7 +203,7 @@ export default function CapsuleTokenPage() {
                 (memory.fileUrl ? (
                   <div className="relative w-full h-full bg-slate-100">
                     <video
-                      src={memory.fileUrl}
+                      src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
                       className="w-full h-full object-cover"
                       controls
                     />
@@ -219,7 +220,7 @@ export default function CapsuleTokenPage() {
               {memory.type === "AUDIO" && memory.fileUrl && (
                 <div className="flex flex-col items-center justify-center h-full gap-2 p-4 bg-surface/50">
                   <Mic className="h-6 w-6 text-foreground/40" />
-                  <audio src={memory.fileUrl} controls className="w-full" />
+                  <audio src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl} controls className="w-full" />
                   <span className="text-[9px] text-foreground/40 font-medium uppercase tracking-wider">
                     AUDIO ✦
                   </span>

@@ -14,6 +14,7 @@ import {
 import { FavoriteButton } from "./FavoriteButton";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { MemoryViewerDrawer } from "./MemoryViewerDrawer";
+import { toProxiedMediaUrl } from "@/lib/utils";
 
 interface Memory {
   id: string;
@@ -101,7 +102,7 @@ function MemoryCard({
         {memory.type === "VIDEO" &&
           (memory.fileUrl ? (
             <>
-              <video src={memory.fileUrl} className="w-full h-full object-cover" />
+              <video src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl} className="w-full h-full object-cover" />
               <div className="absolute inset-0 flex items-center justify-center bg-black/25">
                 <div className="h-10 w-10 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
                   <Play className="h-4 w-4 text-foreground fill-foreground ml-0.5" />

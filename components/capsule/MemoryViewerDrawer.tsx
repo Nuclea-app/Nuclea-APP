@@ -10,6 +10,7 @@ import {
 import Image from "next/image";
 import { X, Image as ImageIcon, Video, Mic, FileText, Pencil } from "lucide-react";
 import { FavoriteButton } from "./FavoriteButton";
+import { toProxiedMediaUrl } from "@/lib/utils";
 
 interface Memory {
   id: string;
@@ -87,7 +88,7 @@ export function MemoryViewerDrawer({ memory, onClose }: MemoryViewerDrawerProps)
             {memory.type === "VIDEO" && memory.fileUrl && (
               <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black">
                 <video
-                  src={memory.fileUrl}
+                  src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
                   controls
                   autoPlay={false}
                   className="w-full h-full"
@@ -107,7 +108,7 @@ export function MemoryViewerDrawer({ memory, onClose }: MemoryViewerDrawerProps)
                   ))}
                 </div>
                 <audio
-                  src={memory.fileUrl}
+                  src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
                   controls
                   className="w-full"
                   style={{ colorScheme: "light" }}

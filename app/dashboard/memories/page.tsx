@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { getUserCapsule, getAllMemories } from "@/lib/actions/capsule.actions";
+import { toProxiedMediaUrl } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -78,7 +79,7 @@ export default async function MemoriesPage({ searchParams }: MemoriesPageProps) 
               {memory.type === "VIDEO" && (
                 memory.fileUrl ? (
                   <div className="relative w-full h-full bg-slate-100">
-                    <video src={memory.fileUrl} className="w-full h-full object-cover" />
+                    <video src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 flex items-center justify-center bg-linear-to-t from-black/70 via-black/20 to-transparent">
                       <Play className="h-8 w-8 text-white fill-white" />
                     </div>
