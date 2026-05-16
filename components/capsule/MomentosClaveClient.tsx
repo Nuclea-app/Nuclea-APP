@@ -183,7 +183,7 @@ export function MomentosClaveClient({ memories }: MomentosClaveClientProps) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 min-[340px]:grid-cols-2 min-[728px]:grid-cols-3 gap-3">
           {filtered.map((memory) => (
             <MemoryCard key={memory.id} memory={memory} />
           ))}
