@@ -27,7 +27,9 @@ import {
   Pause,
   RotateCcw,
   Square,
+  MapPin,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -50,6 +52,9 @@ export const MemoryUploader = ({
   const [preview, setPreview] = useState<string | null>(null);
   const [noteContent, setNoteContent] = useState("");
   const [success, setSuccess] = useState(false);
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
+  const [metaLocation, setMetaLocation] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -72,6 +77,9 @@ export const MemoryUploader = ({
     setPreview(null);
     setNoteContent("");
     setSuccess(false);
+    setMetaTitle("");
+    setMetaDescription("");
+    setMetaLocation("");
     setAudioMode("choose");
     setIsRecording(false);
     setRecordingSeconds(0);
@@ -176,10 +184,16 @@ export const MemoryUploader = ({
   // ─── Upload ───────────────────────────────────────────────────────────────
   const handleUpload = async () => {
     try {
+      const metadata = {
+        title: metaTitle.trim() || undefined,
+        description: metaDescription.trim() || undefined,
+        location: metaLocation.trim() || undefined,
+      };
+
       if (type === MemoryType.NOTE) {
-        await saveNote(noteContent);
+        await saveNote(noteContent, { title: metadata.title, location: metadata.location });
       } else if (file && type) {
-        await uploadFile(file, type);
+        await uploadFile(file, type, metadata);
       }
       setSuccess(true);
       setTimeout(() => {
@@ -390,6 +404,55 @@ export const MemoryUploader = ({
                 }
                 className="hidden"
               />
+
+              {/* ── Metadata optional fields ──────────────────────────────── */}
+              <div className="space-y-3 pt-1">
+                {/* Título — todos los tipos */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold tracking-widest uppercase text-foreground/40">
+                    Título <span className="font-normal normal-case tracking-normal">(opcional)</span>
+                  </label>
+                  <Input
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                    placeholder="Dale un nombre a este recuerdo…"
+                    maxLength={80}
+                    className="rounded-xl bg-surface/30 border-border text-[14px] h-10 px-3"
+                  />
+                </div>
+
+                {/* Descripción — solo tipos de archivo (no NOTE) */}
+                {type !== MemoryType.NOTE && (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold tracking-widest uppercase text-foreground/40">
+                      Descripción <span className="font-normal normal-case tracking-normal">(opcional)</span>
+                    </label>
+                    <Input
+                      value={metaDescription}
+                      onChange={(e) => setMetaDescription(e.target.value)}
+                      placeholder="¿Qué hace especial este momento?"
+                      maxLength={200}
+                      className="rounded-xl bg-surface/30 border-border text-[14px] h-10 px-3"
+                    />
+                  </div>
+                )}
+
+                {/* Ubicación — todos los tipos */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-[11px] font-semibold tracking-widest uppercase text-foreground/40">
+                    <MapPin className="h-3 w-3" />
+                    Lugar <span className="font-normal normal-case tracking-normal">(opcional)</span>
+                  </label>
+                  <Input
+                    value={metaLocation}
+                    onChange={(e) => setMetaLocation(e.target.value)}
+                    placeholder="¿Dónde fue este recuerdo?"
+                    maxLength={100}
+                    className="rounded-xl bg-surface/30 border-border text-[14px] h-10 px-3"
+                  />
+                </div>
+              </div>
+              {/* ─────────────────────────────────────────────────────────── */}
 
               {error && (
                 <div className="p-4 rounded-2xl bg-destructive/10 text-destructive text-[13px] text-center">

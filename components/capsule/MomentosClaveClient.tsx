@@ -23,6 +23,9 @@ interface Memory {
   content?: string | null;
   createdAt: Date | string;
   isFavorite?: boolean;
+  title?: string | null;
+  description?: string | null;
+  location?: string | null;
 }
 
 type FilterType = "TODOS" | "PHOTO" | "VIDEO" | "AUDIO" | "NOTE" | "DRAWING";
@@ -141,15 +144,17 @@ function MemoryCard({
 
       {/* Info debajo del thumbnail */}
       <div className="px-3 pt-2.5 pb-3 flex flex-col gap-1">
-        {/* Título — placeholder hasta que Andrea confirme el campo */}
+        {/* Título: usa el campo si existe, si no cae al label de tipo */}
         <p className="text-[13px] font-semibold text-foreground truncate leading-tight">
-          {TYPE_LABELS[memory.type]}
+          {memory.title || TYPE_LABELS[memory.type]}
         </p>
 
-        {/* Descripción / ubicación — placeholder vacío */}
-        <p className="text-[11px] text-foreground/40 truncate h-4">
-          {/* se llenará cuando exista el campo en DB */}
-        </p>
+        {/* Descripción: solo se renderiza si existe */}
+        {memory.description && (
+          <p className="text-[11px] text-foreground/40 truncate leading-tight">
+            {memory.description}
+          </p>
+        )}
 
         {/* Fecha + favorito */}
         <div className="flex items-center justify-between mt-1">

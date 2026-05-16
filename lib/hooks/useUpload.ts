@@ -2,12 +2,18 @@ import { useState } from "react";
 import { MemoryType } from "@prisma/client";
 import { createMemory } from "@/lib/actions/capsule.actions";
 
+type MemoryMetadata = {
+  title?: string;
+  description?: string;
+  location?: string;
+};
+
 export const useUpload = (capsuleId: string) => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const uploadFile = async (file: File, tipo: MemoryType) => {
+  const uploadFile = async (file: File, tipo: MemoryType, metadata?: MemoryMetadata) => {
     setIsUploading(true);
     setProgress(0);
     setError(null);
@@ -59,6 +65,9 @@ export const useUpload = (capsuleId: string) => {
         capsuleId,
         type: tipo,
         fileUrl,
+        title: metadata?.title,
+        description: metadata?.description,
+        location: metadata?.location,
       });
 
       if (dbResult.error) throw new Error(dbResult.error);
@@ -74,7 +83,7 @@ export const useUpload = (capsuleId: string) => {
     }
   };
 
-  const saveNote = async (content: string) => {
+  const saveNote = async (content: string, metadata?: MemoryMetadata) => {
     setIsUploading(true);
     setError(null);
 
@@ -83,6 +92,9 @@ export const useUpload = (capsuleId: string) => {
         capsuleId,
         type: MemoryType.NOTE,
         content,
+        title: metadata?.title,
+        // description omitido: el contenido de la nota ES la descripción
+        location: metadata?.location,
       });
 
       if (dbResult.error) throw new Error(dbResult.error);

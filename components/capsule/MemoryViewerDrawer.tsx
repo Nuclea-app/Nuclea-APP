@@ -8,7 +8,7 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import Image from "next/image";
-import { X, Image as ImageIcon, Video, Mic, FileText, Pencil } from "lucide-react";
+import { X, Image as ImageIcon, Video, Mic, FileText, Pencil, MapPin } from "lucide-react";
 import { FavoriteButton } from "./FavoriteButton";
 import { toProxiedMediaUrl } from "@/lib/utils";
 
@@ -19,6 +19,9 @@ interface Memory {
   content?: string | null;
   createdAt: Date | string;
   isFavorite?: boolean;
+  title?: string | null;
+  description?: string | null;
+  location?: string | null;
 }
 
 const TYPE_LABELS: Record<Memory["type"], string> = {
@@ -67,6 +70,13 @@ export function MemoryViewerDrawer({ memory, onClose }: MemoryViewerDrawerProps)
               <X className="h-5 w-5 text-foreground/40" />
             </DrawerClose>
           </div>
+
+          {/* Título en serif grande si existe */}
+          {memory?.title && (
+            <p className="mt-3 font-serif text-2xl text-foreground leading-snug">
+              {memory.title}
+            </p>
+          )}
         </DrawerHeader>
 
         {memory && (
@@ -121,6 +131,23 @@ export function MemoryViewerDrawer({ memory, onClose }: MemoryViewerDrawerProps)
                 <p className="font-sans text-[15px] text-foreground/80 leading-relaxed whitespace-pre-wrap">
                   {memory.content || "Sin contenido"}
                 </p>
+              </div>
+            )}
+
+            {/* Descripción + ubicación (si existen) */}
+            {(memory.description || memory.location) && (
+              <div className="space-y-2 px-1">
+                {memory.description && (
+                  <p className="text-[13px] text-foreground/60 leading-relaxed">
+                    {memory.description}
+                  </p>
+                )}
+                {memory.location && (
+                  <div className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-foreground/30 shrink-0" />
+                    <p className="text-[12px] text-foreground/40">{memory.location}</p>
+                  </div>
+                )}
               </div>
             )}
 

@@ -95,6 +95,9 @@ export async function createMemory(data: {
   type: MemoryType;
   fileUrl?: string;
   content?: string;
+  title?: string;
+  description?: string;
+  location?: string;
 }) {
   try {
     const capsule = await prisma.capsule.findUnique({
@@ -111,6 +114,9 @@ export async function createMemory(data: {
         type: data.type,
         fileUrl: data.fileUrl,
         content: data.content,
+        title: data.title || null,
+        description: data.description || null,
+        location: data.location || null,
       },
     });
 

@@ -71,15 +71,18 @@ model Capsule {
 }
 
 model Memory {
-  id        String     @id @default(cuid())
-  type      MemoryType
-  content   String?    @db.Text
-  fileUrl   String?
-  date      DateTime   @default(now())
-  isFavorite Boolean   @default(false)
-  capsuleId String
-  capsule   Capsule    @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
-  createdAt DateTime   @default(now())
+  id          String     @id @default(cuid())
+  type        MemoryType
+  content     String?    @db.Text
+  fileUrl     String?
+  title       String?
+  description String?
+  location    String?
+  date        DateTime   @default(now())
+  isFavorite  Boolean    @default(false)
+  capsuleId   String
+  capsule     Capsule    @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
 
   @@map("memories")
 }
