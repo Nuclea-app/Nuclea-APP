@@ -3,7 +3,7 @@ import { getUserCapsules } from "@/lib/actions/capsule.actions";
 import { OnboardingHeader } from "@/components/nuclea/OnboardingHeader";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import Link from "next/link";
-import { MoveRight, PawPrint, Sprout, Package } from "lucide-react";
+import { MoveRight, PawPrint, Sprout } from "lucide-react";
 
 const TogetherIcon = () => (
   <div className="relative flex items-center justify-center w-5 h-5">
@@ -89,18 +89,12 @@ export default async function CapsuleSelectionPage() {
         </div>
 
         {hasCapsules && (
-          <div className="px-2 mt-6">
+          <div className="mt-6 text-center">
             <Link
               href="/dashboard"
-              className="relative flex w-full items-center justify-center rounded-sm bg-foreground px-6 py-4 text-sm font-semibold tracking-wider text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+              className="text-[13px] text-foreground/40 hover:text-foreground transition-colors"
             >
-              <span className="absolute left-6">
-                <Package className="h-5 w-5" strokeWidth={1.5} />
-              </span>
-              <span className="uppercase">Ir a mis cápsulas</span>
-              <span className="absolute right-6">
-                <MoveRight className="h-5 w-5" />
-              </span>
+              Ir a mis cápsulas →
             </Link>
           </div>
         )}

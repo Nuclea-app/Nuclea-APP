@@ -267,17 +267,20 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
               Recuerdos
             </span>
           </div>
-          <div className="flex flex-col items-center gap-1 flex-1">
+          <Link
+            href={`/dashboard/momentos-clave?capsule=${capsule.id}`}
+            className="group flex flex-col items-center gap-1 flex-1"
+          >
             <div className="flex items-center gap-2 mb-1">
               <Heart className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
               <span className="text-xl font-serif">
                 {capsule.favoritesCount || 0}
               </span>
             </div>
-            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">
+            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40 group-hover:text-foreground/70 transition-colors">
               Momentos clave
             </span>
-          </div>
+          </Link>
         </div>
         <div className="flex items-center gap-3 my-1">
           <div className="h-px flex-1 bg-border" />

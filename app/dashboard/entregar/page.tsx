@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { User, Heart, Users, Star, UserRound, MoreHorizontal, Mail, Phone, MapPin, Lock, Send } from "lucide-react";
+import { User, Heart, Users, Star, UserRound, MoreHorizontal, Mail, MapPin, Lock, Send, Plus, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
@@ -27,44 +27,65 @@ export default function EntregarPage() {
   const [recipientName, setRecipientName] = useState("");
   const [relation, setRelation] = useState("");
   const [relationCustom, setRelationCustom] = useState("");
-  const [useEmail, setUseEmail] = useState(false);
-  const [usePhone, setUsePhone] = useState(false);
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [emails, setEmails] = useState<string[]>([""]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const hasEmail = useEmail && email.trim().length > 0;
-  const hasPhone = usePhone && phone.trim().length > 0;
+  const validEmails = emails.filter((e) => e.trim().length > 0);
 
   const canSubmit =
     recipientName.trim().length > 0 &&
     relation.length > 0 &&
     (relation !== "otro" || relationCustom.trim().length > 0) &&
-    (hasEmail || hasPhone);
+    validEmails.length > 0 &&
+    !!capsuleId;
+
+  const handleEmailChange = (index: number, value: string) => {
+    setEmails((prev) => prev.map((e, i) => (i === index ? value : e)));
+  };
+
+  const addEmail = () => {
+    setEmails((prev) => [...prev, ""]);
+  };
+
+  const removeEmail = (index: number) => {
+    if (emails.length === 1) {
+      setEmails([""]);
+    } else {
+      setEmails((prev) => prev.filter((_, i) => i !== index));
+    }
+  };
 
   const handleSubmit = async () => {
-    if (!canSubmit || !capsuleId) return;
+    if (!canSubmit) return;
     setIsLoading(true);
     setError("");
 
-    const result = await createDelivery({
-      capsuleId,
-      recipientName: recipientName.trim(),
-      relation,
-      relationCustom: relation === "otro" ? relationCustom.trim() : undefined,
-      email: hasEmail ? email.trim() : undefined,
-      phone: hasPhone ? phone.trim() : undefined,
-    });
+    try {
+      const results = await Promise.all(
+        validEmails.map((email) =>
+          createDelivery({
+            capsuleId,
+            recipientName: recipientName.trim(),
+            relation,
+            relationCustom: relation === "otro" ? relationCustom.trim() : undefined,
+            email: email.trim(),
+          })
+        )
+      );
 
-    setIsLoading(false);
+      const failed = results.find((r) => "error" in r);
+      if (failed && "error" in failed) {
+        setError(failed.error ?? "Error al guardar");
+        return;
+      }
 
-    if ("error" in result) {
-      setError(result.error ?? "Error al guardar");
-      return;
+      router.push(`${backHref}&delivered=true`);
+    } catch {
+      setError("Error al enviar la cápsula");
+    } finally {
+      setIsLoading(false);
     }
-
-    router.push(`${backHref}&delivered=true`);
   };
 
   return (
@@ -143,69 +164,66 @@ export default function EntregarPage() {
         )}
       </div>
 
-      {/* Sección: Cómo recibirla */}
+      {/* Sección: Emails */}
       <div className="mb-8">
         <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-1">
-          ¿CÓMO QUIERES QUE LA RECIBA?
+          ¿A QUÉ EMAIL QUIERES QUE LLEGUE?
         </p>
-        <p className="text-[13px] text-foreground/50 mb-3">Puedes elegir una o más opciones.</p>
+        <p className="text-[13px] text-foreground/50 mb-3">
+          Cada destinatario recibirá su propio enlace único.
+        </p>
         <div className="rounded-2xl border border-border overflow-hidden">
-          {/* Email */}
-          <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface">
-              <Mail className="h-4 w-4 text-foreground/50" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-medium text-foreground">Email</p>
+          {emails.map((email, index) => (
+            <div
+              key={index}
+              className={`flex items-center gap-3 px-4 py-3 ${index < emails.length - 1 ? "border-b border-border" : ""}`}
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface">
+                <Mail className="h-4 w-4 text-foreground/50" />
+              </div>
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => handleEmailChange(index, e.target.value)}
                 placeholder="ejemplo@correo.com"
-                className="text-[13px] text-foreground/60 bg-transparent border-none outline-none w-full placeholder:text-foreground/30"
+                className="flex-1 min-w-0 text-[14px] text-foreground bg-transparent border-none outline-none placeholder:text-foreground/30"
               />
+              {emails.length > 1 || email.length > 0 ? (
+                <button
+                  onClick={() => removeEmail(index)}
+                  className="shrink-0 p-1 rounded-full text-foreground/30 hover:text-foreground hover:bg-surface transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              ) : null}
             </div>
-            <button
-              onClick={() => setUseEmail(!useEmail)}
-              className={`h-6 w-6 shrink-0 rounded-full border-2 transition-colors ${useEmail ? "border-foreground bg-foreground" : "border-foreground/20 bg-background"}`}
-            />
-          </div>
+          ))}
+        </div>
 
-          {/* Teléfono */}
-          <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface">
-              <Phone className="h-4 w-4 text-foreground/50" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-medium text-foreground">Teléfono</p>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+34 600 000 000"
-                className="text-[13px] text-foreground/60 bg-transparent border-none outline-none w-full placeholder:text-foreground/30"
-              />
-            </div>
-            <button
-              onClick={() => setUsePhone(!usePhone)}
-              className={`h-6 w-6 shrink-0 rounded-full border-2 transition-colors ${usePhone ? "border-foreground bg-foreground" : "border-foreground/20 bg-background"}`}
-            />
-          </div>
+        {/* Botón añadir otro email */}
+        <button
+          onClick={addEmail}
+          className="mt-3 flex items-center gap-2 text-[13px] text-foreground/40 hover:text-foreground transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Añadir otro email</span>
+        </button>
 
-          {/* Dirección postal — próximamente */}
-          <div className="flex items-center gap-3 px-4 py-4 opacity-50 cursor-not-allowed">
+        {/* Teléfono — próximamente */}
+        <div className="mt-4 rounded-2xl border border-border overflow-hidden opacity-50">
+          <div className="flex items-center gap-3 px-4 py-4 cursor-not-allowed">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface">
               <MapPin className="h-4 w-4 text-foreground/50" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-[14px] font-medium text-foreground">Dirección postal</p>
+                <p className="text-[14px] font-medium text-foreground">Teléfono / Dirección postal</p>
                 <span className="text-[9px] font-bold tracking-wider uppercase bg-surface border border-border rounded-full px-2 py-0.5 text-foreground/50">
                   Próximamente
                 </span>
               </div>
               <p className="text-[12px] text-foreground/40 mt-0.5">
-                Muy pronto podrás enviar también por correo postal.
+                Pronto podrás enviar también por teléfono o correo postal.
               </p>
             </div>
             <Lock className="h-5 w-5 text-foreground/30 shrink-0" />

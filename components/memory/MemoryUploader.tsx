@@ -63,6 +63,7 @@ export const MemoryUploader = ({
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mimeTypeRef = useRef<string>("");
 
   const { uploadFile, saveNote, isUploading, progress, error } = useUpload(capsuleId);
 
@@ -101,10 +102,23 @@ export const MemoryUploader = ({
   };
 
   // ─── Recorder ────────────────────────────────────────────────────────────
+  const getSupportedMimeType = () => {
+    const types = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+    return types.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
+  };
+
+  const getAudioExtension = (mimeType: string) => {
+    if (mimeType.includes("mp4")) return "m4a";
+    if (mimeType.includes("ogg")) return "ogg";
+    return "webm";
+  };
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
+      const mimeType = getSupportedMimeType();
+      mimeTypeRef.current = mimeType;
+      const mr = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       mediaRecorderRef.current = mr;
       chunksRef.current = [];
 
@@ -112,10 +126,12 @@ export const MemoryUploader = ({
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       mr.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const actualMime = mimeTypeRef.current || "audio/webm";
+        const ext = getAudioExtension(actualMime);
+        const blob = new Blob(chunksRef.current, { type: actualMime });
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
-        const f = new File([blob], `grabacion-${Date.now()}.webm`, { type: "audio/webm" });
+        const f = new File([blob], `grabacion-${Date.now()}.${ext}`, { type: actualMime });
         setFile(f);
         stream.getTracks().forEach((t) => t.stop());
       };

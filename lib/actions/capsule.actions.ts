@@ -49,6 +49,18 @@ export async function getUserCapsules(userId: string) {
   }
 }
 
+export async function getFavoriteMemories(capsuleId: string) {
+  try {
+    return await prisma.memory.findMany({
+      where: { capsuleId, isFavorite: true },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("Error fetching favorite memories:", error);
+    return [];
+  }
+}
+
 export async function getAllMemories(capsuleId: string) {
   try {
     return await prisma.memory.findMany({

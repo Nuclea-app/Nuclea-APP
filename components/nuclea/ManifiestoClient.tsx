@@ -102,12 +102,9 @@ export function ManifiestoClient({ isLoggedIn }: ManifiestoClientProps) {
       </div>
 
       {isLoggedIn ? (
-        <div className="w-full flex flex-col gap-3">
-          <Link href="/dashboard" className="w-full">
-            <PrimaryButton>IR A MI CÁPSULA</PrimaryButton>
-          </Link>
-          <Link href="/capsulas" className="w-full text-center text-[12px] text-foreground/40 hover:text-foreground transition-colors py-2">
-            Ver todas mis cápsulas →
+        <div className="w-full">
+          <Link href="/capsulas" className="w-full">
+            <PrimaryButton>CONTINUAR</PrimaryButton>
           </Link>
         </div>
       ) : (
