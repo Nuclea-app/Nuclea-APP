@@ -241,7 +241,10 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
       {/* Stats */}
       <div className="w-full rounded-3xl p-6 mb-6 border-border border bg-background shadow-sm">
         <div className="flex w-full items-center justify-between mb-4">
-          <div className="flex flex-col items-center gap-1 flex-1 border-r border-border">
+          <Link
+            href={`/dashboard/capsula/${capsule.id}/memories`}
+            className="group flex flex-col items-center gap-1 flex-1 border-r border-border"
+          >
             <div className="flex items-center gap-2 mb-1">
               <BookOpen
                 className="h-5 w-5 text-foreground/40"
@@ -251,10 +254,10 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
                 {capsule._count.memories}
               </span>
             </div>
-            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">
+            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40 group-hover:text-foreground/70 transition-colors">
               Recuerdos
             </span>
-          </div>
+          </Link>
           <Link
             href={`/dashboard/capsula/${capsule.id}/momentos-clave`}
             className="group flex flex-col items-center gap-1 flex-1"
