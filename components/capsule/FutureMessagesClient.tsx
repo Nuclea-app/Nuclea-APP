@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Lock, LockOpen, ChevronRight, Mail } from "lucide-react";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
-import ArrowBackButton from "@/components/arrow-back-button";
 
 export interface FutureMessageItem {
   id: string;
@@ -41,20 +40,7 @@ export const FutureMessagesClient = ({
   const list = tab === "desbloqueados" ? unlocked : locked;
 
   return (
-    <div className="flex flex-col min-h-screen pb-20 px-6 pt-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <ArrowBackButton />
-        <Link
-          href="/"
-          className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px] hover:opacity-70 transition-opacity"
-        >
-          <span>NUCLEA</span>
-          <SparkIcon className="text-[10px]" />
-        </Link>
-        <div className="w-9" />
-      </div>
-
+    <div className="flex flex-col min-h-screen pb-20 px-6">
       {/* Hero */}
       <div className="flex flex-col items-center text-center mb-8">
         <div className="relative mb-5">

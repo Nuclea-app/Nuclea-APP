@@ -1,13 +1,6 @@
 export default function MomentosClaveLoading() {
   return (
-    <div className="flex flex-col pb-12 px-6 pt-8 animate-pulse max-w-[430px] mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="h-8 w-8 bg-foreground/8 rounded-full" />
-        <div className="h-4 w-16 bg-foreground/8 rounded" />
-        <div className="h-8 w-8 bg-foreground/8 rounded-full" />
-      </div>
-
+    <div className="flex flex-col pb-12 px-6 animate-pulse">
       {/* Hero */}
       <div className="mb-8 flex flex-col items-center gap-3">
         <div className="h-3 w-28 bg-foreground/8 rounded" />

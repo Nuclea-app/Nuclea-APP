@@ -6,7 +6,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowLeft,
   Mic,
   FileText,
   Image as ImageIcon,
@@ -60,10 +59,6 @@ export default async function DiaPage({ params, searchParams }: PageProps) {
     orderBy: { unlocksAt: "asc" },
   });
 
-  const backHref = capsuleId
-    ? `/dashboard/perfil?capsule=${capsuleId}`
-    : "/dashboard/perfil";
-
   // Formatear la fecha en español de forma elegante
   const formatFechaElegante = (dateStr: string) => {
     try {
@@ -81,23 +76,7 @@ export default async function DiaPage({ params, searchParams }: PageProps) {
   const fechaFormateada = formatFechaElegante(fecha);
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-6 py-8 max-w-[430px] mx-auto flex flex-col">
-      {/* Header */}
-      <header className="grid grid-cols-3 w-full items-center py-4 mb-8">
-        <div className="flex justify-start">
-          <Link
-            href={backHref}
-            className="text-foreground hover:text-foreground/80 transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
-          </Link>
-        </div>
-        <div className="flex justify-center text-xs tracking-[0.2em] font-sans font-semibold">
-          NUCLEA <SparkIcon className="text-[10px] ml-1" />
-        </div>
-        <div />
-      </header>
-
+    <div className="min-h-screen text-foreground px-6 pb-8 flex flex-col">
       {/* Hero Editorial */}
       <div className="text-center space-y-3 mb-10">
         <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40">

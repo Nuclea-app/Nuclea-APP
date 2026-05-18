@@ -8,7 +8,15 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import Image from "next/image";
-import { X, Image as ImageIcon, Video, Mic, FileText, Pencil, MapPin } from "lucide-react";
+import {
+  X,
+  Image as ImageIcon,
+  Video,
+  Mic,
+  FileText,
+  Pencil,
+  MapPin,
+} from "lucide-react";
 import { FavoriteButton } from "./FavoriteButton";
 import { toProxiedMediaUrl } from "@/lib/utils";
 
@@ -52,12 +60,15 @@ interface MemoryViewerDrawerProps {
   onClose: () => void;
 }
 
-export function MemoryViewerDrawer({ memory, onClose }: MemoryViewerDrawerProps) {
+export function MemoryViewerDrawer({
+  memory,
+  onClose,
+}: MemoryViewerDrawerProps) {
   const isOpen = !!memory;
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent className="max-w-[430px] mx-auto rounded-t-[32px] px-6 pb-10">
+      <DrawerContent className="max-w-[430px] mx-auto rounded-t-[32px] bg-black px-6 pb-10">
         <DrawerHeader className="px-0 pt-6 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-foreground/50">
@@ -66,7 +77,10 @@ export function MemoryViewerDrawer({ memory, onClose }: MemoryViewerDrawerProps)
                 {memory ? TYPE_LABELS[memory.type] : ""}
               </DrawerTitle>
             </div>
-            <DrawerClose onClick={onClose} className="p-2 rounded-full hover:bg-surface">
+            <DrawerClose
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-surface"
+            >
               <X className="h-5 w-5 text-foreground/40" />
             </DrawerClose>
           </div>
@@ -145,7 +159,9 @@ export function MemoryViewerDrawer({ memory, onClose }: MemoryViewerDrawerProps)
                 {memory.location && (
                   <div className="flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5 text-foreground/30 shrink-0" />
-                    <p className="text-[12px] text-foreground/40">{memory.location}</p>
+                    <p className="text-[12px] text-foreground/40">
+                      {memory.location}
+                    </p>
                   </div>
                 )}
               </div>

@@ -1,13 +1,6 @@
 export default function DashboardLoading() {
   return (
-    <div className="flex flex-col min-h-screen pb-20 px-6 pt-8 animate-pulse">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="h-8 w-8 bg-foreground/8 rounded-full" />
-        <div className="h-4 w-16 bg-foreground/8 rounded" />
-        <div className="h-8 w-8 bg-foreground/8 rounded-full" />
-      </div>
-
+    <div className="flex flex-col min-h-screen pb-20 px-6 animate-pulse">
       {/* Greeting */}
       <div className="mb-8 space-y-2">
         <div className="h-3 w-32 bg-foreground/8 rounded" />

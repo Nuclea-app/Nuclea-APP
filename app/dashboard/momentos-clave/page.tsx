@@ -1,9 +1,6 @@
 import { auth } from "@/auth";
 import { getUserCapsule, getFavoriteMemories } from "@/lib/actions/capsule.actions";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { SparkIcon } from "@/components/nuclea/SparkIcon";
-import ArrowBackButton from "@/components/arrow-back-button";
 import { MomentosClaveClient } from "@/components/capsule/MomentosClaveClient";
 
 interface MomentosClavePageProps {
@@ -23,20 +20,7 @@ export default async function MomentosClaveePage({
   const memories = await getFavoriteMemories(capsule.id);
 
   return (
-    <div className="flex flex-col pb-12 px-6 pt-8 max-w-[430px] mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <ArrowBackButton />
-        <Link
-          href="/"
-          className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px] hover:opacity-70 transition-opacity"
-        >
-          <span>NUCLEA</span>
-          <SparkIcon className="text-[10px]" />
-        </Link>
-        <div className="w-9" />
-      </div>
-
+    <div className="flex flex-col pb-12 px-6">
       {/* Hero */}
       <div className="mb-8 text-center">
         <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-2">

@@ -16,8 +16,6 @@ import {
   RotateCcw,
   Square,
 } from "lucide-react";
-import Link from "next/link";
-import ArrowBackButton from "@/components/arrow-back-button";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -199,17 +197,7 @@ export default function MensajeFuturoPage() {
   };
 
   return (
-    <div className="flex flex-col pb-16 px-6 pt-8 min-h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <ArrowBackButton />
-        <Link href="/" className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px] hover:opacity-70 transition-opacity">
-          <span>NUCLEA</span>
-          <SparkIcon className="text-[10px]" />
-        </Link>
-        <div className="w-9" />
-      </div>
-
+    <div className="flex flex-col pb-16 px-6 min-h-screen">
       {/* Separador ✦ */}
       <div className="flex items-center justify-center gap-4 mb-8 text-foreground/30">
         <div className="h-px w-8 bg-current" />

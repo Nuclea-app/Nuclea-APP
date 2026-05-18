@@ -1,13 +1,6 @@
 export default function PerfilLoading() {
   return (
-    <div className="flex flex-col items-center pt-8 pb-12 px-6 animate-pulse max-w-[430px] mx-auto">
-      {/* Header */}
-      <div className="w-full flex items-center justify-between mb-8">
-        <div className="h-8 w-8 bg-foreground/8 rounded-full" />
-        <div className="h-4 w-16 bg-foreground/8 rounded" />
-        <div className="h-8 w-8 bg-foreground/8 rounded-full" />
-      </div>
-
+    <div className="flex flex-col items-center pb-12 px-6 animate-pulse">
       {/* Badge */}
       <div className="h-7 w-36 bg-foreground/8 rounded-full mb-8" />
 

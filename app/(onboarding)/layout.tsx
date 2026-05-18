@@ -1,4 +1,3 @@
-
 export default function OnboardingLayout({
   children,
 }: {
@@ -7,7 +6,7 @@ export default function OnboardingLayout({
   return (
     <main className="flex min-h-screen w-full justify-center bg-background px-6">
       <div className="w-full max-w-[430px] flex flex-col">
-        {children}
+        <div className="mx-auto w-full">{children}</div>
       </div>
     </main>
   );
