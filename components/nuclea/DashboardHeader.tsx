@@ -19,7 +19,7 @@ export function DashboardHeader() {
     <div className="flex items-center justify-between px-6 pt-8 mb-8">
       {/* Izquierda */}
       <div className="w-9 flex items-center">
-        {!isRoot && <ArrowBackButton />}
+        <ArrowBackButton />
       </div>
 
       {/* Centro — logo siempre centrado */}
