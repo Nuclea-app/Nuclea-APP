@@ -14,7 +14,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ActionGrid } from "./ActionGrid";
 import { MemoryCalendar, FutureMessageMarker } from "./MemoryCalendar";
-import { Memory, MemoryGrid } from "./MemoryGrid";
+import { Memory, MemoryCard } from "./MomentosClaveClient";
+import { MemoryViewerDrawer } from "./MemoryViewerDrawer";
 import { useUploadCover } from "@/lib/hooks/useUploadCover";
 import { useRef, useState } from "react";
 import {
@@ -54,6 +55,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
   const [tempDescription, setTempDescription] = useState(initialDescription);
 
   const futureMessages = capsule.futureMessages ?? [];
+  const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -125,6 +127,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
   };
 
   return (
+    <>
     <div className="flex flex-col items-center pb-12 px-6">
       <input
         type="file"
@@ -297,7 +300,38 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
 
       {/* Memories */}
       <div className="w-full mb-8">
-        <MemoryGrid memories={capsule.memories} capsuleId={capsule.id} />
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-sans text-[17px] font-semibold text-foreground">
+            Últimos recuerdos
+          </h3>
+          <Link
+            href={`/dashboard/memories?capsule=${capsule.id}`}
+            className="text-[12px] font-medium text-foreground/40 hover:text-foreground"
+          >
+            Ver todos →
+          </Link>
+        </div>
+        {capsule.memories.length === 0 ? (
+          <div className="flex h-[100px] w-full items-center justify-center rounded-2xl border border-border">
+            <p className="text-[12px] text-foreground/40 italic">
+              Aún no hay recuerdos
+            </p>
+          </div>
+        ) : (
+          <div className="flex gap-3 overflow-x-auto pb-3 no-scrollbar -mx-6 px-6">
+            {capsule.memories.map((memory) => (
+              <div
+                key={memory.id}
+                className="shrink-0 w-[120px] min-[320px]:w-[140px]"
+              >
+                <MemoryCard
+                  memory={memory}
+                  onClick={() => setSelectedMemory(memory)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Bottom Actions */}
@@ -318,5 +352,11 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
         </Link>
       </div>
     </div>
+
+    <MemoryViewerDrawer
+      memory={selectedMemory}
+      onClose={() => setSelectedMemory(null)}
+    />
+    </>
   );
 };

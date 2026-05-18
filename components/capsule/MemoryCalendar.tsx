@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { Memory } from "./MemoryGrid";
+import { Memory } from "./MomentosClaveClient";
 
 export interface FutureMessageMarker {
   id: string;
