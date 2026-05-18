@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { User, Heart, Users, Star, UserRound, MoreHorizontal, Mail, MapPin, Lock, Send, Plus, X } from "lucide-react";
 import Image from "next/image";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
@@ -18,9 +18,8 @@ const RELATIONS = [
 
 export default function EntregarPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const capsuleId = searchParams.get("capsule") ?? "";
-  const backHref = capsuleId ? `/dashboard/capsula?capsule=${capsuleId}` : "/dashboard/capsula";
+  const { id: capsuleId } = useParams<{ id: string }>();
+  const backHref = `/dashboard/capsula/${capsuleId}`;
 
   const [recipientName, setRecipientName] = useState("");
   const [relation, setRelation] = useState("");
@@ -78,7 +77,7 @@ export default function EntregarPage() {
         return;
       }
 
-      router.push(`${backHref}&delivered=true`);
+      router.push(`${backHref}?delivered=true`);
     } catch {
       setError("Error al enviar la cápsula");
     } finally {
@@ -188,7 +187,6 @@ export default function EntregarPage() {
           ))}
         </div>
 
-        {/* Botón añadir otro email */}
         <button
           onClick={addEmail}
           className="mt-3 flex items-center gap-2 text-[13px] text-foreground/40 hover:text-foreground transition-colors"
@@ -197,7 +195,6 @@ export default function EntregarPage() {
           <span>Añadir otro email</span>
         </button>
 
-        {/* Teléfono — próximamente */}
         <div className="mt-4 rounded-2xl border border-border overflow-hidden opacity-50">
           <div className="flex items-center gap-3 px-4 py-4 cursor-not-allowed">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface">
@@ -239,7 +236,6 @@ export default function EntregarPage() {
         <p className="text-red-500 text-[13px] text-center mb-4">{error}</p>
       )}
 
-      {/* Botón enviar */}
       <button
         onClick={handleSubmit}
         disabled={!canSubmit || isLoading}
@@ -249,7 +245,6 @@ export default function EntregarPage() {
         <span>{isLoading ? "GUARDANDO..." : "ENVIAR →"}</span>
       </button>
 
-      {/* Footer */}
       <div className="flex items-center justify-center gap-2 opacity-40">
         <SparkIcon className="text-[10px]" />
         <span className="font-sans text-[11px] tracking-[0.2em]">Tu historia, tu decisión.</span>

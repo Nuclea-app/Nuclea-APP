@@ -168,7 +168,7 @@ export const DashboardClient = ({
             return (
               <div key={capsule.id} className="relative">
                 <Link
-                  href={`/dashboard/capsula?capsule=${capsule.id}`}
+                  href={`/dashboard/capsula/${capsule.id}`}
                   className={`group flex w-full items-center gap-4 rounded-3xl border-2 border-foreground/10 bg-background p-4 pr-12 text-left transition-all duration-200 hover:border-foreground/30 hover:bg-surface ${isDeleting ? "opacity-40 pointer-events-none" : "active:scale-[0.99]"}`}
                 >
                   {/* Avatar */}

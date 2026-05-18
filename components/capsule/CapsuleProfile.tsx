@@ -256,7 +256,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
             </span>
           </div>
           <Link
-            href={`/dashboard/momentos-clave?capsule=${capsule.id}`}
+            href={`/dashboard/capsula/${capsule.id}/momentos-clave`}
             className="group flex flex-col items-center gap-1 flex-1"
           >
             <div className="flex items-center gap-2 mb-1">
@@ -276,7 +276,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
           <div className="h-px flex-1 bg-border" />
         </div>
         <Link
-          href={`/dashboard/mensajes-futuros?capsule=${capsule.id}`}
+          href={`/dashboard/capsula/${capsule.id}/mensajes-futuros`}
           className="group flex flex-col items-center gap-1 mt-4"
         >
           <div className="flex items-center gap-2 mb-1">
@@ -305,7 +305,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
             Últimos recuerdos
           </h3>
           <Link
-            href={`/dashboard/memories?capsule=${capsule.id}`}
+            href={`/dashboard/capsula/${capsule.id}/memories`}
             className="text-[12px] font-medium text-foreground/40 hover:text-foreground"
           >
             Ver todos →
@@ -337,14 +337,14 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
       {/* Bottom Actions */}
       <div className="w-full flex flex-col gap-3 mb-8">
         <Link
-          href={`/dashboard/entregar?capsule=${capsule.id}`}
+          href={`/dashboard/capsula/${capsule.id}/entregar`}
           className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:opacity-90"
         >
           <Send className="h-4 w-4" />
           <span>ENTREGAR CÁPSULA</span>
         </Link>
         <Link
-          href={`/dashboard/mensaje-futuro?capsule=${capsule.id}`}
+          href={`/dashboard/capsula/${capsule.id}/mensaje-futuro`}
           className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-foreground text-foreground py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:bg-surface"
         >
           <Clock className="h-4 w-4" />

@@ -2,29 +2,25 @@ import Link from "next/link";
 import { Calendar, Lock, Mic, Video, FileText } from "lucide-react";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 
-interface SuccessPageProps {
-  searchParams: Promise<{
-    capsule?: string;
-    type?: string;
-    date?: string;
-  }>;
+interface PageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ type?: string; date?: string }>;
 }
 
-const TYPE_LABELS: Record<string, { label: string; Icon: React.ElementType }> =
-  {
-    AUDIO: { label: "Audio", Icon: Mic },
-    VIDEO: { label: "Vídeo", Icon: Video },
-    NOTE: { label: "Nota", Icon: FileText },
-  };
+const TYPE_LABELS: Record<string, { label: string; Icon: React.ElementType }> = {
+  AUDIO: { label: "Audio", Icon: Mic },
+  VIDEO: { label: "Vídeo", Icon: Video },
+  NOTE: { label: "Nota", Icon: FileText },
+};
 
 export default async function MensajeFuturoSuccessPage({
+  params,
   searchParams,
-}: SuccessPageProps) {
-  const { capsule: capsuleId, type, date } = await searchParams;
+}: PageProps) {
+  const { id: capsuleId } = await params;
+  const { type, date } = await searchParams;
 
-  const backHref = capsuleId
-    ? `/dashboard/capsula?capsule=${capsuleId}`
-    : "/dashboard/capsula";
+  const backHref = `/dashboard/capsula/${capsuleId}`;
 
   const typeInfo = type ? TYPE_LABELS[type] : TYPE_LABELS["NOTE"];
   const { label: typeLabel, Icon: TypeIcon } = typeInfo;
@@ -45,13 +41,11 @@ export default async function MensajeFuturoSuccessPage({
         <div className="flex h-28 w-28 items-center justify-center rounded-3xl border-2 border-border bg-surface/50">
           <div className="relative flex items-center justify-center">
             <Calendar className="h-14 w-14 text-foreground" strokeWidth={1.5} />
-
             <div className="absolute -bottom-1 -right-1 rounded-full bg-background p-1">
               <Lock className="h-5 w-5 text-foreground" strokeWidth={3} />
             </div>
           </div>
         </div>
-
         <SparkIcon className="absolute bottom-0 -right-8 text-2xl opacity-30" />
       </div>
 
@@ -68,18 +62,13 @@ export default async function MensajeFuturoSuccessPage({
       <div className="w-full rounded-3xl border border-border bg-surface/30 p-5 mb-6 space-y-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-background border border-border">
-            <TypeIcon
-              className="h-4 w-4 text-foreground/50"
-              strokeWidth={1.5}
-            />
+            <TypeIcon className="h-4 w-4 text-foreground/50" strokeWidth={1.5} />
           </div>
           <div>
             <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-foreground/40">
               Formato
             </p>
-            <p className="text-[14px] font-semibold text-foreground">
-              {typeLabel}
-            </p>
+            <p className="text-[14px] font-semibold text-foreground">{typeLabel}</p>
           </div>
         </div>
 
@@ -87,18 +76,13 @@ export default async function MensajeFuturoSuccessPage({
 
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-background border border-border">
-            <Calendar
-              className="h-4 w-4 text-foreground/50"
-              strokeWidth={1.5}
-            />
+            <Calendar className="h-4 w-4 text-foreground/50" strokeWidth={1.5} />
           </div>
           <div>
             <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-foreground/40">
               Fecha de apertura
             </p>
-            <p className="text-[14px] font-semibold text-foreground">
-              {formattedDate}
-            </p>
+            <p className="text-[14px] font-semibold text-foreground">{formattedDate}</p>
           </div>
         </div>
 
@@ -132,7 +116,7 @@ export default async function MensajeFuturoSuccessPage({
         href={backHref}
         className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:opacity-90"
       >
-        <span>VOLVER A MI PERFIL</span>
+        <span>VOLVER A MI CÁPSULA</span>
       </Link>
     </div>
   );

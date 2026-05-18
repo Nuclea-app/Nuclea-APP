@@ -80,8 +80,7 @@ export const MemoryCalendar = ({
 
   const handleDayClick = (day: number) => {
     const fecha = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const query = capsuleId ? `?capsule=${capsuleId}` : "";
-    router.push(`/dashboard/dia/${fecha}${query}`);
+    router.push(`/dashboard/capsula/${capsuleId}/dia/${fecha}`);
   };
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));

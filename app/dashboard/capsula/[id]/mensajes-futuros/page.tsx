@@ -9,14 +9,14 @@ import {
 } from "@/components/capsule/FutureMessagesClient";
 
 interface PageProps {
-  searchParams: Promise<{ capsule?: string }>;
+  params: Promise<{ id: string }>;
 }
 
-export default async function MensajesFuturosPage({ searchParams }: PageProps) {
+export default async function MensajesFuturosPage({ params }: PageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const { capsule: capsuleId } = await searchParams;
+  const { id: capsuleId } = await params;
   const capsule = await getUserCapsule(session.user.id, capsuleId);
   if (!capsule) redirect("/capsulas");
 
@@ -29,5 +29,11 @@ export default async function MensajesFuturosPage({ searchParams }: PageProps) {
     unlocked: isFutureMessageUnlocked(m.unlocksAt),
   }));
 
-  return <FutureMessagesClient messages={items} capsuleName={capsule.name} />;
+  return (
+    <FutureMessagesClient
+      messages={items}
+      capsuleName={capsule.name}
+      capsuleId={capsule.id}
+    />
+  );
 }

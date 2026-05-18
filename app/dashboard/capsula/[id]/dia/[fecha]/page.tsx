@@ -19,13 +19,11 @@ import { FavoriteButton } from "@/components/capsule/FavoriteButton";
 import { isFutureMessageUnlocked } from "@/lib/futureMessages";
 
 interface PageProps {
-  params: Promise<{ fecha: string }>;
-  searchParams: Promise<{ capsule?: string }>;
+  params: Promise<{ id: string; fecha: string }>;
 }
 
-export default async function DiaPage({ params, searchParams }: PageProps) {
-  const { fecha } = await params;
-  const { capsule: capsuleId } = await searchParams;
+export default async function DiaPage({ params }: PageProps) {
+  const { id: capsuleId, fecha } = await params;
   const session = await auth();
 
   if (!session?.user?.id) {

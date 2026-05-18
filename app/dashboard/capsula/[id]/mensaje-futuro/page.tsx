@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   Mic,
   Video,
@@ -50,8 +50,7 @@ const CONTENT_TYPES = [
 
 export default function MensajeFuturoPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const capsuleId = searchParams.get("capsule") ?? "";
+  const { id: capsuleId } = useParams<{ id: string }>();
 
   const [selectedType, setSelectedType] = useState<MemoryType | null>(null);
   const [noteContent, setNoteContent] = useState("");
@@ -189,11 +188,10 @@ export default function MensajeFuturoPage() {
     }
 
     const params = new URLSearchParams({
-      ...(capsuleId ? { capsule: capsuleId } : {}),
       type: selectedType!,
       date: unlocksAt,
     });
-    router.push(`/dashboard/mensaje-futuro/success?${params.toString()}`);
+    router.push(`/dashboard/capsula/${capsuleId}/mensaje-futuro/success?${params.toString()}`);
   };
 
   return (

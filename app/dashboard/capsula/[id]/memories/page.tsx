@@ -3,15 +3,15 @@ import { getUserCapsule, getAllMemories } from "@/lib/actions/capsule.actions";
 import { redirect } from "next/navigation";
 import { MemoriesClient } from "@/components/capsule/MemoriesClient";
 
-interface MemoriesPageProps {
-  searchParams: Promise<{ capsule?: string }>;
+interface PageProps {
+  params: Promise<{ id: string }>;
 }
 
-export default async function MemoriesPage({ searchParams }: MemoriesPageProps) {
+export default async function MemoriesPage({ params }: PageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const { capsule: capsuleId } = await searchParams;
+  const { id: capsuleId } = await params;
   const capsule = await getUserCapsule(session.user.id, capsuleId);
   if (!capsule) redirect("/capsulas");
 

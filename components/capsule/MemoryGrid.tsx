@@ -21,8 +21,8 @@ export const MemoryGrid = ({
   capsuleId?: string;
 }) => {
   const allHref = capsuleId
-    ? `/dashboard/memories?capsule=${capsuleId}`
-    : "/dashboard/memories";
+    ? `/dashboard/capsula/${capsuleId}/memories`
+    : "/dashboard";
 
   return (
     <div className="w-full">

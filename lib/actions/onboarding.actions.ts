@@ -14,16 +14,18 @@ export async function createCapsuleAction(tipo: CapsuleType) {
 
   const name = session.user.name || "Mi Cápsula";
 
+  let capsuleId: string;
   try {
-    await createCapsule({
+    const capsule = await createCapsule({
       type: tipo,
       name: name,
       userId: session.user.id,
     });
+    capsuleId = capsule.id;
   } catch (error) {
     console.error("Action error:", error);
     return { error: "No se pudo crear la cápsula" };
   }
 
-  redirect("/dashboard/capsula");
+  redirect(`/dashboard/capsula/${capsuleId}`);
 }

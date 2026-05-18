@@ -5,16 +5,16 @@ import { Lock, LockOpen, Mic, Video, FileText, Calendar } from "lucide-react";
 import { isFutureMessageUnlocked } from "@/lib/futureMessages";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; messageId: string }>;
 }
 
 export default async function MensajeFuturoDetailPage({ params }: PageProps) {
-  const { id } = await params;
+  const { messageId } = await params;
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const message = await prisma.futureMessage.findUnique({
-    where: { id },
+    where: { id: messageId },
     include: { capsule: { select: { userId: true, name: true, id: true } } },
   });
 
