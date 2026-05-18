@@ -38,15 +38,7 @@ export default async function MensajeFuturoSuccessPage({
     : "—";
 
   return (
-    <div className="flex flex-col items-center pb-16 px-6 pt-10 min-h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-center mb-10">
-        <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">
-          <span>NUCLEA</span>
-          <SparkIcon className="text-[10px]" />
-        </div>
-      </div>
-
+    <div className="flex flex-col items-center pb-16 px-6 min-h-screen">
       {/* Ilustración */}
       <div className="relative flex items-center justify-center mb-6">
         <SparkIcon className="absolute -left-8 top-2 text-2xl opacity-30" />

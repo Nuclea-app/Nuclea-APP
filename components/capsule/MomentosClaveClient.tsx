@@ -10,6 +10,7 @@ import {
   Video,
   MoreHorizontal,
   Pencil,
+  MapPin,
 } from "lucide-react";
 import { FavoriteButton } from "./FavoriteButton";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
@@ -149,11 +150,14 @@ function MemoryCard({
           {memory.title || TYPE_LABELS[memory.type]}
         </p>
 
-        {/* Descripción: solo se renderiza si existe */}
-        {memory.description && (
-          <p className="text-[11px] text-foreground/40 truncate leading-tight">
-            {memory.description}
-          </p>
+        {/* Ubicación: solo se renderiza si existe */}
+        {memory.location && (
+          <div className="flex items-center gap-1">
+            <MapPin className="h-3 w-3 text-foreground/40 shrink-0" />
+            <p className="text-[11px] text-foreground/40 truncate leading-tight">
+              {memory.location}
+            </p>
+          </div>
         )}
 
         {/* Fecha + favorito */}
