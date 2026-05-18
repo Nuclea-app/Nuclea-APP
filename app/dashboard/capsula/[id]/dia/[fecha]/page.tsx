@@ -102,12 +102,16 @@ export default async function DiaPage({ params }: PageProps) {
             {memoriesDelDia.map((memory) => (
               <div
                 key={memory.id}
-                className="relative overflow-hidden rounded-3xl border border-border bg-surface/30 p-5 flex flex-col gap-4 shadow-xs"
+                className="relative overflow-hidden rounded-3xl border border-border bg-surface/30 p-5 flex flex-col gap-2 shadow-xs"
               >
-                <FavoriteButton memoryId={memory.id} initialIsFavorite={memory.isFavorite} className="absolute top-3 right-3 z-10" />
-                
+                <FavoriteButton
+                  memoryId={memory.id}
+                  initialIsFavorite={memory.isFavorite}
+                  className="absolute bottom-0 right-3 z-10"
+                />
+
                 {/* Badge de tipo */}
-                <div className="flex items-center justify-between border-b border-border/50 pb-3">
+                <div className="flex items-center justify-between border-b border-border/50 pb-2">
                   <div className="flex items-center gap-2">
                     <div className="h-7 w-7 rounded-full bg-surface flex items-center justify-center text-foreground/60">
                       {(memory.type === "PHOTO" ||
@@ -116,7 +120,9 @@ export default async function DiaPage({ params }: PageProps) {
                       )}
                       {memory.type === "VIDEO" && <Video className="h-4 w-4" />}
                       {memory.type === "AUDIO" && <Mic className="h-4 w-4" />}
-                      {memory.type === "NOTE" && <FileText className="h-4 w-4" />}
+                      {memory.type === "NOTE" && (
+                        <FileText className="h-4 w-4" />
+                      )}
                     </div>
                     <span className="text-[10px] font-bold tracking-widest uppercase text-foreground/60">
                       {memory.type === "DRAWING" ? "DIBUJO" : memory.type} ✦
@@ -148,7 +154,9 @@ export default async function DiaPage({ params }: PageProps) {
                   {memory.type === "VIDEO" && memory.fileUrl && (
                     <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-surface mb-2">
                       <video
-                        src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
+                        src={
+                          toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl
+                        }
                         controls
                         className="w-full h-full object-cover"
                       />
@@ -165,7 +173,13 @@ export default async function DiaPage({ params }: PageProps) {
                         <div className="w-[3px] h-5 bg-foreground/35 rounded-full" />
                         <div className="w-[3px] h-2 bg-foreground/20 rounded-full animate-pulse" />
                       </div>
-                      <audio src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl} controls className="w-full h-8 mt-1" />
+                      <audio
+                        src={
+                          toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl
+                        }
+                        controls
+                        className="w-full h-8 mt-1"
+                      />
                     </div>
                   )}
 
