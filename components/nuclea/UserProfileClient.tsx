@@ -9,15 +9,12 @@ import {
   Globe,
   ChevronRight,
   Pencil,
-  Bell,
   X,
   Eye,
   EyeOff,
   Send,
   LogOut,
 } from "lucide-react";
-import Link from "next/link";
-import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { es } from "date-fns/locale";
 import {
@@ -26,7 +23,6 @@ import {
   updateUserBirthdate,
 } from "@/lib/actions/user.actions";
 import { signOut } from "next-auth/react";
-import ArrowBackButton from "@/components/arrow-back-button";
 
 interface UserProfileClientProps {
   userId: string;
@@ -128,23 +124,7 @@ export const UserProfileClient = ({
 
   return (
     <>
-      <div className="flex flex-col pb-24 px-6 pt-8 min-h-screen">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <ArrowBackButton />
-          <Link
-            href="/"
-            className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px] hover:opacity-70 transition-opacity"
-          >
-            <span>NUCLEA</span>
-            <SparkIcon className="text-[10px]" />
-          </Link>
-          <div className="relative">
-            <Bell className="h-6 w-6 text-foreground/40" />
-            <div className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-background" />
-          </div>
-        </div>
-
+      <div className="flex flex-col pb-24 px-6 min-h-screen">
         {/* Avatar */}
         <div className="flex flex-col items-center mb-8">
           <div className="relative mb-4">
