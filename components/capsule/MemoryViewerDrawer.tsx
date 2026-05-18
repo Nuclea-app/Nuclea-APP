@@ -68,7 +68,7 @@ export function MemoryViewerDrawer({
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent className="max-w-[430px] mx-auto rounded-t-[32px] bg-black px-6 pb-10">
+      <DrawerContent className="max-w-[430px] mx-auto rounded-t-[32px] bg-white px-6 pb-10">
         <DrawerHeader className="px-0 pt-6 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-foreground/50">

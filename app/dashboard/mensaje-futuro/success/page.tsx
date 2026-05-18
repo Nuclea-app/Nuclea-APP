@@ -23,8 +23,8 @@ export default async function MensajeFuturoSuccessPage({
   const { capsule: capsuleId, type, date } = await searchParams;
 
   const backHref = capsuleId
-    ? `/dashboard/perfil?capsule=${capsuleId}`
-    : "/dashboard/perfil";
+    ? `/dashboard/capsula?capsule=${capsuleId}`
+    : "/dashboard/capsula";
 
   const typeInfo = type ? TYPE_LABELS[type] : TYPE_LABELS["NOTE"];
   const { label: typeLabel, Icon: TypeIcon } = typeInfo;

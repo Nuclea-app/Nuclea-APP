@@ -70,7 +70,8 @@ export const MemoryUploader = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mimeTypeRef = useRef<string>("");
 
-  const { uploadFile, saveNote, isUploading, progress, error } = useUpload(capsuleId);
+  const { uploadFile, saveNote, isUploading, progress, error } =
+    useUpload(capsuleId);
 
   const reset = () => {
     setFile(null);
@@ -111,7 +112,12 @@ export const MemoryUploader = ({
 
   // ─── Recorder ────────────────────────────────────────────────────────────
   const getSupportedMimeType = () => {
-    const types = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+    const types = [
+      "audio/mp4",
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/ogg;codecs=opus",
+    ];
     return types.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
   };
 
@@ -126,7 +132,9 @@ export const MemoryUploader = ({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = getSupportedMimeType();
       mimeTypeRef.current = mimeType;
-      const mr = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const mr = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       mediaRecorderRef.current = mr;
       chunksRef.current = [];
 
@@ -139,7 +147,9 @@ export const MemoryUploader = ({
         const blob = new Blob(chunksRef.current, { type: actualMime });
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
-        const f = new File([blob], `grabacion-${Date.now()}.${ext}`, { type: actualMime });
+        const f = new File([blob], `grabacion-${Date.now()}.${ext}`, {
+          type: actualMime,
+        });
         setFile(f);
         stream.getTracks().forEach((t) => t.stop());
       };
@@ -147,7 +157,10 @@ export const MemoryUploader = ({
       mr.start();
       setIsRecording(true);
       setRecordingSeconds(0);
-      timerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000);
+      timerRef.current = setInterval(
+        () => setRecordingSeconds((s) => s + 1),
+        1000,
+      );
     } catch {
       alert("No se pudo acceder al micrófono.");
     }
@@ -176,7 +189,9 @@ export const MemoryUploader = ({
   };
 
   const formatTime = (s: number) => {
-    const m = Math.floor(s / 60).toString().padStart(2, "0");
+    const m = Math.floor(s / 60)
+      .toString()
+      .padStart(2, "0");
     const sec = (s % 60).toString().padStart(2, "0");
     return `${m}:${sec}`;
   };
@@ -191,7 +206,10 @@ export const MemoryUploader = ({
       };
 
       if (type === MemoryType.NOTE) {
-        await saveNote(noteContent, { title: metadata.title, location: metadata.location });
+        await saveNote(noteContent, {
+          title: metadata.title,
+          location: metadata.location,
+        });
       } else if (file && type) {
         await uploadFile(file, type, metadata);
       }
@@ -212,7 +230,7 @@ export const MemoryUploader = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent className="max-w-[430px] mx-auto rounded-t-[32px] px-6 pb-12">
+      <DrawerContent className="max-w-[430px] bg-white mx-auto rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0 pt-8">
           <div className="flex items-center justify-between">
             <DrawerTitle className="font-serif text-2xl">
@@ -222,7 +240,10 @@ export const MemoryUploader = ({
               {type === MemoryType.NOTE && "Escribir nota"}
               {type === MemoryType.DRAWING && "Subir dibujo"}
             </DrawerTitle>
-            <DrawerClose onClick={onClose} className="p-2 rounded-full hover:bg-surface">
+            <DrawerClose
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-surface"
+            >
               <X className="h-6 w-6 opacity-40" />
             </DrawerClose>
           </div>
@@ -232,7 +253,9 @@ export const MemoryUploader = ({
           {success ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <CheckCircle2 className="h-16 w-16 text-green-500 animate-in zoom-in duration-300" />
-              <p className="font-serif text-xl tracking-wide">✦ Recuerdo guardado</p>
+              <p className="font-serif text-xl tracking-wide">
+                ✦ Recuerdo guardado
+              </p>
             </div>
           ) : (
             <>
@@ -247,7 +270,9 @@ export const MemoryUploader = ({
                     className="min-h-[200px] rounded-2xl bg-surface/30 border-border p-4 text-[15px] focus:ring-0 focus:border-foreground"
                   />
                   <div className="flex justify-end">
-                    <span className="text-[12px] text-foreground/40">{noteContent.length}/1000</span>
+                    <span className="text-[12px] text-foreground/40">
+                      {noteContent.length}/1000
+                    </span>
                   </div>
                 </div>
               )}
@@ -262,16 +287,23 @@ export const MemoryUploader = ({
                     <div className="h-12 w-12 rounded-full bg-background shadow-sm flex items-center justify-center">
                       <Mic className="h-5 w-5 text-foreground/50" />
                     </div>
-                    <span className="text-[13px] font-semibold text-foreground/70">Grabar audio</span>
+                    <span className="text-[13px] font-semibold text-foreground/70">
+                      Grabar audio
+                    </span>
                   </button>
                   <button
-                    onClick={() => { setAudioMode("upload"); fileInputRef.current?.click(); }}
+                    onClick={() => {
+                      setAudioMode("upload");
+                      fileInputRef.current?.click();
+                    }}
                     className="flex flex-col items-center gap-3 rounded-3xl border-2 border-dashed border-foreground/20 bg-surface py-10 transition-all hover:bg-surface/60 active:scale-[0.99]"
                   >
                     <div className="h-12 w-12 rounded-full bg-background shadow-sm flex items-center justify-center">
                       <Upload className="h-5 w-5 text-foreground/50" />
                     </div>
-                    <span className="text-[13px] font-semibold text-foreground/70">Subir archivo</span>
+                    <span className="text-[13px] font-semibold text-foreground/70">
+                      Subir archivo
+                    </span>
                   </button>
                 </div>
               )}
@@ -279,11 +311,15 @@ export const MemoryUploader = ({
               {/* AUDIO — grabando */}
               {isAudio && audioMode === "record" && !audioUrl && (
                 <div className="flex flex-col items-center gap-6 py-6">
-                  <div className={`h-24 w-24 rounded-full flex items-center justify-center shadow-lg transition-all ${isRecording ? "bg-red-500 animate-pulse" : "bg-foreground"}`}>
+                  <div
+                    className={`h-24 w-24 rounded-full flex items-center justify-center shadow-lg transition-all ${isRecording ? "bg-red-500 animate-pulse" : "bg-foreground"}`}
+                  >
                     <Mic className="h-10 w-10 text-white" />
                   </div>
                   {isRecording && (
-                    <p className="font-mono text-2xl text-foreground tabular-nums">{formatTime(recordingSeconds)}</p>
+                    <p className="font-mono text-2xl text-foreground tabular-nums">
+                      {formatTime(recordingSeconds)}
+                    </p>
                   )}
                   <div className="flex gap-3">
                     {!isRecording ? (
@@ -303,7 +339,13 @@ export const MemoryUploader = ({
                         Detener
                       </button>
                     )}
-                    <button onClick={() => { setAudioMode("choose"); setRecordingSeconds(0); }} className="rounded-2xl border border-border px-4 py-3 text-[13px] text-foreground/50">
+                    <button
+                      onClick={() => {
+                        setAudioMode("choose");
+                        setRecordingSeconds(0);
+                      }}
+                      className="rounded-2xl border border-border px-4 py-3 text-[13px] text-foreground/50"
+                    >
                       Cancelar
                     </button>
                   </div>
@@ -313,7 +355,7 @@ export const MemoryUploader = ({
               {/* AUDIO — preview listo (grabado o subido) */}
               {isAudio && audioUrl && (
                 <div className="space-y-4">
-                  { }
+                  {}
                   <audio
                     ref={audioRef}
                     src={audioUrl}
@@ -325,18 +367,29 @@ export const MemoryUploader = ({
                       onClick={togglePlay}
                       className="h-12 w-12 shrink-0 rounded-full bg-foreground text-background flex items-center justify-center shadow-sm"
                     >
-                      {isPlaying ? <Pause className="h-5 w-5" fill="currentColor" /> : <Play className="h-5 w-5" fill="currentColor" />}
+                      {isPlaying ? (
+                        <Pause className="h-5 w-5" fill="currentColor" />
+                      ) : (
+                        <Play className="h-5 w-5" fill="currentColor" />
+                      )}
                     </button>
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-medium text-foreground truncate">
                         {file?.name ?? "Grabación de audio"}
                       </p>
                       <p className="text-[11px] text-foreground/40 mt-0.5">
-                        {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : formatTime(recordingSeconds)}
+                        {file
+                          ? `${(file.size / 1024 / 1024).toFixed(1)} MB`
+                          : formatTime(recordingSeconds)}
                       </p>
                     </div>
                     <button
-                      onClick={() => { setAudioUrl(null); setFile(null); setAudioMode("choose"); setIsPlaying(false); }}
+                      onClick={() => {
+                        setAudioUrl(null);
+                        setFile(null);
+                        setAudioMode("choose");
+                        setIsPlaying(false);
+                      }}
                       className="shrink-0 p-2 hover:opacity-60 transition-opacity"
                     >
                       <RotateCcw className="h-4 w-4 text-foreground/40" />
@@ -354,15 +407,24 @@ export const MemoryUploader = ({
                       className="w-full flex flex-col items-center justify-center py-12 gap-4 rounded-3xl border-2 border-dashed border-foreground/20 bg-surface hover:bg-surface/60 active:scale-[0.99] transition-all"
                     >
                       <div className="h-14 w-14 rounded-full bg-background shadow-sm flex items-center justify-center">
-                        {type === MemoryType.PHOTO && <ImageIcon className="h-6 w-6 text-foreground/50" />}
-                        {type === MemoryType.VIDEO && <Video className="h-6 w-6 text-foreground/50" />}
-                        {type === MemoryType.DRAWING && <Pencil className="h-6 w-6 text-foreground/50" />}
+                        {type === MemoryType.PHOTO && (
+                          <ImageIcon className="h-6 w-6 text-foreground/50" />
+                        )}
+                        {type === MemoryType.VIDEO && (
+                          <Video className="h-6 w-6 text-foreground/50" />
+                        )}
+                        {type === MemoryType.DRAWING && (
+                          <Pencil className="h-6 w-6 text-foreground/50" />
+                        )}
                       </div>
                       <div className="text-center">
-                        <p className="text-[14px] font-semibold text-foreground/80">Toca para seleccionar</p>
+                        <p className="text-[14px] font-semibold text-foreground/80">
+                          Toca para seleccionar
+                        </p>
                         <p className="text-[12px] text-foreground/40 mt-1">
                           {type === MemoryType.PHOTO && "JPG, PNG, HEIC"}
-                          {type === MemoryType.VIDEO && "MP4, MOV — Máximo 100MB"}
+                          {type === MemoryType.VIDEO &&
+                            "MP4, MOV — Máximo 100MB"}
                           {type === MemoryType.DRAWING && "JPG, PNG, HEIC"}
                         </p>
                       </div>
@@ -370,7 +432,12 @@ export const MemoryUploader = ({
                   ) : (
                     <div className="relative w-full aspect-square rounded-3xl overflow-hidden bg-surface group">
                       {preview ? (
-                        <Image src={preview} alt="Preview" fill className="object-cover" />
+                        <Image
+                          src={preview}
+                          alt="Preview"
+                          fill
+                          className="object-cover"
+                        />
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full gap-2">
                           <FileText className="h-10 w-10 opacity-20" />
@@ -399,8 +466,8 @@ export const MemoryUploader = ({
                   type === MemoryType.PHOTO || type === MemoryType.DRAWING
                     ? "image/*"
                     : type === MemoryType.VIDEO
-                    ? "video/*"
-                    : "audio/*"
+                      ? "video/*"
+                      : "audio/*"
                 }
                 className="hidden"
               />
@@ -410,7 +477,10 @@ export const MemoryUploader = ({
                 {/* Título — todos los tipos */}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold tracking-widest uppercase text-foreground/40">
-                    Título <span className="font-normal normal-case tracking-normal">(opcional)</span>
+                    Título{" "}
+                    <span className="font-normal normal-case tracking-normal">
+                      (opcional)
+                    </span>
                   </label>
                   <Input
                     value={metaTitle}
@@ -425,7 +495,10 @@ export const MemoryUploader = ({
                 {type !== MemoryType.NOTE && (
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold tracking-widest uppercase text-foreground/40">
-                      Descripción <span className="font-normal normal-case tracking-normal">(opcional)</span>
+                      Descripción{" "}
+                      <span className="font-normal normal-case tracking-normal">
+                        (opcional)
+                      </span>
                     </label>
                     <Input
                       value={metaDescription}
@@ -441,7 +514,10 @@ export const MemoryUploader = ({
                 <div className="space-y-1.5">
                   <label className="flex items-center gap-1.5 text-[11px] font-semibold tracking-widest uppercase text-foreground/40">
                     <MapPin className="h-3 w-3" />
-                    Lugar <span className="font-normal normal-case tracking-normal">(opcional)</span>
+                    Lugar{" "}
+                    <span className="font-normal normal-case tracking-normal">
+                      (opcional)
+                    </span>
                   </label>
                   <Input
                     value={metaLocation}

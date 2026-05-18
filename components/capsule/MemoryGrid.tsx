@@ -54,6 +54,7 @@ export const MemoryGrid = ({
               <FavoriteButton
                 memoryId={memory.id}
                 initialIsFavorite={memory.isFavorite || false}
+                className="absolute top-2 right-2 z-10"
               />
 
               {(memory.type === "PHOTO" || memory.type === "DRAWING") &&

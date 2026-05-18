@@ -25,5 +25,5 @@ export async function createCapsuleAction(tipo: CapsuleType) {
     return { error: "No se pudo crear la cápsula" };
   }
 
-  redirect("/dashboard/perfil");
+  redirect("/dashboard/capsula");
 }

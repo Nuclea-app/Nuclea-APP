@@ -20,7 +20,7 @@ export default function EntregarPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const capsuleId = searchParams.get("capsule") ?? "";
-  const backHref = capsuleId ? `/dashboard/perfil?capsule=${capsuleId}` : "/dashboard/perfil";
+  const backHref = capsuleId ? `/dashboard/capsula?capsule=${capsuleId}` : "/dashboard/capsula";
 
   const [recipientName, setRecipientName] = useState("");
   const [relation, setRelation] = useState("");

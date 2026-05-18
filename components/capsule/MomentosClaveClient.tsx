@@ -17,7 +17,7 @@ import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { MemoryViewerDrawer } from "./MemoryViewerDrawer";
 import { toProxiedMediaUrl } from "@/lib/utils";
 
-interface Memory {
+export interface Memory {
   id: string;
   type: "PHOTO" | "VIDEO" | "AUDIO" | "NOTE" | "DRAWING";
   fileUrl?: string | null;
@@ -63,7 +63,7 @@ const formatDate = (date: Date | string) =>
     year: "numeric",
   });
 
-function MemoryCard({
+export function MemoryCard({
   memory,
   onClick,
 }: {
@@ -106,7 +106,10 @@ function MemoryCard({
         {memory.type === "VIDEO" &&
           (memory.fileUrl ? (
             <>
-              <video src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl} className="w-full h-full object-cover" />
+              <video
+                src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
+                className="w-full h-full object-cover"
+              />
               <div className="absolute inset-0 flex items-center justify-center bg-black/25">
                 <div className="h-10 w-10 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
                   <Play className="h-4 w-4 text-foreground fill-foreground ml-0.5" />
@@ -162,7 +165,9 @@ function MemoryCard({
 
         {/* Fecha + favorito */}
         <div className="flex items-center justify-between mt-1">
-          <p className="text-[11px] text-foreground/50">{formatDate(memory.createdAt)}</p>
+          <p className="text-[11px] text-foreground/50">
+            {formatDate(memory.createdAt)}
+          </p>
           <FavoriteButton
             memoryId={memory.id}
             initialIsFavorite={memory.isFavorite ?? false}
@@ -183,7 +188,7 @@ export function MomentosClaveClient({ memories }: MomentosClaveClientProps) {
 
   const availableTypes = new Set(memories.map((m) => m.type));
   const visibleFilters = FILTERS.filter(
-    (f) => f.id === "TODOS" || availableTypes.has(f.id as Memory["type"])
+    (f) => f.id === "TODOS" || availableTypes.has(f.id as Memory["type"]),
   );
 
   const filtered =
@@ -236,7 +241,7 @@ export function MomentosClaveClient({ memories }: MomentosClaveClientProps) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 min-[340px]:grid-cols-2 min-[728px]:grid-cols-3 gap-3">
+        <div className="w-full grid grid-cols-1 min-[340px]:grid-cols-2 gap-3">
           {filtered.map((memory) => (
             <MemoryCard
               key={memory.id}

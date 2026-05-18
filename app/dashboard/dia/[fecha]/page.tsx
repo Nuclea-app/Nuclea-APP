@@ -106,7 +106,7 @@ export default async function DiaPage({ params, searchParams }: PageProps) {
                 key={memory.id}
                 className="relative overflow-hidden rounded-3xl border border-border bg-surface/30 p-5 flex flex-col gap-4 shadow-xs"
               >
-                <FavoriteButton memoryId={memory.id} initialIsFavorite={memory.isFavorite} />
+                <FavoriteButton memoryId={memory.id} initialIsFavorite={memory.isFavorite} className="absolute top-3 right-3 z-10" />
                 
                 {/* Badge de tipo */}
                 <div className="flex items-center justify-between border-b border-border/50 pb-3">

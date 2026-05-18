@@ -40,7 +40,7 @@ export function FavoriteButton({ memoryId, initialIsFavorite, className }: Favor
       onClick={handleToggle}
       disabled={isPending}
       className={cn(
-        "absolute top-2 right-2 z-10 rounded-full p-1.5 transition-all hover:scale-110",
+        "rounded-full p-1.5 transition-all hover:scale-110",
         isFavorite ? "text-foreground bg-surface/80" : "text-foreground/40 bg-surface/40 hover:text-foreground",
         className
       )}
