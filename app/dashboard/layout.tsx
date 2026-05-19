@@ -1,6 +1,6 @@
 import { BottomNav } from "@/components/nuclea/BottomNav";
 import { DashboardHeader } from "@/components/nuclea/DashboardHeader";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function DashboardLayout({
   children,
