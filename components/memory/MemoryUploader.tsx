@@ -230,8 +230,8 @@ export const MemoryUploader = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent className="max-w-[430px] bg-white mx-auto rounded-t-[32px] px-6 pb-12">
-        <DrawerHeader className="px-0 pt-8">
+      <DrawerContent className="max-w-[430px] bg-white mx-auto rounded-t-[32px] px-6">
+        <DrawerHeader className="px-0 pt-8 shrink-0">
           <div className="flex items-center justify-between">
             <DrawerTitle className="font-serif text-2xl">
               {type === MemoryType.PHOTO && "Subir foto"}
@@ -249,7 +249,7 @@ export const MemoryUploader = ({
           </div>
         </DrawerHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 pb-12 overflow-y-auto flex-1 min-h-0">
           {success ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <CheckCircle2 className="h-16 w-16 text-green-500 animate-in zoom-in duration-300" />

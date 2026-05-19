@@ -26,6 +26,7 @@ import {
 import { es } from "date-fns/locale";
 import { createFutureMessage } from "@/lib/actions/futureMessage.actions";
 import { MemoryType } from "@prisma/client";
+import { toast } from "sonner";
 
 const CONTENT_TYPES = [
   {
@@ -58,7 +59,6 @@ export default function MensajeFuturoPage() {
   const [unlocksAt, setUnlocksAt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Audio recorder
@@ -160,38 +160,43 @@ export default function MensajeFuturoPage() {
     setIsLoading(true);
     setError("");
 
-    let fileUrl: string | undefined;
+    try {
+      let fileUrl: string | undefined;
 
-    if ((selectedType === "AUDIO" || selectedType === "VIDEO") && file) {
-      try {
-        fileUrl = await uploadToR2(file, selectedType);
-      } catch {
-        setError("Error al subir el archivo. Intentá de nuevo.");
+      if ((selectedType === "AUDIO" || selectedType === "VIDEO") && file) {
+        try {
+          fileUrl = await uploadToR2(file, selectedType);
+        } catch {
+          toast.error("Error al subir el archivo. Intentá de nuevo.", { duration: 4000 });
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      const result = await createFutureMessage({
+        capsuleId,
+        type: selectedType!,
+        content: selectedType === "NOTE" ? noteContent.trim() : undefined,
+        fileUrl,
+        unlocksAt: new Date(unlocksAt),
+      });
+
+      if ("error" in result) {
+        toast.error(result.error ?? "Error al guardar el mensaje", { duration: 4000 });
         setIsLoading(false);
         return;
       }
+
+      const params = new URLSearchParams({
+        type: selectedType!,
+        date: unlocksAt,
+      });
+      router.push(`/dashboard/capsula/${capsuleId}/mensaje-futuro/success?${params.toString()}`);
+    } catch {
+      toast.error("Algo salió mal. Intentá de nuevo.", { duration: 4000 });
+    } finally {
+      setIsLoading(false);
     }
-
-    const result = await createFutureMessage({
-      capsuleId,
-      type: selectedType!,
-      content: selectedType === "NOTE" ? noteContent.trim() : undefined,
-      fileUrl,
-      unlocksAt: new Date(unlocksAt),
-    });
-
-    setIsLoading(false);
-
-    if ("error" in result) {
-      setError(result.error ?? "Error al guardar");
-      return;
-    }
-
-    const params = new URLSearchParams({
-      type: selectedType!,
-      date: unlocksAt,
-    });
-    router.push(`/dashboard/capsula/${capsuleId}/mensaje-futuro/success?${params.toString()}`);
   };
 
   return (
@@ -438,10 +443,6 @@ export default function MensajeFuturoPage() {
           ✦ Lo que hoy guardas, algún día significará todo para alguien. ✦
         </p>
       </div>
-
-      {error && (
-        <p className="text-red-500 text-[13px] text-center mb-4">{error}</p>
-      )}
 
       {/* Botón continuar */}
       <button

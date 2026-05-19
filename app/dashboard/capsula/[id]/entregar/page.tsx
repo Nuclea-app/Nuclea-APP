@@ -90,7 +90,11 @@ export default function EntregarPage() {
         return;
       }
 
-      router.push(`${backHref}?delivered=true`);
+      const successParams = new URLSearchParams({
+        name: recipientName.trim(),
+        emails: validEmails.join(","),
+      });
+      router.push(`/dashboard/capsula/${capsuleId}/entregar/success?${successParams.toString()}`);
     } catch {
       setError("Error al enviar la cápsula");
     } finally {
