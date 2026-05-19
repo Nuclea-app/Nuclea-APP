@@ -6,6 +6,7 @@ import { User, Heart, Users, Star, UserRound, MoreHorizontal, Mail, MapPin, Lock
 import Image from "next/image";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { createDelivery } from "@/lib/actions/delivery.actions";
+import { toast } from "sonner";
 
 const RELATIONS = [
   { id: "madre", label: "Madre", icon: Heart },
@@ -53,8 +54,20 @@ export default function EntregarPage() {
     }
   };
 
+  const getValidationMessage = () => {
+    if (!recipientName.trim()) return "Escribe el nombre de la persona";
+    if (!relation) return "Elige tu relación con ella";
+    if (relation === "otro" && !relationCustom.trim()) return "Especifica cuál es tu relación";
+    if (validEmails.length === 0) return "Añade al menos un email";
+    return null;
+  };
+
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    const validationError = getValidationMessage();
+    if (validationError) {
+      toast.error(validationError, { duration: 3000 });
+      return;
+    }
     setIsLoading(true);
     setError("");
 
@@ -238,8 +251,8 @@ export default function EntregarPage() {
 
       <button
         onClick={handleSubmit}
-        disabled={!canSubmit || isLoading}
-        className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed mb-6"
+        disabled={isLoading}
+        className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-50 mb-6"
       >
         <Send className="h-4 w-4" />
         <span>{isLoading ? "GUARDANDO..." : "ENVIAR →"}</span>
