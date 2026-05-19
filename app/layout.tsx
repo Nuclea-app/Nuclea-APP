@@ -37,6 +37,7 @@ export const metadata: Metadata = {
 
 import { ServiceWorkerRegistration } from "@/components/nuclea/ServiceWorkerRegistration";
 import { InstallPrompt } from "@/components/nuclea/InstallPrompt";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
   children,
@@ -58,6 +59,7 @@ export default function RootLayout({
         <ServiceWorkerRegistration />
         <InstallPrompt />
         {children}
+        <Toaster position="bottom-center" richColors />
       </body>
     </html>
   );

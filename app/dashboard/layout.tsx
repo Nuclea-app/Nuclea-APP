@@ -1,6 +1,5 @@
 import { BottomNav } from "@/components/nuclea/BottomNav";
 import { DashboardHeader } from "@/components/nuclea/DashboardHeader";
-import { Toaster } from "@/components/ui/sonner";
 
 export default function DashboardLayout({
   children,
@@ -14,7 +13,6 @@ export default function DashboardLayout({
         <div className="mx-auto w-full">{children}</div>
         <BottomNav />
       </div>
-      <Toaster position="bottom-center" richColors />
     </main>
   );
 }
