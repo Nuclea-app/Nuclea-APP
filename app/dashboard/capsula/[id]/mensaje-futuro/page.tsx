@@ -158,7 +158,6 @@ export default function MensajeFuturoPage() {
   const handleSubmit = async () => {
     if (!canSubmit || !capsuleId) return;
     setIsLoading(true);
-    setError("");
 
     try {
       let fileUrl: string | undefined;
