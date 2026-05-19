@@ -125,6 +125,14 @@ export default function MensajeFuturoPage() {
     unlocksAt.length > 0 &&
     (selectedType === "NOTE" ? noteContent.trim().length > 0 : file !== null);
 
+  const getValidationMessage = () => {
+    if (!selectedType) return "Elige qué tipo de mensaje quieres dejar";
+    if (selectedType === "NOTE" && !noteContent.trim()) return "Escribe el contenido del mensaje";
+    if (selectedType !== "NOTE" && !file) return "Sube un archivo de audio o vídeo";
+    if (!unlocksAt) return "Elige cuándo quieres que se abra el mensaje";
+    return null;
+  };
+
   const uploadToR2 = async (f: File, tipo: MemoryType): Promise<string> => {
     const res = await fetch("/api/upload/presigned", {
       method: "POST",
@@ -156,7 +164,12 @@ export default function MensajeFuturoPage() {
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit || !capsuleId) return;
+    if (!capsuleId) return;
+    const validationError = getValidationMessage();
+    if (validationError) {
+      toast.error(validationError, { duration: 3000 });
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -446,7 +459,7 @@ export default function MensajeFuturoPage() {
       {/* Botón continuar */}
       <button
         onClick={handleSubmit}
-        disabled={!canSubmit || isLoading}
+        disabled={isLoading}
         className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <span>{isLoading ? "GUARDANDO..." : "CONTINUAR"}</span>

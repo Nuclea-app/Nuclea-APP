@@ -4,7 +4,17 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { auth } from "@/auth";
 
+async function requireSelf(userId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "No autorizado" as const };
+  if (session.user.id !== userId) return { error: "No autorizado" as const };
+  return { session };
+}
+
 export async function updateUserName(userId: string, name: string) {
+  const check = await requireSelf(userId);
+  if ("error" in check) return check;
+
   const trimmed = name.trim();
   if (!trimmed) return { error: "El nombre no puede estar vacío" };
 
@@ -21,6 +31,9 @@ export async function updateUserPassword(
   currentPassword: string,
   newPassword: string
 ) {
+  const check = await requireSelf(userId);
+  if ("error" in check) return check;
+
   if (newPassword.length < 8)
     return { error: "La contraseña debe tener al menos 8 caracteres" };
 
@@ -28,11 +41,13 @@ export async function updateUserPassword(
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return { error: "Usuario no encontrado" };
 
-    // Si ya tiene contraseña, verificar la actual
-    if (user.password) {
-      const valid = await bcrypt.compare(currentPassword, user.password);
-      if (!valid) return { error: "La contraseña actual es incorrecta" };
+    if (!user.password) {
+      // OAuth-only account: don't allow setting a password without explicit flow
+      return { error: "Esta cuenta usa acceso con Google. No tiene contraseña asociada." };
     }
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) return { error: "La contraseña actual es incorrecta" };
 
     const hashed = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({ where: { id: userId }, data: { password: hashed } });
@@ -43,7 +58,9 @@ export async function updateUserPassword(
 }
 
 export async function updateUserBirthdate(userId: string, birthdate: string) {
-  // birthdate = "YYYY-MM-DD"
+  const check = await requireSelf(userId);
+  if ("error" in check) return check;
+
   try {
     const date = new Date(birthdate + "T12:00:00");
     if (isNaN(date.getTime())) return { error: "Fecha inválida" };
@@ -56,6 +73,9 @@ export async function updateUserBirthdate(userId: string, birthdate: string) {
 }
 
 export async function getUserStats(userId: string) {
+  const check = await requireSelf(userId);
+  if ("error" in check) return { capsulesCreated: 0, capsulesDelivered: 0 };
+
   try {
     const [capsulesCreated, capsulesDelivered] = await Promise.all([
       prisma.capsule.count({ where: { userId } }),

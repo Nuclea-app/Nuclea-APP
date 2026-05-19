@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { auth } from "@/auth";
 import { resend, buildCapsuleEmailHtml } from "@/lib/resend";
 
 export async function createDelivery(data: {
@@ -12,6 +13,16 @@ export async function createDelivery(data: {
   phone?: string;
 }) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "No autorizado" };
+
+    // Verify the capsule belongs to the current user before creating delivery
+    const capsule = await prisma.capsule.findUnique({
+      where: { id: data.capsuleId, userId: session.user.id },
+      select: { id: true },
+    });
+    if (!capsule) return { error: "Cápsula no encontrada" };
+
     const delivery = await prisma.capsuleDelivery.create({
       data: {
         capsuleId: data.capsuleId,
@@ -31,9 +42,9 @@ export async function createDelivery(data: {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://nuclea.app";
     const capsuleUrl = `${baseUrl}/capsula/${delivery.token}`;
 
-    // Enviar email si se proporcionó uno
+    let emailSent = false;
     if (data.email) {
-      await sendCapsuleEmail({
+      emailSent = await sendCapsuleEmail({
         to: data.email,
         recipientName: data.recipientName,
         senderName: delivery.capsule.user?.name ?? undefined,
@@ -41,7 +52,7 @@ export async function createDelivery(data: {
       });
     }
 
-    return { success: true, token: delivery.token, capsuleUrl };
+    return { success: true, token: delivery.token, capsuleUrl, emailSent };
   } catch (error) {
     console.error("Error creating delivery:", error);
     return { error: "No se pudo guardar la entrega" };
@@ -53,7 +64,7 @@ async function sendCapsuleEmail(params: {
   recipientName: string;
   senderName?: string;
   capsuleUrl: string;
-}) {
+}): Promise<boolean> {
   const fromDomain = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
 
   try {
@@ -67,9 +78,11 @@ async function sendCapsuleEmail(params: {
         capsuleUrl: params.capsuleUrl,
       }),
     });
+    return true;
   } catch (error) {
-    // No bloquear la entrega si el email falla
+    // Don't block delivery if email fails — log and report back
     console.error("Error sending capsule email:", error);
+    return false;
   }
 }
 

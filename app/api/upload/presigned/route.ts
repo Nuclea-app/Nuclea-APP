@@ -3,6 +3,25 @@ import { generatePresignedUploadUrl, buildR2Key } from "@/lib/r2";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+// Allowed memory types mapped to R2 directory names
+const TIPO_TO_R2: Record<string, string> = {
+  photo: "image",
+  video: "video",
+  audio: "audio",
+  note: "note",
+  drawing: "image",
+  cover: "cover",
+};
+
+// Sanitize filename: keep only safe characters, strip path separators
+function sanitizeFilename(name: string): string {
+  return name
+    .replace(/[^\w\s.\-]/g, "") // keep word chars, spaces, dots, dashes
+    .replace(/\s+/g, "_")        // spaces → underscores
+    .replace(/\.{2,}/g, ".")     // collapse multiple dots (path traversal)
+    .slice(0, 200);              // max length
+}
+
 export async function POST(req: Request) {
   try {
     const session = await auth();
@@ -16,22 +35,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
     }
 
-    // Verificar que la cápsula pertenezca al usuario
+    // Validate tipo against whitelist
+    const r2Type = TIPO_TO_R2[tipo.toLowerCase()];
+    if (!r2Type) {
+      return NextResponse.json({ error: "Tipo de archivo no permitido" }, { status: 400 });
+    }
+
+    // Sanitize filename to prevent path traversal
+    const safeFilename = sanitizeFilename(filename);
+    if (!safeFilename) {
+      return NextResponse.json({ error: "Nombre de archivo inválido" }, { status: 400 });
+    }
+
+    // Verify that the capsule belongs to the authenticated user
     const capsule = await prisma.capsule.findUnique({
-      where: {
-        id: capsuleId,
-        userId: session.user.id,
-      },
+      where: { id: capsuleId, userId: session.user.id },
+      select: { id: true },
     });
 
     if (!capsule) {
-      return NextResponse.json({ error: "Cápsula no encontrada o no pertenece al usuario" }, { status: 404 });
+      return NextResponse.json({ error: "Cápsula no encontrada" }, { status: 404 });
     }
 
-    // Mapear el tipo de memoria al tipo de R2 (directorio)
-    const r2Type = tipo.toLowerCase() === 'photo' ? 'image' : tipo.toLowerCase();
-    
-    const key = buildR2Key(session.user.id, capsuleId, r2Type, filename);
+    const key = buildR2Key(
+      session.user.id,
+      capsuleId,
+      r2Type as "image" | "video" | "audio" | "note",
+      safeFilename,
+    );
     const uploadUrl = await generatePresignedUploadUrl(key, contentType);
 
     return NextResponse.json({ uploadUrl, key });

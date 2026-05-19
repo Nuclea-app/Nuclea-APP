@@ -1,10 +1,14 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { auth } from "@/auth";
 import { CapsuleType } from "@/lib/capsule-data";
 import { MemoryType, CapsuleType as PrismaCapsuleType } from "@prisma/client";
 
+const ALLOWED_CAPSULE_TYPES = ["LEGACY", "TOGETHER", "PET", "ORIGIN"] as const;
+
 export async function getUserCapsule(userId: string, capsuleId?: string) {
+  if (!userId) return null;
   try {
     const capsule = capsuleId
       ? await prisma.capsule.findUnique({
@@ -37,6 +41,7 @@ export async function getUserCapsule(userId: string, capsuleId?: string) {
 }
 
 export async function getUserCapsules(userId: string) {
+  if (!userId) return [];
   try {
     return await prisma.capsule.findMany({
       where: { userId },
@@ -51,8 +56,15 @@ export async function getUserCapsules(userId: string) {
 
 export async function getFavoriteMemories(capsuleId: string) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
     return await prisma.memory.findMany({
-      where: { capsuleId, isFavorite: true },
+      where: {
+        capsuleId,
+        isFavorite: true,
+        capsule: { userId: session.user.id },
+      },
       orderBy: { createdAt: "desc" },
     });
   } catch (error) {
@@ -63,8 +75,14 @@ export async function getFavoriteMemories(capsuleId: string) {
 
 export async function getAllMemories(capsuleId: string) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
     return await prisma.memory.findMany({
-      where: { capsuleId },
+      where: {
+        capsuleId,
+        capsule: { userId: session.user.id },
+      },
       orderBy: { createdAt: "desc" },
     });
   } catch (error) {
@@ -75,9 +93,14 @@ export async function getAllMemories(capsuleId: string) {
 
 export async function createCapsule(data: { type: CapsuleType; name: string; userId: string }) {
   try {
+    const typeUpper = data.type.toUpperCase();
+    if (!ALLOWED_CAPSULE_TYPES.includes(typeUpper as typeof ALLOWED_CAPSULE_TYPES[number])) {
+      throw new Error(`Tipo de cápsula inválido: ${data.type}`);
+    }
+
     const capsule = await prisma.capsule.create({
       data: {
-        type: data.type.toUpperCase() as PrismaCapsuleType,
+        type: typeUpper as PrismaCapsuleType,
         name: data.name,
         userId: data.userId,
       }
@@ -100,8 +123,13 @@ export async function createMemory(data: {
   location?: string;
 }) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "No autorizado" };
+
+    // Verify ownership
     const capsule = await prisma.capsule.findUnique({
-      where: { id: data.capsuleId },
+      where: { id: data.capsuleId, userId: session.user.id },
+      select: { id: true },
     });
 
     if (!capsule) {
@@ -129,11 +157,17 @@ export async function createMemory(data: {
 
 export async function toggleFavorite(memoryId: string) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "No autorizado" };
+
     const memory = await prisma.memory.findUnique({
-      where: { id: memoryId }
+      where: { id: memoryId },
+      include: { capsule: { select: { userId: true } } },
     });
+
     if (!memory) return { error: "Recuerdo no encontrado" };
-    
+    if (memory.capsule.userId !== session.user.id) return { error: "No autorizado" };
+
     const updated = await prisma.memory.update({
       where: { id: memoryId },
       data: { isFavorite: !memory.isFavorite }

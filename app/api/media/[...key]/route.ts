@@ -1,21 +1,35 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import r2Client from "@/lib/r2";
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
 /**
- * Proxy for R2 media files (audio, video).
+ * Authenticated proxy for R2 media files (audio, video).
  * Serves the file from the server with CORS headers so Safari/iOS can
  * load <audio> and <video> elements without a CORS error.
  *
- * Usage: /api/media/<key>  where key = R2 object key (e.g. userId/capsuleId/audio/file.m4a)
+ * Usage: /api/media/<key>  where key = R2 object key (userId/capsuleId/type/filename)
+ * The first segment of the key must match the authenticated user's ID.
  */
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ key: string[] }> }
 ) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     const { key: keySegments } = await params;
     const key = keySegments.join("/");
+
+    // The R2 key structure is: userId/capsuleId/type/filename
+    // Verify the userId segment matches the authenticated user
+    const keyUserId = keySegments[0];
+    if (keyUserId !== session.user.id) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
 
     const command = new GetObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME!,
@@ -31,14 +45,13 @@ export async function GET(
     const headers = new Headers({
       "Content-Type": object.ContentType ?? "application/octet-stream",
       "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cache-Control": "private, max-age=3600",
     });
 
     if (object.ContentLength) {
       headers.set("Content-Length", String(object.ContentLength));
     }
 
-    // AWS SDK v3 Body supports transformToWebStream() in Node.js 18+
     const stream = object.Body.transformToWebStream();
 
     return new NextResponse(stream, { headers });

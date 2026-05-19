@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
-import { redirect, notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Lock, LockOpen, Mic, Video, FileText, Calendar } from "lucide-react";
 import { isFutureMessageUnlocked } from "@/lib/futureMessages";
 
@@ -9,7 +9,7 @@ interface PageProps {
 }
 
 export default async function MensajeFuturoDetailPage({ params }: PageProps) {
-  const { messageId } = await params;
+  const { id: capsuleId, messageId } = await params;
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -18,8 +18,10 @@ export default async function MensajeFuturoDetailPage({ params }: PageProps) {
     include: { capsule: { select: { userId: true, name: true, id: true } } },
   });
 
+  // Redirect to the list instead of showing a 404 if message is not found
+  // or doesn't belong to the current user
   if (!message || message.capsule.userId !== session.user.id) {
-    notFound();
+    redirect(`/dashboard/capsula/${capsuleId}/mensajes-futuros`);
   }
 
   const unlocked = isFutureMessageUnlocked(message.unlocksAt);
