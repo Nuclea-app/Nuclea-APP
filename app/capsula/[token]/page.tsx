@@ -5,173 +5,37 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { CapsuleOpening } from "@/components/capsule/CapsuleOpening";
+import { MemoryCalendar, FutureMessageMarker } from "@/components/capsule/MemoryCalendar";
+import { MemoryCard, Memory } from "@/components/capsule/MomentosClaveClient";
+import { MemoryViewerDrawer } from "@/components/capsule/MemoryViewerDrawer";
 import { getDeliveryByToken } from "@/lib/actions/delivery.actions";
-import { toProxiedMediaUrl } from "@/lib/utils";
-import {
-  FileText,
-  Image as ImageIcon,
-  Mic,
-  Play,
-  Lock,
-  Heart,
-  BookOpen,
-  X,
-} from "lucide-react";
-
-type Memory = {
-  id: string;
-  type: "PHOTO" | "VIDEO" | "AUDIO" | "NOTE" | "DRAWING";
-  fileUrl?: string | null;
-  content?: string | null;
-  createdAt: Date | string;
-};
+import { toDeliveryMediaUrl } from "@/lib/utils";
+import { Heart, BookOpen, Lock, Mail, Send } from "lucide-react";
 
 type DeliveryData = {
   recipientName: string;
   capsule: {
     name: string;
+    type: string;
     description?: string | null;
     coverUrl?: string | null;
     memories: Memory[];
+    futureMessages: FutureMessageMarker[];
     user?: { name: string | null; image: string | null } | null;
   };
 };
 
 type Phase = "opening" | "bienvenida" | "dentro";
 
-// ─── Read-only memory card (thumbnail) ───────────────────────────────────────
-function MemoryThumb({
-  memory,
-  onClick,
-}: {
-  memory: Memory;
-  onClick: () => void;
-}) {
-  const label =
-    memory.type === "PHOTO"
-      ? "FOTO"
-      : memory.type === "VIDEO"
-        ? "VIDEO"
-        : memory.type === "AUDIO"
-          ? "AUDIO"
-          : memory.type === "DRAWING"
-            ? "DIBUJO"
-            : "NOTA";
+const DEFAULT_DESCRIPTION =
+  "Elegimos seguir escribiendo nuestra historia, cada día, juntos.";
 
-  return (
-    <button
-      onClick={onClick}
-      className="shrink-0 w-[140px] flex flex-col rounded-2xl overflow-hidden border border-border/60 bg-background active:scale-[0.98] transition-all"
-    >
-      {/* Image area */}
-      <div className="relative w-full aspect-square bg-surface overflow-hidden">
-        {(memory.type === "PHOTO" || memory.type === "DRAWING") &&
-          memory.fileUrl ? (
-          <Image
-            src={memory.fileUrl}
-            alt={label}
-            fill
-            className="object-cover"
-          />
-        ) : memory.type === "VIDEO" && memory.fileUrl ? (
-          <div className="flex h-full w-full items-center justify-center bg-slate-100">
-            <Play className="h-8 w-8 text-foreground/30" />
-          </div>
-        ) : memory.type === "AUDIO" ? (
-          <div className="flex h-full w-full items-center justify-center bg-surface">
-            <Mic className="h-8 w-8 text-foreground/30" />
-          </div>
-        ) : memory.type === "NOTE" ? (
-          <div className="flex h-full w-full items-start p-3 bg-surface/50">
-            <p className="text-[11px] text-foreground/60 line-clamp-5 leading-tight text-left">
-              {memory.content || "Nota"}
-            </p>
-          </div>
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <ImageIcon className="h-8 w-8 opacity-10" />
-          </div>
-        )}
-      </div>
-      {/* Label */}
-      <div className="px-3 pt-2 pb-3">
-        <p className="text-[11px] font-semibold text-foreground/50 truncate">
-          {label} ✦
-        </p>
-      </div>
-    </button>
-  );
-}
-
-// ─── Full-screen memory viewer overlay ───────────────────────────────────────
-function MemoryViewer({
-  memory,
-  onClose,
-}: {
-  memory: Memory;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex flex-col">
-      <div className="flex items-center justify-end p-4">
-        <button
-          onClick={onClose}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-
-      <div className="flex-1 flex items-center justify-center px-4">
-        {(memory.type === "PHOTO" || memory.type === "DRAWING") &&
-          memory.fileUrl ? (
-          <div className="relative w-full max-h-[70vh] aspect-square">
-            <Image
-              src={memory.fileUrl}
-              alt="Recuerdo"
-              fill
-              className="object-contain"
-            />
-          </div>
-        ) : memory.type === "VIDEO" && memory.fileUrl ? (
-          <video
-            src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
-            className="w-full max-h-[70vh] rounded-xl"
-            controls
-            autoPlay
-          />
-        ) : memory.type === "AUDIO" && memory.fileUrl ? (
-          <div className="flex flex-col items-center gap-6 w-full max-w-[300px]">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/10">
-              <Mic className="h-10 w-10 text-white/60" />
-            </div>
-            <audio
-              src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
-              controls
-              autoPlay
-              className="w-full"
-            />
-          </div>
-        ) : memory.type === "NOTE" ? (
-          <div className="w-full max-w-[360px] rounded-3xl bg-white/10 p-6">
-            <FileText className="h-5 w-5 text-white/40 mb-3" />
-            <p className="text-white/80 text-[15px] leading-relaxed">
-              {memory.content || "Sin contenido"}
-            </p>
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 export default function CapsuleTokenPage() {
   const { token } = useParams<{ token: string }>();
   const [delivery, setDelivery] = useState<DeliveryData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [phase, setPhase] = useState<Phase>("opening");
-  const [viewerMemory, setViewerMemory] = useState<Memory | null>(null);
+  const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
 
   useEffect(() => {
     getDeliveryByToken(token).then((data) => {
@@ -179,10 +43,27 @@ export default function CapsuleTokenPage() {
         setNotFound(true);
         return;
       }
-      setDelivery(data as DeliveryData);
+
+      // Pre-transform all media URLs to use the delivery proxy
+      // so recipients can load photos, videos and audio without auth
+      const transformed = {
+        ...data,
+        capsule: {
+          ...data.capsule,
+          memories: (data.capsule.memories as Memory[]).map((m) => ({
+            ...m,
+            fileUrl: m.fileUrl
+              ? (toDeliveryMediaUrl(m.fileUrl, token) ?? m.fileUrl)
+              : null,
+          })),
+        },
+      };
+
+      setDelivery(transformed as DeliveryData);
     });
   }, [token]);
 
+  // ── Loading / not found ───────────────────────────────────────────────────
   if (notFound) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
@@ -205,18 +86,18 @@ export default function CapsuleTokenPage() {
     );
   }
 
-  // ── Paso 2+3: animación de apertura ──────────────────────────────────────
+  // ── Opening animation ─────────────────────────────────────────────────────
   if (phase === "opening") {
     return <CapsuleOpening onComplete={() => setPhase("bienvenida")} />;
   }
 
-  // ── Paso 4: pantalla de bienvenida ───────────────────────────────────────
+  // ── Welcome screen ────────────────────────────────────────────────────────
   if (phase === "bienvenida") {
     const senderName = delivery.capsule.user?.name ?? "Alguien especial";
     const avatar = delivery.capsule.user?.image ?? delivery.capsule.coverUrl;
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center max-w-[430px] mx-auto">
+      <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center max-w-[430px] mx-auto w-full">
         <SparkIcon className="text-xl text-foreground mb-8" />
 
         <h1 className="font-serif text-3xl leading-tight text-foreground max-w-[280px] mb-4">
@@ -227,7 +108,6 @@ export default function CapsuleTokenPage() {
           momentos que quiere que conserves.
         </p>
 
-        {/* Imagen del remitente */}
         <div className="relative mb-10">
           <div className="h-[140px] w-[140px] rounded-full overflow-hidden bg-surface border border-border">
             {avatar ? (
@@ -274,34 +154,34 @@ export default function CapsuleTokenPage() {
     );
   }
 
-  // ── Paso 5: dentro de la cápsula — igual que CapsuleProfile (read-only) ──
-  const DEFAULT_DESCRIPTION =
-    "Elegimos seguir escribiendo nuestra historia, cada día, juntos.";
+  // ── Dentro: layout idéntico a CapsuleProfile (read-only) ─────────────────
+  const { capsule } = delivery;
+  const futureMessages = capsule.futureMessages ?? [];
 
   return (
     <>
-      <div className="flex flex-col items-center pb-12 px-6">
+      <div className="flex flex-col items-center pb-12 px-6 max-w-[430px] mx-auto w-full">
 
         {/* Badge */}
         <div className="mb-8">
           <span className="rounded-full border border-foreground/10 px-6 py-1 text-[10px] font-bold tracking-[0.3em] uppercase bg-surface/50">
-            CÁPSULA DE RECUERDOS ✦
+            {capsule.type} ✦
           </span>
         </div>
 
-        {/* Cover image */}
+        {/* Cover image — sin botón de edición */}
         <div className="relative mb-6">
           <div className="h-[120px] w-[120px] rounded-full bg-surface overflow-hidden border-4 border-background shadow-sm">
-            {delivery.capsule.coverUrl ? (
+            {capsule.coverUrl ? (
               <Image
-                src={delivery.capsule.coverUrl}
-                alt={delivery.capsule.name}
+                src={capsule.coverUrl}
+                alt={capsule.name}
                 fill
                 className="object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-3xl font-serif text-foreground/20 uppercase">
-                {delivery.capsule.name.charAt(0)}
+                {capsule.name.charAt(0)}
               </div>
             )}
           </div>
@@ -309,7 +189,7 @@ export default function CapsuleTokenPage() {
 
         {/* Name */}
         <h1 className="font-serif text-3xl font-semibold text-foreground text-center mb-4">
-          {delivery.capsule.name}
+          {capsule.name}
         </h1>
 
         {/* Separator */}
@@ -321,35 +201,71 @@ export default function CapsuleTokenPage() {
 
         {/* Description */}
         <p className="font-sans italic text-[15px] text-foreground/60 text-center leading-relaxed max-w-[300px] mb-4">
-          {delivery.capsule.description || DEFAULT_DESCRIPTION}
+          {capsule.description || DEFAULT_DESCRIPTION}
         </p>
 
         <Heart className="h-4 w-4 text-foreground/20 mb-10" />
 
-        {/* Stats */}
+        {/* Stats — igual que CapsuleProfile */}
         <div className="w-full rounded-3xl p-6 mb-6 border-border border bg-background shadow-sm">
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex items-center gap-2 mb-1">
-              <BookOpen
-                className="h-5 w-5 text-foreground/40"
-                strokeWidth={1.5}
-              />
-              <span className="text-xl font-serif">
-                {delivery.capsule.memories.length}
+          <div className="flex w-full items-center justify-between mb-4">
+            <div className="flex flex-col items-center gap-1 flex-1 border-r border-border">
+              <div className="flex items-center gap-2 mb-1">
+                <BookOpen className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
+                <span className="text-xl font-serif">{capsule.memories.length}</span>
+              </div>
+              <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">
+                Recuerdos
               </span>
             </div>
+            <div className="flex flex-col items-center gap-1 flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Send className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
+                <span className="text-xl font-serif">
+                  {delivery.recipientName.split(" ")[0]}
+                </span>
+              </div>
+              <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">
+                Destinatario
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 my-1">
+            <div className="h-px flex-1 bg-border" />
+            <SparkIcon className="text-[12px] opacity-30" />
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          {/* Mensajes futuros — count visible, bloqueados */}
+          <div className="flex flex-col items-center gap-1 mt-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Mail className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
+              <span className="text-xl font-serif">{futureMessages.length}</span>
+            </div>
             <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">
-              Recuerdos
+              Mensajes futuros
             </span>
           </div>
         </div>
 
-        {/* Memories */}
+        {/* Calendar — igual que CapsuleProfile, sin navegación a días */}
+        <div className="w-full mb-6">
+          <MemoryCalendar
+            memories={capsule.memories}
+            futureMessages={futureMessages}
+            onDayClick={() => {/* read-only: no navegar */}}
+          />
+        </div>
+
+        {/* Últimos recuerdos — scroll horizontal, igual que CapsuleProfile */}
         <div className="w-full mb-8">
-          <h3 className="font-sans text-[17px] font-semibold text-foreground mb-4">
-            Recuerdos
-          </h3>
-          {delivery.capsule.memories.length === 0 ? (
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-sans text-[17px] font-semibold text-foreground">
+              Últimos recuerdos
+            </h3>
+          </div>
+          {capsule.memories.length === 0 ? (
             <div className="flex h-[100px] w-full items-center justify-center rounded-2xl border border-border">
               <p className="text-[12px] text-foreground/40 italic">
                 Aún no hay recuerdos
@@ -357,19 +273,24 @@ export default function CapsuleTokenPage() {
             </div>
           ) : (
             <div className="flex gap-3 overflow-x-auto pb-3 no-scrollbar -mx-6 px-6">
-              {delivery.capsule.memories.map((memory) => (
-                <MemoryThumb
+              {capsule.memories.map((memory) => (
+                <div
                   key={memory.id}
-                  memory={memory}
-                  onClick={() => setViewerMemory(memory)}
-                />
+                  className="shrink-0 w-[120px] min-[320px]:w-[140px]"
+                >
+                  <MemoryCard
+                    memory={memory}
+                    onClick={() => setSelectedMemory(memory)}
+                    readOnly
+                  />
+                </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Mensajes futuros — bloqueado */}
-        <div className="w-full rounded-3xl p-6 mb-8 border border-border/50 bg-surface/30">
+        {/* Mensajes futuros — bloqueados, igual que el CapsuleProfile pero sin link */}
+        <div className="w-full rounded-3xl p-6 mb-8 border border-border bg-background shadow-sm">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface border border-border">
               <Lock className="h-5 w-5 text-foreground/30" strokeWidth={1.5} />
@@ -391,13 +312,11 @@ export default function CapsuleTokenPage() {
         </div>
       </div>
 
-      {/* Memory viewer overlay */}
-      {viewerMemory && (
-        <MemoryViewer
-          memory={viewerMemory}
-          onClose={() => setViewerMemory(null)}
-        />
-      )}
+      {/* Viewer drawer — igual que CapsuleProfile */}
+      <MemoryViewerDrawer
+        memory={selectedMemory}
+        onClose={() => setSelectedMemory(null)}
+      />
     </>
   );
 }

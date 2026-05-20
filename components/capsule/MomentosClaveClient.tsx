@@ -66,9 +66,11 @@ const formatDate = (date: Date | string) =>
 export function MemoryCard({
   memory,
   onClick,
+  readOnly = false,
 }: {
   memory: Memory;
   onClick: () => void;
+  readOnly?: boolean;
 }) {
   return (
     <div className="flex flex-col rounded-2xl overflow-hidden border border-border/60 bg-background">
@@ -82,10 +84,12 @@ export function MemoryCard({
           {TYPE_ICONS[memory.type]}
         </div>
 
-        {/* Menú "..." — arriba derecha (placeholder) */}
-        <div className="absolute top-2 right-2 z-10 h-7 w-7 rounded-full bg-white/90 shadow-sm flex items-center justify-center">
-          <MoreHorizontal className="h-3.5 w-3.5 text-foreground/60" />
-        </div>
+        {/* Menú "..." — arriba derecha (oculto en readOnly) */}
+        {!readOnly && (
+          <div className="absolute top-2 right-2 z-10 h-7 w-7 rounded-full bg-white/90 shadow-sm flex items-center justify-center">
+            <MoreHorizontal className="h-3.5 w-3.5 text-foreground/60" />
+          </div>
+        )}
 
         {/* Contenido del thumbnail */}
         {(memory.type === "PHOTO" || memory.type === "DRAWING") &&
@@ -109,6 +113,9 @@ export function MemoryCard({
               <video
                 src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
                 className="w-full h-full object-cover"
+                preload="metadata"
+                muted
+                playsInline
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/25">
                 <div className="h-10 w-10 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
@@ -168,10 +175,12 @@ export function MemoryCard({
           <p className="text-[11px] text-foreground/50">
             {formatDate(memory.createdAt)}
           </p>
-          <FavoriteButton
-            memoryId={memory.id}
-            initialIsFavorite={memory.isFavorite ?? false}
-          />
+          {!readOnly && (
+            <FavoriteButton
+              memoryId={memory.id}
+              initialIsFavorite={memory.isFavorite ?? false}
+            />
+          )}
         </div>
       </div>
     </div>

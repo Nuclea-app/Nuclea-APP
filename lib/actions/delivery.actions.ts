@@ -101,6 +101,7 @@ export async function getDeliveryByToken(token: string) {
           include: {
             memories: { orderBy: { createdAt: "desc" } },
             user: { select: { name: true, image: true } },
+            futureMessages: { select: { id: true, unlocksAt: true } },
           },
         },
       },

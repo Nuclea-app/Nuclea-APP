@@ -15,12 +15,14 @@ interface MemoryCalendarProps {
   memories: Memory[];
   futureMessages?: FutureMessageMarker[];
   capsuleId?: string;
+  onDayClick?: (day: number, year: number, month: number) => void;
 }
 
 export const MemoryCalendar = ({
   memories,
   futureMessages = [],
   capsuleId,
+  onDayClick,
 }: MemoryCalendarProps) => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -79,6 +81,11 @@ export const MemoryCalendar = ({
     });
 
   const handleDayClick = (day: number) => {
+    if (onDayClick) {
+      onDayClick(day, year, month);
+      return;
+    }
+    if (!capsuleId) return;
     const fecha = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     router.push(`/dashboard/capsula/${capsuleId}/dia/${fecha}`);
   };
