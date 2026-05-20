@@ -68,8 +68,8 @@ export function MemoryViewerDrawer({
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent className="max-w-[430px] mx-auto rounded-t-[32px] bg-white px-6 pb-10">
-        <DrawerHeader className="px-0 pt-6 pb-4">
+      <DrawerContent className="max-w-[430px] mx-auto rounded-t-[32px] bg-white px-6">
+        <DrawerHeader className="px-0 pt-6 pb-4 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-foreground/50">
               {memory && TYPE_ICONS[memory.type]}
@@ -94,7 +94,7 @@ export function MemoryViewerDrawer({
         </DrawerHeader>
 
         {memory && (
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pb-10">
             {/* Contenido principal */}
             {(memory.type === "PHOTO" || memory.type === "DRAWING") &&
               memory.fileUrl && (
