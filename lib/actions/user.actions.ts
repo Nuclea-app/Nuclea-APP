@@ -4,16 +4,18 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { auth } from "@/auth";
 
-async function requireSelf(userId: string) {
+async function getAuthUserId(): Promise<string | null> {
   const session = await auth();
-  if (!session?.user?.id) return { error: "No autorizado" as const };
-  if (session.user.id !== userId) return { error: "No autorizado" as const };
-  return { session };
+  return session?.user?.id ?? null;
+}
+
+function notSelf(authId: string | null, userId: string): boolean {
+  return !authId || authId !== userId;
 }
 
 export async function updateUserName(userId: string, name: string) {
-  const check = await requireSelf(userId);
-  if ("error" in check) return check;
+  const authId = await getAuthUserId();
+  if (notSelf(authId, userId)) return { error: "No autorizado" };
 
   const trimmed = name.trim();
   if (!trimmed) return { error: "El nombre no puede estar vacío" };
@@ -31,8 +33,8 @@ export async function updateUserPassword(
   currentPassword: string,
   newPassword: string
 ) {
-  const check = await requireSelf(userId);
-  if ("error" in check) return check;
+  const authId = await getAuthUserId();
+  if (notSelf(authId, userId)) return { error: "No autorizado" };
 
   if (newPassword.length < 8)
     return { error: "La contraseña debe tener al menos 8 caracteres" };
@@ -42,7 +44,6 @@ export async function updateUserPassword(
     if (!user) return { error: "Usuario no encontrado" };
 
     if (!user.password) {
-      // OAuth-only account: don't allow setting a password without explicit flow
       return { error: "Esta cuenta usa acceso con Google. No tiene contraseña asociada." };
     }
 
@@ -58,8 +59,8 @@ export async function updateUserPassword(
 }
 
 export async function updateUserBirthdate(userId: string, birthdate: string) {
-  const check = await requireSelf(userId);
-  if ("error" in check) return check;
+  const authId = await getAuthUserId();
+  if (notSelf(authId, userId)) return { error: "No autorizado" };
 
   try {
     const date = new Date(birthdate + "T12:00:00");
@@ -73,8 +74,8 @@ export async function updateUserBirthdate(userId: string, birthdate: string) {
 }
 
 export async function getUserStats(userId: string) {
-  const check = await requireSelf(userId);
-  if ("error" in check) return { capsulesCreated: 0, capsulesDelivered: 0 };
+  const authId = await getAuthUserId();
+  if (notSelf(authId, userId)) return { capsulesCreated: 0, capsulesDelivered: 0 };
 
   try {
     const [capsulesCreated, capsulesDelivered] = await Promise.all([
@@ -89,11 +90,11 @@ export async function getUserStats(userId: string) {
 
 export async function deleteCapsule(capsuleId: string) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) return { error: "No autorizado" };
+    const authId = await getAuthUserId();
+    if (!authId) return { error: "No autorizado" };
 
     const capsule = await prisma.capsule.findUnique({ where: { id: capsuleId } });
-    if (!capsule || capsule.userId !== session.user.id)
+    if (!capsule || capsule.userId !== authId)
       return { error: "Cápsula no encontrada" };
 
     await prisma.capsule.delete({ where: { id: capsuleId } });
