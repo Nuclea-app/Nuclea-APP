@@ -58,11 +58,13 @@ const formatDate = (date: Date | string) =>
 interface MemoryViewerDrawerProps {
   memory: Memory | null;
   onClose: () => void;
+  readOnly?: boolean;
 }
 
 export function MemoryViewerDrawer({
   memory,
   onClose,
+  readOnly = false,
 }: MemoryViewerDrawerProps) {
   const isOpen = !!memory;
 
@@ -172,10 +174,12 @@ export function MemoryViewerDrawer({
               <p className="text-[12px] text-foreground/40">
                 {formatDate(memory.createdAt)}
               </p>
-              <FavoriteButton
-                memoryId={memory.id}
-                initialIsFavorite={memory.isFavorite ?? false}
-              />
+              {!readOnly && (
+                <FavoriteButton
+                  memoryId={memory.id}
+                  initialIsFavorite={memory.isFavorite ?? false}
+                />
+              )}
             </div>
           </div>
         )}

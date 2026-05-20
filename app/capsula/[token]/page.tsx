@@ -160,12 +160,12 @@ export default function CapsuleTokenPage() {
 
   return (
     <>
-      <div className="flex flex-col items-center pb-12 px-6 max-w-[430px] mx-auto w-full">
+      <div className="flex flex-col items-center pt-10 pb-12 px-6 max-w-[430px] mx-auto w-full">
 
         {/* Badge */}
         <div className="mb-8">
           <span className="rounded-full border border-foreground/10 px-6 py-1 text-[10px] font-bold tracking-[0.3em] uppercase bg-surface/50">
-            {capsule.type} ✦
+            {capsule.type.toLowerCase()} ✦
           </span>
         </div>
 
@@ -312,10 +312,11 @@ export default function CapsuleTokenPage() {
         </div>
       </div>
 
-      {/* Viewer drawer — igual que CapsuleProfile */}
+      {/* Viewer drawer — read-only: sin FavoriteButton */}
       <MemoryViewerDrawer
         memory={selectedMemory}
         onClose={() => setSelectedMemory(null)}
+        readOnly
       />
     </>
   );
