@@ -2,6 +2,30 @@ import { Resend } from "resend";
 
 export const resend = new Resend(process.env.RESEND_API_KEY);
 
+export function buildCapsuleEmailText(params: {
+  recipientName: string;
+  senderName?: string;
+  capsuleUrl: string;
+}): string {
+  const sender = params.senderName ?? "Alguien especial";
+  return [
+    "NUCLEA",
+    "",
+    `Hola ${params.recipientName},`,
+    "",
+    `${sender} te ha enviado una cápsula de recuerdos.`,
+    "",
+    "Abre tu cápsula aquí:",
+    params.capsuleUrl,
+    "",
+    "Este regalo es privado y personal. Solo tú puedes abrir esta cápsula.",
+    "",
+    "---",
+    "Hecho con amor por Nuclea",
+    "Lo que hoy vives, mañana tendrá aún más significado.",
+  ].join("\n");
+}
+
 export function buildCapsuleEmailHtml(params: {
   recipientName: string;
   senderName?: string;

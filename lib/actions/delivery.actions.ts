@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-import { resend, buildCapsuleEmailHtml } from "@/lib/resend";
+import { resend, buildCapsuleEmailHtml, buildCapsuleEmailText } from "@/lib/resend";
 
 export async function createDelivery(data: {
   capsuleId: string;
@@ -69,14 +69,20 @@ async function sendCapsuleEmail(params: {
 
   try {
     await resend.emails.send({
-      from: `NUCLEA <${fromDomain}>`,
+      from: `Nuclea <${fromDomain}>`,
       to: params.to,
-      subject: "✦ Alguien te envió una cápsula",
+      replyTo: fromDomain,
+      subject: "Alguien te envió una cápsula de recuerdos",
+      text: buildCapsuleEmailText(params),
       html: buildCapsuleEmailHtml({
         recipientName: params.recipientName,
         senderName: params.senderName,
         capsuleUrl: params.capsuleUrl,
       }),
+      headers: {
+        "List-Unsubscribe": `<mailto:${fromDomain}?subject=unsubscribe>`,
+        "X-Entity-Ref-ID": `nuclea-delivery-${Date.now()}`,
+      },
     });
     return true;
   } catch (error) {

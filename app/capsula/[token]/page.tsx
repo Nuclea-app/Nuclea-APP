@@ -14,6 +14,8 @@ import {
   Play,
   Lock,
   Heart,
+  BookOpen,
+  X,
 } from "lucide-react";
 
 type Memory = {
@@ -28,6 +30,7 @@ type DeliveryData = {
   recipientName: string;
   capsule: {
     name: string;
+    description?: string | null;
     coverUrl?: string | null;
     memories: Memory[];
     user?: { name: string | null; image: string | null } | null;
@@ -36,11 +39,139 @@ type DeliveryData = {
 
 type Phase = "opening" | "bienvenida" | "dentro";
 
+// ─── Read-only memory card (thumbnail) ───────────────────────────────────────
+function MemoryThumb({
+  memory,
+  onClick,
+}: {
+  memory: Memory;
+  onClick: () => void;
+}) {
+  const label =
+    memory.type === "PHOTO"
+      ? "FOTO"
+      : memory.type === "VIDEO"
+        ? "VIDEO"
+        : memory.type === "AUDIO"
+          ? "AUDIO"
+          : memory.type === "DRAWING"
+            ? "DIBUJO"
+            : "NOTA";
+
+  return (
+    <button
+      onClick={onClick}
+      className="shrink-0 w-[140px] flex flex-col rounded-2xl overflow-hidden border border-border/60 bg-background active:scale-[0.98] transition-all"
+    >
+      {/* Image area */}
+      <div className="relative w-full aspect-square bg-surface overflow-hidden">
+        {(memory.type === "PHOTO" || memory.type === "DRAWING") &&
+          memory.fileUrl ? (
+          <Image
+            src={memory.fileUrl}
+            alt={label}
+            fill
+            className="object-cover"
+          />
+        ) : memory.type === "VIDEO" && memory.fileUrl ? (
+          <div className="flex h-full w-full items-center justify-center bg-slate-100">
+            <Play className="h-8 w-8 text-foreground/30" />
+          </div>
+        ) : memory.type === "AUDIO" ? (
+          <div className="flex h-full w-full items-center justify-center bg-surface">
+            <Mic className="h-8 w-8 text-foreground/30" />
+          </div>
+        ) : memory.type === "NOTE" ? (
+          <div className="flex h-full w-full items-start p-3 bg-surface/50">
+            <p className="text-[11px] text-foreground/60 line-clamp-5 leading-tight text-left">
+              {memory.content || "Nota"}
+            </p>
+          </div>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <ImageIcon className="h-8 w-8 opacity-10" />
+          </div>
+        )}
+      </div>
+      {/* Label */}
+      <div className="px-3 pt-2 pb-3">
+        <p className="text-[11px] font-semibold text-foreground/50 truncate">
+          {label} ✦
+        </p>
+      </div>
+    </button>
+  );
+}
+
+// ─── Full-screen memory viewer overlay ───────────────────────────────────────
+function MemoryViewer({
+  memory,
+  onClose,
+}: {
+  memory: Memory;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/90 flex flex-col">
+      <div className="flex items-center justify-end p-4">
+        <button
+          onClick={onClose}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center px-4">
+        {(memory.type === "PHOTO" || memory.type === "DRAWING") &&
+          memory.fileUrl ? (
+          <div className="relative w-full max-h-[70vh] aspect-square">
+            <Image
+              src={memory.fileUrl}
+              alt="Recuerdo"
+              fill
+              className="object-contain"
+            />
+          </div>
+        ) : memory.type === "VIDEO" && memory.fileUrl ? (
+          <video
+            src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
+            className="w-full max-h-[70vh] rounded-xl"
+            controls
+            autoPlay
+          />
+        ) : memory.type === "AUDIO" && memory.fileUrl ? (
+          <div className="flex flex-col items-center gap-6 w-full max-w-[300px]">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/10">
+              <Mic className="h-10 w-10 text-white/60" />
+            </div>
+            <audio
+              src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
+              controls
+              autoPlay
+              className="w-full"
+            />
+          </div>
+        ) : memory.type === "NOTE" ? (
+          <div className="w-full max-w-[360px] rounded-3xl bg-white/10 p-6">
+            <FileText className="h-5 w-5 text-white/40 mb-3" />
+            <p className="text-white/80 text-[15px] leading-relaxed">
+              {memory.content || "Sin contenido"}
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function CapsuleTokenPage() {
   const { token } = useParams<{ token: string }>();
   const [delivery, setDelivery] = useState<DeliveryData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [phase, setPhase] = useState<Phase>("opening");
+  const [viewerMemory, setViewerMemory] = useState<Memory | null>(null);
 
   useEffect(() => {
     getDeliveryByToken(token).then((data) => {
@@ -74,12 +205,12 @@ export default function CapsuleTokenPage() {
     );
   }
 
-  // Paso 2 + 3: animación de apertura
+  // ── Paso 2+3: animación de apertura ──────────────────────────────────────
   if (phase === "opening") {
     return <CapsuleOpening onComplete={() => setPhase("bienvenida")} />;
   }
 
-  // Paso 4: pantalla de bienvenida
+  // ── Paso 4: pantalla de bienvenida ───────────────────────────────────────
   if (phase === "bienvenida") {
     const senderName = delivery.capsule.user?.name ?? "Alguien especial";
     const avatar = delivery.capsule.user?.image ?? delivery.capsule.coverUrl;
@@ -134,7 +265,7 @@ export default function CapsuleTokenPage() {
 
         <button
           onClick={() => setPhase("dentro")}
-          className="w-full max-w-[320px] flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background py-4 text-[12px] font-semibold tracking-wider transition-all active:scale-[0.98] hover:opacity-90"
+          className="w-full max-w-[320px] flex items-center justify-center gap-2 rounded-sm bg-foreground text-background py-4 text-sm font-semibold tracking-wider uppercase transition-all active:scale-[0.98] hover:opacity-90"
         >
           <SparkIcon className="text-[10px]" />
           <span>VER MI CÁPSULA</span>
@@ -143,112 +274,130 @@ export default function CapsuleTokenPage() {
     );
   }
 
-  // Paso 5: dentro de la cápsula
+  // ── Paso 5: dentro de la cápsula — igual que CapsuleProfile (read-only) ──
+  const DEFAULT_DESCRIPTION =
+    "Elegimos seguir escribiendo nuestra historia, cada día, juntos.";
+
   return (
-    <div className="flex flex-col pb-12 px-6 pt-10 min-h-screen">
-      <div className="flex items-center justify-center mb-8">
-        <div className="flex items-center gap-1 font-sans font-semibold tracking-[0.2em] text-[12px]">
-          <span>NUCLEA</span>
+    <>
+      <div className="flex flex-col items-center pb-12 px-6">
+
+        {/* Badge */}
+        <div className="mb-8">
+          <span className="rounded-full border border-foreground/10 px-6 py-1 text-[10px] font-bold tracking-[0.3em] uppercase bg-surface/50">
+            CÁPSULA DE RECUERDOS ✦
+          </span>
+        </div>
+
+        {/* Cover image */}
+        <div className="relative mb-6">
+          <div className="h-[120px] w-[120px] rounded-full bg-surface overflow-hidden border-4 border-background shadow-sm">
+            {delivery.capsule.coverUrl ? (
+              <Image
+                src={delivery.capsule.coverUrl}
+                alt={delivery.capsule.name}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-3xl font-serif text-foreground/20 uppercase">
+                {delivery.capsule.name.charAt(0)}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Name */}
+        <h1 className="font-serif text-3xl font-semibold text-foreground text-center mb-4">
+          {delivery.capsule.name}
+        </h1>
+
+        {/* Separator */}
+        <div className="flex gap-2 items-center justify-center w-full mb-4">
+          <div className="w-[35%] h-px bg-gray-300" />
+          <Heart className="h-4 w-4 text-foreground/20" />
+          <div className="w-[35%] h-px bg-gray-300" />
+        </div>
+
+        {/* Description */}
+        <p className="font-sans italic text-[15px] text-foreground/60 text-center leading-relaxed max-w-[300px] mb-4">
+          {delivery.capsule.description || DEFAULT_DESCRIPTION}
+        </p>
+
+        <Heart className="h-4 w-4 text-foreground/20 mb-10" />
+
+        {/* Stats */}
+        <div className="w-full rounded-3xl p-6 mb-6 border-border border bg-background shadow-sm">
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2 mb-1">
+              <BookOpen
+                className="h-5 w-5 text-foreground/40"
+                strokeWidth={1.5}
+              />
+              <span className="text-xl font-serif">
+                {delivery.capsule.memories.length}
+              </span>
+            </div>
+            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">
+              Recuerdos
+            </span>
+          </div>
+        </div>
+
+        {/* Memories */}
+        <div className="w-full mb-8">
+          <h3 className="font-sans text-[17px] font-semibold text-foreground mb-4">
+            Recuerdos
+          </h3>
+          {delivery.capsule.memories.length === 0 ? (
+            <div className="flex h-[100px] w-full items-center justify-center rounded-2xl border border-border">
+              <p className="text-[12px] text-foreground/40 italic">
+                Aún no hay recuerdos
+              </p>
+            </div>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto pb-3 no-scrollbar -mx-6 px-6">
+              {delivery.capsule.memories.map((memory) => (
+                <MemoryThumb
+                  key={memory.id}
+                  memory={memory}
+                  onClick={() => setViewerMemory(memory)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Mensajes futuros — bloqueado */}
+        <div className="w-full rounded-3xl p-6 mb-8 border border-border/50 bg-surface/30">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface border border-border">
+              <Lock className="h-5 w-5 text-foreground/30" strokeWidth={1.5} />
+            </div>
+            <p className="font-sans text-[14px] font-semibold text-foreground/50">
+              Mensajes futuros
+            </p>
+            <p className="text-[12px] text-foreground/30 leading-relaxed">
+              Esta sección es privada para el creador de la cápsula.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-center gap-2 opacity-30">
+          <SparkIcon className="text-[10px]" />
+          <span className="font-sans text-[11px] tracking-[0.2em]">NUCLEA</span>
           <SparkIcon className="text-[10px]" />
         </div>
       </div>
 
-      <div className="text-center mb-8">
-        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-2">
-          CÁPSULA DE RECUERDOS ✦
-        </p>
-        <h1 className="font-serif text-2xl text-foreground mb-1">
-          {delivery.capsule.name}
-        </h1>
-        <p className="text-[13px] text-foreground/50">
-          Creada especialmente para {delivery.recipientName}
-        </p>
-      </div>
-
-      {delivery.capsule.memories.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-border bg-surface/30 py-16 text-center">
-          <SparkIcon className="text-2xl opacity-20" />
-          <p className="text-[13px] text-foreground/40 italic">
-            Esta cápsula aún no tiene recuerdos.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {delivery.capsule.memories.map((memory) => (
-            <div
-              key={memory.id}
-              className="relative aspect-square rounded-2xl bg-surface overflow-hidden"
-            >
-              {(memory.type === "PHOTO" || memory.type === "DRAWING") &&
-                (memory.fileUrl ? (
-                  <>
-                    <Image
-                      src={memory.fileUrl}
-                      alt="Recuerdo"
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
-                    <div className="absolute bottom-2 left-2 text-[9px] text-white font-medium uppercase tracking-wider">
-                      {memory.type === "DRAWING" ? "DIBUJO" : "PHOTO"} ✦
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <ImageIcon className="h-8 w-8 opacity-10" />
-                  </div>
-                ))}
-
-              {memory.type === "VIDEO" &&
-                (memory.fileUrl ? (
-                  <div className="relative w-full h-full bg-slate-100">
-                    <video
-                      src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
-                      className="w-full h-full object-cover"
-                      controls
-                    />
-                    <div className="absolute top-2 left-2 text-[9px] text-white font-medium uppercase tracking-wider bg-black/40 rounded px-1">
-                      VIDEO ✦
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <Play className="h-8 w-8 opacity-10" />
-                  </div>
-                ))}
-
-              {memory.type === "AUDIO" && memory.fileUrl && (
-                <div className="flex flex-col items-center justify-center h-full gap-2 p-4 bg-surface/50">
-                  <Mic className="h-6 w-6 text-foreground/40" />
-                  <audio src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl} controls className="w-full" />
-                  <span className="text-[9px] text-foreground/40 font-medium uppercase tracking-wider">
-                    AUDIO ✦
-                  </span>
-                </div>
-              )}
-
-              {memory.type === "NOTE" && (
-                <div className="flex flex-col h-full p-4 gap-2 bg-surface/50">
-                  <FileText className="h-4 w-4 text-foreground/40" />
-                  <p className="text-[11px] text-foreground/60 line-clamp-6 leading-tight">
-                    {memory.content || "Sin contenido"}
-                  </p>
-                  <span className="text-[8px] font-medium tracking-widest uppercase text-foreground/30 mt-auto">
-                    NOTA ✦
-                  </span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+      {/* Memory viewer overlay */}
+      {viewerMemory && (
+        <MemoryViewer
+          memory={viewerMemory}
+          onClose={() => setViewerMemory(null)}
+        />
       )}
-
-      <div className="mt-12 flex items-center justify-center gap-2 opacity-30">
-        <Lock className="h-3 w-3" />
-        <span className="font-sans text-[10px] tracking-[0.2em]">
-          Creado especialmente para ti
-        </span>
-      </div>
-    </div>
+    </>
   );
 }
