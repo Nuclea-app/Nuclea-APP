@@ -56,6 +56,12 @@ export default function CapsuleTokenPage() {
               ? (toDeliveryMediaUrl(m.fileUrl, token) ?? m.fileUrl)
               : null,
           })),
+          futureMessages: (data.capsule.futureMessages ?? []).map((fm) => ({
+            ...fm,
+            unlocksAt: fm.unlocksAt instanceof Date
+              ? fm.unlocksAt.toISOString()
+              : String(fm.unlocksAt),
+          })),
         },
       };
 
