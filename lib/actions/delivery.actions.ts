@@ -24,73 +24,81 @@ export async function createDelivery(data: {
     if (!capsule) return { error: "Cápsula no encontrada" };
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://nuclea.app";
-    const results: { token: string; capsuleUrl: string; email: string; emailSent: boolean }[] = [];
+    const senderName = capsule.user?.name ?? undefined;
 
-    // Create one delivery per email and send each — sequentially to avoid race conditions
-    for (const email of data.emails) {
-      const trimmed = email.trim();
-      if (!trimmed) continue;
+    // 1. Create all delivery records in the DB first
+    const deliveries = await Promise.all(
+      data.emails
+        .map((e) => e.trim())
+        .filter(Boolean)
+        .map((email) =>
+          prisma.capsuleDelivery.create({
+            data: {
+              capsuleId: data.capsuleId,
+              recipientName: data.recipientName,
+              relation: data.relation,
+              relationCustom: data.relationCustom,
+              email,
+              phone: data.phone,
+            },
+          })
+        )
+    );
 
-      const delivery = await prisma.capsuleDelivery.create({
-        data: {
-          capsuleId: data.capsuleId,
-          recipientName: data.recipientName,
-          relation: data.relation,
-          relationCustom: data.relationCustom,
-          email: trimmed,
-          phone: data.phone,
-        },
-      });
-
-      const capsuleUrl = `${baseUrl}/capsula/${delivery.token}`;
-
-      const emailSent = await sendCapsuleEmail({
-        to: trimmed,
+    // 2. Send all emails in a single Resend batch request
+    //    Resend queues and retries each one independently — no email gets lost
+    await sendBatchCapsuleEmails(
+      deliveries.map((d) => ({
+        to: d.email!,
         recipientName: data.recipientName,
-        senderName: capsule.user?.name ?? undefined,
-        capsuleUrl,
-      });
+        senderName,
+        capsuleUrl: `${baseUrl}/capsula/${d.token}`,
+      }))
+    );
 
-      results.push({ token: delivery.token, capsuleUrl, email: trimmed, emailSent });
-    }
-
-    return { success: true, results };
+    return {
+      success: true,
+      results: deliveries.map((d) => ({
+        token: d.token,
+        capsuleUrl: `${baseUrl}/capsula/${d.token}`,
+        email: d.email!,
+      })),
+    };
   } catch (error) {
     console.error("Error creating delivery:", error);
     return { error: "No se pudo guardar la entrega" };
   }
 }
 
-async function sendCapsuleEmail(params: {
-  to: string;
-  recipientName: string;
-  senderName?: string;
-  capsuleUrl: string;
-}): Promise<boolean> {
+async function sendBatchCapsuleEmails(
+  emails: { to: string; recipientName: string; senderName?: string; capsuleUrl: string }[]
+): Promise<void> {
+  if (emails.length === 0) return;
+
   const fromDomain = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
 
   try {
-    await resend.emails.send({
-      from: `Nuclea <${fromDomain}>`,
-      to: params.to,
-      replyTo: fromDomain,
-      subject: "Alguien te envió una cápsula de recuerdos",
-      text: buildCapsuleEmailText(params),
-      html: buildCapsuleEmailHtml({
-        recipientName: params.recipientName,
-        senderName: params.senderName,
-        capsuleUrl: params.capsuleUrl,
-      }),
-      headers: {
-        "List-Unsubscribe": `<mailto:${fromDomain}?subject=unsubscribe>`,
-        "X-Entity-Ref-ID": `nuclea-delivery-${Date.now()}`,
-      },
-    });
-    return true;
+    await resend.batch.send(
+      emails.map((params) => ({
+        from: `Nuclea <${fromDomain}>`,
+        to: params.to,
+        replyTo: fromDomain,
+        subject: "Alguien te envió una cápsula de recuerdos",
+        text: buildCapsuleEmailText(params),
+        html: buildCapsuleEmailHtml({
+          recipientName: params.recipientName,
+          senderName: params.senderName,
+          capsuleUrl: params.capsuleUrl,
+        }),
+        headers: {
+          "List-Unsubscribe": `<mailto:${fromDomain}?subject=unsubscribe>`,
+          "X-Entity-Ref-ID": `nuclea-delivery-${Date.now()}`,
+        },
+      }))
+    );
   } catch (error) {
-    // Don't block delivery if email fails — log and report back
-    console.error("Error sending capsule email:", error);
-    return false;
+    // Don't block delivery creation if email batch fails — deliveries are already saved
+    console.error("Error sending capsule email batch:", error);
   }
 }
 
