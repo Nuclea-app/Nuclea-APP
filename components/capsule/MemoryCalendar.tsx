@@ -27,6 +27,7 @@ export const MemoryCalendar = ({
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showYearPicker, setShowYearPicker] = useState(false);
+  const [yearPage, setYearPage] = useState(0);
 
   const daysInMonth = (year: number, month: number) =>
     new Date(year, month + 1, 0).getDate();
@@ -101,7 +102,7 @@ export const MemoryCalendar = ({
     <div className="w-full border border-border bg-background rounded-3xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <button
-          onClick={() => setShowYearPicker(v => !v)}
+          onClick={() => { setShowYearPicker(v => !v); setYearPage(0); }}
           className="font-serif text-xl hover:opacity-60 transition-opacity text-left"
         >
           {monthNames[month]} {year}
@@ -131,21 +132,40 @@ export const MemoryCalendar = ({
       </div>
 
       {showYearPicker && (
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          {Array.from({ length: 16 }, (_, i) => today.getFullYear() - 3 + i).map(y => (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2 px-1">
             <button
-              key={y}
-              onClick={() => { setCurrentDate(new Date(y, month, 1)); setShowYearPicker(false); }}
-              className={cn(
-                "rounded-xl py-2 text-[13px] font-medium transition-colors",
-                y === year
-                  ? "bg-foreground text-background"
-                  : "hover:bg-surface text-foreground/60"
-              )}
+              onClick={() => setYearPage(p => p - 1)}
+              className="p-1 hover:bg-surface rounded-full transition-colors"
             >
-              {y}
+              <ChevronLeft className="h-4 w-4 opacity-40" />
             </button>
-          ))}
+            <span className="text-[11px] font-bold tracking-widest uppercase text-foreground/30">
+              {today.getFullYear() - 3 + yearPage * 16} — {today.getFullYear() + 12 + yearPage * 16}
+            </span>
+            <button
+              onClick={() => setYearPage(p => p + 1)}
+              className="p-1 hover:bg-surface rounded-full transition-colors"
+            >
+              <ChevronRight className="h-4 w-4 opacity-40" />
+            </button>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {Array.from({ length: 16 }, (_, i) => today.getFullYear() - 3 + yearPage * 16 + i).map(y => (
+              <button
+                key={y}
+                onClick={() => { setCurrentDate(new Date(y, month, 1)); setShowYearPicker(false); setYearPage(0); }}
+                className={cn(
+                  "rounded-xl py-2 text-[13px] font-medium transition-colors",
+                  y === year
+                    ? "bg-foreground text-background"
+                    : "hover:bg-surface text-foreground/60"
+                )}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
