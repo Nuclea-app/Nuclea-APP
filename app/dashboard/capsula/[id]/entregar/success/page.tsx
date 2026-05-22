@@ -12,7 +12,7 @@ export default async function EntregarSuccessPage({
   params,
   searchParams,
 }: PageProps) {
-  const { id: capsuleId } = await params;
+  await params; // capsuleId no needed — both buttons redirect to /dashboard
   const { name } = await searchParams;
 
   const now = new Date();
