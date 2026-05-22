@@ -9,50 +9,52 @@ export async function createDelivery(data: {
   recipientName: string;
   relation: string;
   relationCustom?: string;
-  email?: string;
+  emails: string[];
   phone?: string;
 }) {
   try {
     const session = await auth();
     if (!session?.user?.id) return { error: "No autorizado" };
 
-    // Verify the capsule belongs to the current user before creating delivery
+    // Verify the capsule belongs to the current user — one check for all emails
     const capsule = await prisma.capsule.findUnique({
       where: { id: data.capsuleId, userId: session.user.id },
-      select: { id: true },
+      include: { user: { select: { name: true } } },
     });
     if (!capsule) return { error: "Cápsula no encontrada" };
 
-    const delivery = await prisma.capsuleDelivery.create({
-      data: {
-        capsuleId: data.capsuleId,
-        recipientName: data.recipientName,
-        relation: data.relation,
-        relationCustom: data.relationCustom,
-        email: data.email,
-        phone: data.phone,
-      },
-      include: {
-        capsule: {
-          include: { user: { select: { name: true } } },
-        },
-      },
-    });
-
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://nuclea.app";
-    const capsuleUrl = `${baseUrl}/capsula/${delivery.token}`;
+    const results: { token: string; capsuleUrl: string; email: string; emailSent: boolean }[] = [];
 
-    let emailSent = false;
-    if (data.email) {
-      emailSent = await sendCapsuleEmail({
-        to: data.email,
+    // Create one delivery per email and send each — sequentially to avoid race conditions
+    for (const email of data.emails) {
+      const trimmed = email.trim();
+      if (!trimmed) continue;
+
+      const delivery = await prisma.capsuleDelivery.create({
+        data: {
+          capsuleId: data.capsuleId,
+          recipientName: data.recipientName,
+          relation: data.relation,
+          relationCustom: data.relationCustom,
+          email: trimmed,
+          phone: data.phone,
+        },
+      });
+
+      const capsuleUrl = `${baseUrl}/capsula/${delivery.token}`;
+
+      const emailSent = await sendCapsuleEmail({
+        to: trimmed,
         recipientName: data.recipientName,
-        senderName: delivery.capsule.user?.name ?? undefined,
+        senderName: capsule.user?.name ?? undefined,
         capsuleUrl,
       });
+
+      results.push({ token: delivery.token, capsuleUrl, email: trimmed, emailSent });
     }
 
-    return { success: true, token: delivery.token, capsuleUrl, emailSent };
+    return { success: true, results };
   } catch (error) {
     console.error("Error creating delivery:", error);
     return { error: "No se pudo guardar la entrega" };

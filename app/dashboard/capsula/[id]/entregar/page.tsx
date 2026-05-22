@@ -72,21 +72,16 @@ export default function EntregarPage() {
     setError("");
 
     try {
-      const results = await Promise.all(
-        validEmails.map((email) =>
-          createDelivery({
-            capsuleId,
-            recipientName: recipientName.trim(),
-            relation,
-            relationCustom: relation === "otro" ? relationCustom.trim() : undefined,
-            email: email.trim(),
-          })
-        )
-      );
+      const result = await createDelivery({
+        capsuleId,
+        recipientName: recipientName.trim(),
+        relation,
+        relationCustom: relation === "otro" ? relationCustom.trim() : undefined,
+        emails: validEmails,
+      });
 
-      const failed = results.find((r) => "error" in r);
-      if (failed && "error" in failed) {
-        setError(failed.error ?? "Error al guardar");
+      if ("error" in result) {
+        setError(result.error ?? "Error al guardar");
         return;
       }
 
