@@ -50,6 +50,7 @@ model User {
   sessions            Session[]
   passwordResetToken  PasswordResetToken[]
   capsules            Capsule[]
+  receivedDeliveries  CapsuleDelivery[]
 
   @@map("users")
 }
@@ -103,17 +104,19 @@ enum MemoryType {
 }
 
 model CapsuleDelivery {
-  id             String    @id @default(cuid())
-  capsuleId      String
-  capsule        Capsule   @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
-  token          String    @unique @default(cuid())
-  recipientName  String
-  relation       String
-  relationCustom String?
-  email          String?
-  phone          String?
-  deliveredAt    DateTime?
-  createdAt      DateTime  @default(now())
+  id              String    @id @default(cuid())
+  capsuleId       String
+  capsule         Capsule   @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+  token           String    @unique @default(cuid())
+  recipientName   String
+  relation        String
+  relationCustom  String?
+  email           String?
+  phone           String?
+  deliveredAt     DateTime?
+  createdAt       DateTime  @default(now())
+  recipientUserId String?
+  recipientUser   User?     @relation(fields: [recipientUserId], references: [id], onDelete: SetNull)
 
   @@map("capsule_deliveries")
 }

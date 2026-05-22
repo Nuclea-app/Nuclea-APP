@@ -57,6 +57,35 @@ export async function getUserCapsules(userId: string) {
   }
 }
 
+export async function getReceivedCapsules(userId: string) {
+  if (!userId) return [];
+  try {
+    return await prisma.capsuleDelivery.findMany({
+      where: { recipientUserId: userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        token: true,
+        recipientName: true,
+        createdAt: true,
+        capsule: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            coverUrl: true,
+            _count: { select: { memories: true } },
+            user: { select: { name: true } },
+          },
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching received capsules:", error);
+    return [];
+  }
+}
+
 export async function getFavoriteMemories(capsuleId: string) {
   try {
     const session = await auth();

@@ -50,13 +50,29 @@ interface Capsule {
   deliveries: { id: string }[];
 }
 
+interface ReceivedCapsule {
+  id: string;
+  token: string;
+  recipientName: string;
+  capsule: {
+    id: string;
+    name: string;
+    type: string;
+    coverUrl: string | null;
+    _count: { memories: number };
+    user: { name: string | null } | null;
+  };
+}
+
 interface DashboardClientProps {
   capsules: Capsule[];
+  receivedCapsules: ReceivedCapsule[];
   userName: string;
 }
 
 export const DashboardClient = ({
   capsules: initialCapsules,
+  receivedCapsules,
   userName,
 }: DashboardClientProps) => {
   const router = useRouter();
@@ -306,6 +322,55 @@ export const DashboardClient = ({
                     <SendIcon className="h-3 w-3 text-foreground/40" />
                     <span className="text-[10px] font-semibold tracking-wide uppercase text-foreground/40">
                       Enviada
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── CÁPSULAS RECIBIDAS ── */}
+      {receivedCapsules.length > 0 && (
+        <div className="mt-6 mb-4">
+          <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-4">
+            CÁPSULAS RECIBIDAS · {receivedCapsules.length}
+          </p>
+          <div className="space-y-3">
+            {receivedCapsules.map((delivery) => {
+              const config = TYPE_CONFIG[delivery.capsule.type] ?? TYPE_CONFIG.LEGACY;
+              const senderName = delivery.capsule.user?.name ?? "Alguien especial";
+              return (
+                <Link
+                  key={delivery.id}
+                  href={`/capsula/${delivery.token}`}
+                  className="group flex w-full items-center gap-4 rounded-3xl border-2 border-foreground/5 bg-surface/50 p-4 text-left transition-all duration-200 hover:border-foreground/20 hover:bg-surface active:scale-[0.99]"
+                >
+                  <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-background border-2 border-background shadow-sm opacity-80">
+                    {delivery.capsule.coverUrl ? (
+                      <Image src={delivery.capsule.coverUrl} alt={delivery.capsule.name} fill className="object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        {config.icon}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-light tracking-widest uppercase text-foreground/30">
+                      De {senderName}
+                    </span>
+                    <h3 className="font-serif text-[18px] leading-tight text-foreground/70 truncate">
+                      {delivery.capsule.name}
+                    </h3>
+                    <p className="text-[11px] text-foreground/30 mt-0.5">
+                      {delivery.capsule._count.memories} recuerdo{delivery.capsule._count.memories !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0 rounded-full bg-foreground/10 px-2.5 py-1">
+                    <SparkIcon className="text-[10px] text-foreground/40" />
+                    <span className="text-[10px] font-semibold tracking-wide uppercase text-foreground/40">
+                      Para ti
                     </span>
                   </div>
                 </Link>

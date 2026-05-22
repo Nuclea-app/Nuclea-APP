@@ -27,12 +27,18 @@ export async function registerAction(values: z.infer<typeof registerSchema>) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
       },
+    });
+
+    // Vincular entregas previas que llegaron a este email
+    await prisma.capsuleDelivery.updateMany({
+      where: { email, recipientUserId: null },
+      data: { recipientUserId: newUser.id },
     });
 
     return { success: "Usuario creado exitosamente" };

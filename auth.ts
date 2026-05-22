@@ -20,6 +20,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   callbacks: {
+    async signIn({ user }) {
+      // Vincular entregas previas al email del usuario (cubre Google + credentials)
+      if (user.id && user.email) {
+        await prisma.capsuleDelivery.updateMany({
+          where: { email: user.email, recipientUserId: null },
+          data: { recipientUserId: user.id },
+        });
+      }
+      return true;
+    },
     async session({ session, token }) {
       if (token.sub) {
         session.user.id = token.sub;
