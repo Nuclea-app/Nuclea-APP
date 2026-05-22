@@ -425,6 +425,9 @@ export default function MensajeFuturoPage() {
             <Calendar
               mode="single"
               locale={es}
+              captionLayout="dropdown"
+              fromYear={new Date().getFullYear()}
+              toYear={new Date().getFullYear() + 30}
               selected={
                 unlocksAt ? new Date(unlocksAt + "T12:00:00") : undefined
               }

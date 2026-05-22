@@ -88,6 +88,18 @@ export async function getUserStats(userId: string) {
   }
 }
 
+export async function updateUserImage(imageUrl: string) {
+  const authId = await getAuthUserId();
+  if (!authId) return { error: "No autorizado" };
+
+  try {
+    await prisma.user.update({ where: { id: authId }, data: { image: imageUrl } });
+    return { success: true };
+  } catch {
+    return { error: "No se pudo actualizar la foto de perfil" };
+  }
+}
+
 export async function deleteCapsule(capsuleId: string) {
   try {
     const authId = await getAuthUserId();

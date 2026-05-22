@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Mail,
   Lock,
@@ -14,7 +14,10 @@ import {
   EyeOff,
   Send,
   LogOut,
+  Loader2,
 } from "lucide-react";
+import Image from "next/image";
+import { useUploadAvatar } from "@/lib/hooks/useUploadAvatar";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { es } from "date-fns/locale";
 import {
@@ -30,6 +33,7 @@ interface UserProfileClientProps {
   email: string;
   birthdate: Date | null;
   hasPassword: boolean;
+  image: string | null;
   capsulesCreated: number;
   capsulesDelivered: number;
 }
@@ -42,12 +46,27 @@ export const UserProfileClient = ({
   email,
   birthdate: initialBirthdate,
   hasPassword,
+  image: initialImage,
   capsulesCreated,
   capsulesDelivered,
 }: UserProfileClientProps) => {
   const [name, setName] = useState(initialName);
   const [birthdate, setBirthdate] = useState<Date | null>(initialBirthdate);
   const [editField, setEditField] = useState<EditField>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialImage);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const { uploadAvatar, isUploading: isUploadingAvatar } = useUploadAvatar();
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await uploadAvatar(file);
+      if (result.success) setAvatarUrl(result.url);
+    } catch {
+      // error is handled inside the hook
+    }
+  };
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -127,11 +146,31 @@ export const UserProfileClient = ({
       <div className="flex flex-col pb-24 px-6 min-h-screen">
         {/* Avatar */}
         <div className="flex flex-col items-center mb-8">
+          <input
+            type="file"
+            ref={avatarInputRef}
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
           <div className="relative mb-4">
-            <div className="h-[100px] w-[100px] rounded-full bg-surface flex items-center justify-center border border-border">
-              <span className="font-serif text-4xl text-foreground/30">{initial}</span>
+            <div className="h-[100px] w-[100px] rounded-full bg-surface overflow-hidden flex items-center justify-center border border-border relative">
+              {isUploadingAvatar && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-[2px] rounded-full">
+                  <Loader2 className="h-7 w-7 text-white animate-spin" />
+                </div>
+              )}
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt={name || "Avatar"} fill className="object-cover" />
+              ) : (
+                <span className="font-serif text-4xl text-foreground/30">{initial}</span>
+              )}
             </div>
-            <button className="absolute bottom-1 right-1 h-8 w-8 rounded-full bg-foreground text-background flex items-center justify-center border-2 border-background shadow-sm">
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute bottom-1 right-1 h-8 w-8 rounded-full bg-foreground text-background flex items-center justify-center border-2 border-background shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
+            >
               <Pencil className="h-3.5 w-3.5" />
             </button>
           </div>

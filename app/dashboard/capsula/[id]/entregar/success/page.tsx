@@ -139,7 +139,7 @@ export default async function EntregarSuccessPage({
 
       {/* Botones */}
       <Link
-        href={`/dashboard/capsula/${capsuleId}`}
+        href="/dashboard"
         className="w-full flex items-center justify-center gap-2 rounded-sm bg-foreground text-background py-4 text-sm font-semibold tracking-wider uppercase transition-all active:scale-[0.98] hover:opacity-90 mb-3"
       >
         <span>Ver mis cápsulas</span>

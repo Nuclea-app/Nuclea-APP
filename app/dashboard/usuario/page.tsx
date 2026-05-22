@@ -11,7 +11,7 @@ export default async function UsuarioPage() {
   const userId = session.user.id;
 
   const [user, stats] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true, birthdate: true, password: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true, birthdate: true, password: true, image: true } }),
     getUserStats(userId),
   ]);
 
@@ -24,6 +24,7 @@ export default async function UsuarioPage() {
       email={user.email ?? ""}
       birthdate={user.birthdate}
       hasPassword={!!user.password}
+      image={user.image ?? null}
       capsulesCreated={stats.capsulesCreated}
       capsulesDelivered={stats.capsulesDelivered}
     />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Search, Plus, PawPrint, Sprout, MoreVertical, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, PawPrint, Sprout, MoreVertical, Trash2, ChevronLeft, ChevronRight, Send as SendIcon } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -47,6 +47,7 @@ interface Capsule {
   type: string;
   coverUrl: string | null;
   _count: { memories: number };
+  deliveries: { id: string }[];
 }
 
 interface DashboardClientProps {
@@ -112,8 +113,11 @@ export const DashboardClient = ({
     );
   }, [capsules, debouncedQuery]);
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginated = filtered.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+  const activeCapsules = useMemo(() => filtered.filter(c => c.deliveries.length === 0), [filtered]);
+  const sentCapsules = useMemo(() => filtered.filter(c => c.deliveries.length > 0), [filtered]);
+
+  const totalPages = Math.ceil(activeCapsules.length / ITEMS_PER_PAGE);
+  const paginated = activeCapsules.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -152,13 +156,12 @@ export const DashboardClient = ({
         />
       </div>
 
-      {/* Label */}
+      {/* ── CÁPSULAS ACTIVAS ── */}
       <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-4">
-        MIS CÁPSULAS · {filtered.length}
+        CÁPSULAS ACTIVAS · {activeCapsules.length}
       </p>
 
-      {/* Capsule list */}
-      {filtered.length > 0 ? (
+      {activeCapsules.length > 0 ? (
         <>
         <div className="space-y-3 mb-4" ref={menuRef}>
           {paginated.map((capsule) => {
@@ -171,7 +174,6 @@ export const DashboardClient = ({
                   href={`/dashboard/capsula/${capsule.id}`}
                   className={`group flex w-full items-center gap-4 rounded-3xl border-2 border-foreground/10 bg-background p-4 pr-12 text-left transition-all duration-200 hover:border-foreground/30 hover:bg-surface ${isDeleting ? "opacity-40 pointer-events-none" : "active:scale-[0.99]"}`}
                 >
-                  {/* Avatar */}
                   <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-surface border-2 border-background shadow-sm">
                     {capsule.coverUrl ? (
                       <Image src={capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
@@ -181,8 +183,6 @@ export const DashboardClient = ({
                       </div>
                     )}
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <span className="text-[10px] font-light tracking-widest uppercase text-foreground/40">
                       {config.label}
@@ -196,7 +196,6 @@ export const DashboardClient = ({
                   </div>
                 </Link>
 
-                {/* Dropdown trigger */}
                 <button
                   onClick={(e) => { e.preventDefault(); setOpenMenuId(menuOpen ? null : capsule.id); }}
                   className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full text-foreground/30 hover:text-foreground hover:bg-surface transition-colors z-10"
@@ -204,7 +203,6 @@ export const DashboardClient = ({
                   <MoreVertical className="h-4 w-4" />
                 </button>
 
-                {/* Dropdown menu */}
                 {menuOpen && (
                   <div className="absolute top-12 right-4 z-20 min-w-[160px] rounded-2xl bg-background border border-border shadow-lg overflow-hidden">
                     <button
@@ -221,7 +219,6 @@ export const DashboardClient = ({
           })}
         </div>
 
-        {/* Paginación */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between mb-8 px-1">
             <button
@@ -238,9 +235,7 @@ export const DashboardClient = ({
                   key={i}
                   onClick={() => setPage(i)}
                   className={`h-2 rounded-full transition-all duration-200 ${
-                    i === page
-                      ? "w-5 bg-foreground"
-                      : "w-2 bg-foreground/20 hover:bg-foreground/40"
+                    i === page ? "w-5 bg-foreground" : "w-2 bg-foreground/20 hover:bg-foreground/40"
                   }`}
                 />
               ))}
@@ -256,12 +251,67 @@ export const DashboardClient = ({
           </div>
         )}
         </>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
+      ) : debouncedQuery ? (
+        <div className="flex flex-col items-center justify-center py-10 gap-3">
           <SparkIcon className="text-2xl text-foreground/20" />
           <p className="text-[14px] text-foreground/40 text-center">
             No hay cápsulas que coincidan con &ldquo;{debouncedQuery}&rdquo;
           </p>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-10 gap-3">
+          <SparkIcon className="text-2xl text-foreground/20" />
+          <p className="text-[14px] text-foreground/40 text-center italic">
+            Aún no tienes cápsulas activas.
+          </p>
+        </div>
+      )}
+
+      {/* ── CÁPSULAS ENVIADAS ── */}
+      {sentCapsules.length > 0 && (
+        <div className="mt-6 mb-4">
+          <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-4">
+            CÁPSULAS ENVIADAS · {sentCapsules.length}
+          </p>
+          <div className="space-y-3">
+            {sentCapsules.map((capsule) => {
+              const config = TYPE_CONFIG[capsule.type] ?? TYPE_CONFIG.LEGACY;
+              return (
+                <Link
+                  key={capsule.id}
+                  href={`/dashboard/capsula/${capsule.id}`}
+                  className="group flex w-full items-center gap-4 rounded-3xl border-2 border-foreground/5 bg-surface/50 p-4 pr-4 text-left transition-all duration-200 hover:border-foreground/20 hover:bg-surface active:scale-[0.99]"
+                >
+                  <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-background border-2 border-background shadow-sm opacity-80">
+                    {capsule.coverUrl ? (
+                      <Image src={capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        {config.icon}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-light tracking-widest uppercase text-foreground/30">
+                      {config.label}
+                    </span>
+                    <h3 className="font-serif text-[18px] leading-tight text-foreground/70 truncate">
+                      {capsule.name}
+                    </h3>
+                    <p className="text-[11px] text-foreground/30 mt-0.5">
+                      {capsule._count.memories} recuerdo{capsule._count.memories !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0 rounded-full bg-foreground/10 px-2.5 py-1">
+                    <SendIcon className="h-3 w-3 text-foreground/40" />
+                    <span className="text-[10px] font-semibold tracking-wide uppercase text-foreground/40">
+                      Enviada
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       )}
 

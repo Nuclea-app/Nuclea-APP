@@ -46,7 +46,10 @@ export async function getUserCapsules(userId: string) {
     return await prisma.capsule.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      include: { _count: { select: { memories: true } } },
+      include: {
+        _count: { select: { memories: true } },
+        deliveries: { take: 1, select: { id: true } },
+      },
     });
   } catch (error) {
     console.error("Error fetching capsules:", error);

@@ -177,7 +177,7 @@ export default function CapsuleTokenPage() {
 
         {/* Cover image — sin botón de edición */}
         <div className="relative mb-6">
-          <div className="h-[120px] w-[120px] rounded-full bg-surface overflow-hidden border-4 border-background shadow-sm">
+          <div className="h-[120px] w-[120px] rounded-full bg-surface overflow-hidden border-4 border-background shadow-sm relative">
             {capsule.coverUrl ? (
               <Image
                 src={capsule.coverUrl}

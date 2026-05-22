@@ -11,6 +11,7 @@ const TIPO_TO_R2: Record<string, string> = {
   note: "note",
   drawing: "image",
   cover: "cover",
+  avatar: "avatar",
 };
 
 // Sanitize filename: keep only safe characters, strip path separators
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
 
     const { capsuleId, tipo, filename, contentType } = await req.json();
 
-    if (!capsuleId || !tipo || !filename || !contentType) {
+    if (!tipo || !filename || !contentType) {
       return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
     }
 
@@ -47,22 +48,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Nombre de archivo inválido" }, { status: 400 });
     }
 
-    // Verify that the capsule belongs to the authenticated user
-    const capsule = await prisma.capsule.findUnique({
-      where: { id: capsuleId, userId: session.user.id },
-      select: { id: true },
-    });
+    let key: string;
 
-    if (!capsule) {
-      return NextResponse.json({ error: "Cápsula no encontrada" }, { status: 404 });
+    if (tipo.toLowerCase() === "avatar") {
+      // Avatar upload: key is userId/avatar/filename (no capsuleId needed)
+      key = `${session.user.id}/avatar/${safeFilename}`;
+    } else {
+      // All other types require a capsuleId and ownership check
+      if (!capsuleId) {
+        return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
+      }
+
+      const capsule = await prisma.capsule.findUnique({
+        where: { id: capsuleId, userId: session.user.id },
+        select: { id: true },
+      });
+
+      if (!capsule) {
+        return NextResponse.json({ error: "Cápsula no encontrada" }, { status: 404 });
+      }
+
+      key = buildR2Key(
+        session.user.id,
+        capsuleId,
+        r2Type as "image" | "video" | "audio" | "note",
+        safeFilename,
+      );
     }
 
-    const key = buildR2Key(
-      session.user.id,
-      capsuleId,
-      r2Type as "image" | "video" | "audio" | "note",
-      safeFilename,
-    );
     const uploadUrl = await generatePresignedUploadUrl(key, contentType);
 
     return NextResponse.json({ uploadUrl, key });

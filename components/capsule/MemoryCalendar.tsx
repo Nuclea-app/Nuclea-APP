@@ -26,6 +26,7 @@ export const MemoryCalendar = ({
 }: MemoryCalendarProps) => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showYearPicker, setShowYearPicker] = useState(false);
 
   const daysInMonth = (year: number, month: number) =>
     new Date(year, month + 1, 0).getDate();
@@ -98,13 +99,16 @@ export const MemoryCalendar = ({
 
   return (
     <div className="w-full border border-border bg-background rounded-3xl p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-8">
-        <h3 className="font-serif text-xl">
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => setShowYearPicker(v => !v)}
+          className="font-serif text-xl hover:opacity-60 transition-opacity text-left"
+        >
           {monthNames[month]} {year}
-        </h3>
+        </button>
         <div className="flex items-center gap-4">
           <button
-            onClick={goToToday}
+            onClick={() => { goToToday(); setShowYearPicker(false); }}
             className="text-[12px] font-bold tracking-widest uppercase hover:opacity-60"
           >
             Hoy
@@ -125,6 +129,25 @@ export const MemoryCalendar = ({
           </div>
         </div>
       </div>
+
+      {showYearPicker && (
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          {Array.from({ length: 16 }, (_, i) => today.getFullYear() - 3 + i).map(y => (
+            <button
+              key={y}
+              onClick={() => { setCurrentDate(new Date(y, month, 1)); setShowYearPicker(false); }}
+              className={cn(
+                "rounded-xl py-2 text-[13px] font-medium transition-colors",
+                y === year
+                  ? "bg-foreground text-background"
+                  : "hover:bg-surface text-foreground/60"
+              )}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-7 gap-y-4 text-center">
         {days.map((day) => (
