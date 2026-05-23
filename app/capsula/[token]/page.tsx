@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { CapsuleOpening } from "@/components/capsule/CapsuleOpening";
 import { MemoryCalendar, FutureMessageMarker } from "@/components/capsule/MemoryCalendar";
@@ -10,22 +11,9 @@ import { MemoryCard, Memory } from "@/components/capsule/MomentosClaveClient";
 import { MemoryViewerDrawer } from "@/components/capsule/MemoryViewerDrawer";
 import { getDeliveryByToken } from "@/lib/actions/delivery.actions";
 import { toDeliveryMediaUrl } from "@/lib/utils";
-import {
-  Heart, BookOpen, Lock, LockOpen, Mail, Send,
-  X, ChevronRight, Mic, Video, FileText, Calendar,
-  Image as ImageIcon,
-} from "lucide-react";
+import { Heart, BookOpen, Mail } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-type FutureMessageFull = {
-  id: string;
-  unlocksAt: string;
-  type: string;
-  content: string | null;
-  fileUrl: string | null;
-  unlocked: boolean;
-};
 
 type DeliveryData = {
   recipientName: string;
@@ -35,22 +23,15 @@ type DeliveryData = {
     description?: string | null;
     coverUrl?: string | null;
     memories: Memory[];
-    futureMessages: FutureMessageFull[];
+    futureMessages: { id: string; unlocksAt: string }[];
     user?: { name: string | null; image: string | null } | null;
   };
 };
 
 type Phase = "opening" | "bienvenida" | "dentro";
 
-type SelectedDay = { day: number; year: number; month: number };
-
 const DEFAULT_DESCRIPTION =
   "Elegimos seguir escribiendo nuestra historia, cada día, juntos.";
-
-const MONTH_NAMES = [
-  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre",
-];
 
 const isUnlocked = (unlocksAt: string) => new Date(unlocksAt) <= new Date();
 
@@ -61,16 +42,7 @@ export default function CapsuleTokenPage() {
   const [delivery, setDelivery] = useState<DeliveryData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [phase, setPhase] = useState<Phase>("opening");
-
-  // Memory viewer
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
-
-  // Day drawer
-  const [selectedDay, setSelectedDay] = useState<SelectedDay | null>(null);
-
-  // Future message detail drawer
-  const [selectedFutureMessage, setSelectedFutureMessage] = useState<FutureMessageFull | null>(null);
-  const [futureTab, setFutureTab] = useState<"unlocked" | "locked">("unlocked");
 
   useEffect(() => {
     getDeliveryByToken(token).then((data) => {
@@ -89,14 +61,7 @@ export default function CapsuleTokenPage() {
               fm.unlocksAt instanceof Date
                 ? fm.unlocksAt.toISOString()
                 : String(fm.unlocksAt);
-            return {
-              ...fm,
-              unlocksAt,
-              fileUrl: fm.fileUrl
-                ? (toDeliveryMediaUrl(fm.fileUrl, token) ?? fm.fileUrl)
-                : null,
-              unlocked: isUnlocked(unlocksAt),
-            };
+            return { id: fm.id, unlocksAt };
           }),
         },
       };
@@ -105,7 +70,12 @@ export default function CapsuleTokenPage() {
     });
   }, [token]);
 
-  // ── Loading / not found ───────────────────────────────────────────────────
+  // ── Opening animation plays immediately while data loads in background ───
+  if (phase === "opening") {
+    return <CapsuleOpening onComplete={() => setPhase("bienvenida")} />;
+  }
+
+  // ── Loading / not found (after animation completes) ───────────────────────
   if (notFound) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
@@ -116,17 +86,13 @@ export default function CapsuleTokenPage() {
     );
   }
 
+  // In the unlikely case data hasn't loaded by the time the animation finishes
   if (!delivery) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="h-6 w-6 rounded-full border-2 border-foreground/20 border-t-foreground animate-spin" />
       </div>
     );
-  }
-
-  // ── Opening animation ─────────────────────────────────────────────────────
-  if (phase === "opening") {
-    return <CapsuleOpening onComplete={() => setPhase("bienvenida")} />;
   }
 
   // ── Welcome screen ────────────────────────────────────────────────────────
@@ -184,37 +150,9 @@ export default function CapsuleTokenPage() {
 
   // ── Dentro ────────────────────────────────────────────────────────────────
   const { capsule } = delivery;
-  const futureMessagesFull = capsule.futureMessages;
-  const futureMessageMarkers: FutureMessageMarker[] = futureMessagesFull.map((fm) => ({
-    id: fm.id,
-    unlocksAt: fm.unlocksAt,
-  }));
-
-  const unlockedMessages = futureMessagesFull.filter((fm) => fm.unlocked);
-  const lockedMessages = futureMessagesFull.filter((fm) => !fm.unlocked);
-
-  // Day filtering
-  const memoriesForDay = selectedDay
-    ? capsule.memories.filter((m) => {
-        const d = new Date(m.createdAt);
-        return (
-          d.getDate() === selectedDay.day &&
-          d.getMonth() === selectedDay.month &&
-          d.getFullYear() === selectedDay.year
-        );
-      })
-    : [];
-
-  const futureMessagesForDay = selectedDay
-    ? futureMessagesFull.filter((fm) => {
-        const d = new Date(fm.unlocksAt);
-        return (
-          d.getDate() === selectedDay.day &&
-          d.getMonth() === selectedDay.month &&
-          d.getFullYear() === selectedDay.year
-        );
-      })
-    : [];
+  const futureMessageMarkers: FutureMessageMarker[] = capsule.futureMessages;
+  const unlockedCount = capsule.futureMessages.filter((fm) => isUnlocked(fm.unlocksAt)).length;
+  const favoritesCount = capsule.memories.filter((m) => m.isFavorite).length;
 
   return (
     <>
@@ -241,9 +179,14 @@ export default function CapsuleTokenPage() {
         </div>
 
         {/* Name */}
-        <h1 className="font-serif text-3xl font-semibold text-foreground text-center mb-4">
+        <h1 className="font-serif text-3xl font-semibold text-foreground text-center mb-2">
           {capsule.name}
         </h1>
+
+        {/* Recipient */}
+        <p className="text-[13px] text-foreground/50 mb-4">
+          Para: {delivery.recipientName}
+        </p>
 
         <div className="flex gap-2 items-center justify-center w-full mb-4">
           <div className="w-[35%] h-px bg-gray-300" />
@@ -257,23 +200,33 @@ export default function CapsuleTokenPage() {
 
         <Heart className="h-4 w-4 text-foreground/20 mb-10" />
 
-        {/* Stats */}
+        {/* Stats — identical layout to CapsuleProfile */}
         <div className="w-full rounded-3xl p-6 mb-6 border-border border bg-background shadow-sm">
           <div className="flex w-full items-center justify-between mb-4">
-            <div className="flex flex-col items-center gap-1 flex-1 border-r border-border">
+            <Link
+              href={`/capsula/${token}/memories`}
+              className="group flex flex-col items-center gap-1 flex-1 border-r border-border"
+            >
               <div className="flex items-center gap-2 mb-1">
                 <BookOpen className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
                 <span className="text-xl font-serif">{capsule.memories.length}</span>
               </div>
-              <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">Recuerdos</span>
-            </div>
-            <div className="flex flex-col items-center gap-1 flex-1">
+              <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40 group-hover:text-foreground/70 transition-colors">
+                Recuerdos
+              </span>
+            </Link>
+            <Link
+              href={`/capsula/${token}/momentos-clave`}
+              className="group flex flex-col items-center gap-1 flex-1"
+            >
               <div className="flex items-center gap-2 mb-1">
-                <Send className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
-                <span className="text-xl font-serif">{delivery.recipientName.split(" ")[0]}</span>
+                <Heart className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
+                <span className="text-xl font-serif">{favoritesCount}</span>
               </div>
-              <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">Destinatario</span>
-            </div>
+              <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40 group-hover:text-foreground/70 transition-colors">
+                Momentos clave
+              </span>
+            </Link>
           </div>
 
           <div className="flex items-center gap-3 my-1">
@@ -282,28 +235,44 @@ export default function CapsuleTokenPage() {
             <div className="h-px flex-1 bg-border" />
           </div>
 
-          <div className="flex flex-col items-center gap-1 mt-4">
+          <Link
+            href={`/capsula/${token}/mensajes-futuros`}
+            className="group flex flex-col items-center gap-1 mt-4"
+          >
             <div className="flex items-center gap-2 mb-1">
               <Mail className="h-5 w-5 text-foreground/40" strokeWidth={1.5} />
-              <span className="text-xl font-serif">{futureMessagesFull.length}</span>
+              <span className="text-xl font-serif">{capsule.futureMessages.length}</span>
             </div>
-            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40">Mensajes futuros</span>
-          </div>
+            <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40 group-hover:text-foreground/70 transition-colors">
+              Mensajes futuros
+              {unlockedCount > 0 && (
+                <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground text-background text-[9px] px-1">
+                  {unlockedCount}
+                </span>
+              )}
+            </span>
+          </Link>
         </div>
 
-        {/* ── Calendario — días clickables ── */}
+        {/* Calendar — navigates to /capsula/[token]/dia/[fecha] */}
         <div className="w-full mb-6">
           <MemoryCalendar
             memories={capsule.memories}
             futureMessages={futureMessageMarkers}
-            onDayClick={(day, year, month) => setSelectedDay({ day, year, month })}
+            routePrefix={`/capsula/${token}`}
           />
         </div>
 
-        {/* ── Últimos recuerdos ── */}
+        {/* Últimos recuerdos */}
         <div className="w-full mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-sans text-[17px] font-semibold text-foreground">Últimos recuerdos</h3>
+            <Link
+              href={`/capsula/${token}/memories`}
+              className="text-[12px] font-medium text-foreground/40 hover:text-foreground"
+            >
+              Ver todos →
+            </Link>
           </div>
           {capsule.memories.length === 0 ? (
             <div className="flex h-[100px] w-full items-center justify-center rounded-2xl border border-border">
@@ -320,100 +289,6 @@ export default function CapsuleTokenPage() {
           )}
         </div>
 
-        {/* ── Mensajes futuros ── */}
-        {futureMessagesFull.length > 0 ? (
-          <div className="w-full mb-8">
-            <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-4">
-              MENSAJES FUTUROS · {futureMessagesFull.length}
-            </p>
-
-            {/* Tabs */}
-            <div className="flex items-center gap-1 rounded-2xl bg-surface border border-border p-1 mb-4">
-              <button
-                onClick={() => setFutureTab("unlocked")}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-[13px] font-medium transition-all ${
-                  futureTab === "unlocked" ? "bg-background shadow-sm text-foreground" : "text-foreground/50"
-                }`}
-              >
-                <LockOpen className="h-4 w-4" />
-                <span>Disponibles</span>
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground/10 px-1.5 text-[11px]">
-                  {unlockedMessages.length}
-                </span>
-              </button>
-              <button
-                onClick={() => setFutureTab("locked")}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-[13px] font-medium transition-all ${
-                  futureTab === "locked" ? "bg-background shadow-sm text-foreground" : "text-foreground/50"
-                }`}
-              >
-                <Lock className="h-4 w-4" />
-                <span>Próximos</span>
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground/10 px-1.5 text-[11px]">
-                  {lockedMessages.length}
-                </span>
-              </button>
-            </div>
-
-            {/* List */}
-            {(futureTab === "unlocked" ? unlockedMessages : lockedMessages).length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-3">
-                <SparkIcon className="text-2xl text-foreground/20" />
-                <p className="text-[13px] text-foreground/40 text-center">
-                  {futureTab === "unlocked" ? "Aún no hay mensajes disponibles." : "No hay mensajes próximos."}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {(futureTab === "unlocked" ? unlockedMessages : lockedMessages).map((fm) => (
-                  <button
-                    key={fm.id}
-                    onClick={() => fm.unlocked && setSelectedFutureMessage(fm)}
-                    disabled={!fm.unlocked}
-                    className={`group flex w-full items-center gap-4 rounded-3xl border-2 p-4 text-left transition-all duration-200 active:scale-[0.99] ${
-                      fm.unlocked
-                        ? "border-foreground/10 bg-background hover:border-foreground/30 hover:bg-surface"
-                        : "border-foreground/5 bg-surface/50 cursor-default"
-                    }`}
-                  >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface">
-                      {fm.unlocked ? (
-                        <LockOpen className="h-5 w-5 text-foreground/60" />
-                      ) : (
-                        <Lock className="h-5 w-5 text-foreground/30" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[11px] text-foreground/40">
-                        {fm.unlocked ? "Disponible desde" : "Se abre el"}
-                      </span>
-                      <h3 className="font-serif text-[18px] leading-tight text-foreground">
-                        {new Date(fm.unlocksAt).toLocaleDateString("es-ES", {
-                          day: "numeric", month: "long", year: "numeric",
-                        })}
-                      </h3>
-                    </div>
-                    {fm.unlocked && (
-                      <ChevronRight className="h-5 w-5 shrink-0 text-foreground/30 group-hover:text-foreground transition-colors" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="w-full rounded-3xl p-6 mb-8 border border-border bg-background shadow-sm">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface border border-border">
-                <Mail className="h-5 w-5 text-foreground/30" strokeWidth={1.5} />
-              </div>
-              <p className="font-sans text-[13px] text-foreground/40 italic">
-                Esta cápsula no tiene mensajes futuros.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Footer */}
         <div className="flex items-center justify-center gap-2 opacity-30">
           <SparkIcon className="text-[10px]" />
@@ -422,161 +297,12 @@ export default function CapsuleTokenPage() {
         </div>
       </div>
 
-      {/* ── Memory viewer drawer ── */}
+      {/* Memory viewer drawer (for the horizontal strip) */}
       <MemoryViewerDrawer
         memory={selectedMemory}
         onClose={() => setSelectedMemory(null)}
         readOnly
       />
-
-      {/* ── Day drawer ── */}
-      {selectedDay && (
-        <div className="fixed inset-0 z-[60] flex flex-col justify-end">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedDay(null)} />
-          <div className="relative bg-background rounded-t-[32px] px-6 pt-6 pb-12 max-w-[430px] w-full mx-auto shadow-2xl max-h-[85vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-5 shrink-0">
-              <div>
-                <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40">
-                  {MONTH_NAMES[selectedDay.month]} {selectedDay.year}
-                </p>
-                <h3 className="font-serif text-2xl text-foreground">
-                  Día {selectedDay.day}
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedDay(null)}
-                className="p-2 rounded-full hover:bg-surface"
-              >
-                <X className="h-5 w-5 text-foreground/40" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="overflow-y-auto flex-1">
-              {memoriesForDay.length === 0 && futureMessagesForDay.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-3">
-                  <SparkIcon className="text-2xl text-foreground/20" />
-                  <p className="text-[13px] text-foreground/40 text-center italic">
-                    No hay recuerdos ni mensajes en este día.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 pb-2">
-                  {/* Memories */}
-                  {memoriesForDay.map((memory) => (
-                    <button
-                      key={memory.id}
-                      onClick={() => { setSelectedMemory(memory); setSelectedDay(null); }}
-                      className="w-full flex items-center gap-4 rounded-3xl border border-border bg-background p-4 text-left hover:bg-surface transition-colors active:scale-[0.99]"
-                    >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface">
-                        {(memory.type === "PHOTO" || memory.type === "DRAWING") && <ImageIcon className="h-4 w-4 text-foreground/50" />}
-                        {memory.type === "VIDEO" && <Video className="h-4 w-4 text-foreground/50" />}
-                        {memory.type === "AUDIO" && <Mic className="h-4 w-4 text-foreground/50" />}
-                        {memory.type === "NOTE" && <FileText className="h-4 w-4 text-foreground/50" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[10px] font-bold tracking-widest uppercase text-foreground/40">
-                          {memory.type === "DRAWING" ? "Dibujo" : memory.type.charAt(0) + memory.type.slice(1).toLowerCase()} ✦
-                        </span>
-                        <p className="text-[14px] text-foreground truncate">
-                          {memory.title || (memory.type === "NOTE" && memory.content ? `"${memory.content.slice(0, 40)}..."` : "Ver recuerdo")}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-foreground/30 shrink-0" />
-                    </button>
-                  ))}
-
-                  {/* Future messages for this day */}
-                  {futureMessagesForDay.map((fm) => (
-                    <button
-                      key={fm.id}
-                      onClick={() => { if (fm.unlocked) { setSelectedFutureMessage(fm); setSelectedDay(null); } }}
-                      disabled={!fm.unlocked}
-                      className={`w-full flex items-center gap-4 rounded-3xl border p-4 text-left transition-colors active:scale-[0.99] ${
-                        fm.unlocked ? "border-border bg-background hover:bg-surface" : "border-border/50 bg-surface/50 cursor-default"
-                      }`}
-                    >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface">
-                        {fm.unlocked ? <LockOpen className="h-4 w-4 text-foreground/50" /> : <Lock className="h-4 w-4 text-foreground/30" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[10px] font-bold tracking-widest uppercase text-foreground/40">
-                          Mensaje futuro ✦
-                        </span>
-                        <p className="text-[14px] text-foreground/70">
-                          {fm.unlocked ? "Disponible — toca para ver" : "Aún no disponible"}
-                        </p>
-                      </div>
-                      {fm.unlocked && <ChevronRight className="h-4 w-4 text-foreground/30 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Future message detail drawer ── */}
-      {selectedFutureMessage && (
-        <div className="fixed inset-0 z-[70] flex flex-col justify-end">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedFutureMessage(null)} />
-          <div className="relative bg-background rounded-t-[32px] px-6 pt-6 pb-12 max-w-[430px] w-full mx-auto shadow-2xl max-h-[85vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-5 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface border border-border">
-                  <LockOpen className="h-5 w-5 text-foreground/60" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40">MENSAJE FUTURO</p>
-                  <p className="text-[13px] text-foreground/60 flex items-center gap-1.5">
-                    <Calendar className="h-3 w-3" />
-                    {new Date(selectedFutureMessage.unlocksAt).toLocaleDateString("es-ES", {
-                      day: "numeric", month: "long", year: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-              <button onClick={() => setSelectedFutureMessage(null)} className="p-2 rounded-full hover:bg-surface">
-                <X className="h-5 w-5 text-foreground/40" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="overflow-y-auto flex-1">
-              <div className="rounded-3xl border border-border bg-background p-5">
-                <div className="flex items-center gap-2 border-b border-border/50 pb-3 mb-4">
-                  <div className="h-7 w-7 rounded-full bg-surface flex items-center justify-center text-foreground/60">
-                    {selectedFutureMessage.type === "AUDIO" && <Mic className="h-4 w-4" />}
-                    {selectedFutureMessage.type === "VIDEO" && <Video className="h-4 w-4" />}
-                    {selectedFutureMessage.type === "NOTE" && <FileText className="h-4 w-4" />}
-                  </div>
-                  <span className="text-[10px] font-bold tracking-widest uppercase text-foreground/60">
-                    {selectedFutureMessage.type === "AUDIO" ? "Audio" : selectedFutureMessage.type === "VIDEO" ? "Vídeo" : "Nota"} ✦
-                  </span>
-                </div>
-
-                {selectedFutureMessage.type === "NOTE" && (
-                  <p className="font-sans italic text-[15px] text-foreground/70 leading-relaxed pl-3 border-l-2 border-foreground/10 py-1">
-                    &ldquo;{selectedFutureMessage.content || "Sin contenido"}&rdquo;
-                  </p>
-                )}
-
-                {selectedFutureMessage.type === "AUDIO" && selectedFutureMessage.fileUrl && (
-                  <audio src={selectedFutureMessage.fileUrl} controls className="w-full" />
-                )}
-
-                {selectedFutureMessage.type === "VIDEO" && selectedFutureMessage.fileUrl && (
-                  <video src={selectedFutureMessage.fileUrl} controls className="w-full rounded-2xl" />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

@@ -189,9 +189,10 @@ export function MemoryCard({
 
 interface MomentosClaveClientProps {
   memories: Memory[];
+  readOnly?: boolean;
 }
 
-export function MomentosClaveClient({ memories }: MomentosClaveClientProps) {
+export function MomentosClaveClient({ memories, readOnly = false }: MomentosClaveClientProps) {
   const [activeFilter, setActiveFilter] = useState<FilterType>("TODOS");
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
 
@@ -256,6 +257,7 @@ export function MomentosClaveClient({ memories }: MomentosClaveClientProps) {
               key={memory.id}
               memory={memory}
               onClick={() => setSelectedMemory(memory)}
+              readOnly={readOnly}
             />
           ))}
         </div>
@@ -265,6 +267,7 @@ export function MomentosClaveClient({ memories }: MomentosClaveClientProps) {
       <MemoryViewerDrawer
         memory={selectedMemory}
         onClose={() => setSelectedMemory(null)}
+        readOnly={readOnly}
       />
     </>
   );

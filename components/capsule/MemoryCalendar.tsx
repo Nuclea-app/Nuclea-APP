@@ -16,6 +16,8 @@ interface MemoryCalendarProps {
   futureMessages?: FutureMessageMarker[];
   capsuleId?: string;
   onDayClick?: (day: number, year: number, month: number) => void;
+  /** Override route prefix for day navigation, e.g. "/capsula/TOKEN". Replaces /dashboard/capsula/{capsuleId} */
+  routePrefix?: string;
 }
 
 export const MemoryCalendar = ({
@@ -23,6 +25,7 @@ export const MemoryCalendar = ({
   futureMessages = [],
   capsuleId,
   onDayClick,
+  routePrefix,
 }: MemoryCalendarProps) => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -87,8 +90,12 @@ export const MemoryCalendar = ({
       onDayClick(day, year, month);
       return;
     }
-    if (!capsuleId) return;
     const fecha = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    if (routePrefix) {
+      router.push(`${routePrefix}/dia/${fecha}`);
+      return;
+    }
+    if (!capsuleId) return;
     router.push(`/dashboard/capsula/${capsuleId}/dia/${fecha}`);
   };
 

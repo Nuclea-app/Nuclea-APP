@@ -16,6 +16,8 @@ interface FutureMessagesClientProps {
   messages: FutureMessageItem[];
   capsuleName: string;
   capsuleId: string;
+  /** Override base path for message links. Defaults to /dashboard/capsula/{capsuleId}/mensajes-futuros */
+  messageBasePath?: string;
 }
 
 type Tab = "desbloqueados" | "bloqueados";
@@ -31,6 +33,7 @@ export const FutureMessagesClient = ({
   messages,
   capsuleName,
   capsuleId,
+  messageBasePath,
 }: FutureMessagesClientProps) => {
   const unlocked = messages.filter((m) => m.unlocked);
   const locked = messages.filter((m) => !m.unlocked);
@@ -117,7 +120,7 @@ export const FutureMessagesClient = ({
           {list.map((m) => (
             <Link
               key={m.id}
-              href={`/dashboard/capsula/${capsuleId}/mensajes-futuros/${m.id}`}
+              href={`${messageBasePath ?? `/dashboard/capsula/${capsuleId}/mensajes-futuros`}/${m.id}`}
               className="group flex w-full items-center gap-4 rounded-3xl border-2 border-foreground/10 bg-background p-4 transition-all duration-200 hover:border-foreground/30 hover:bg-surface active:scale-[0.99]"
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface">

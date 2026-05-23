@@ -7,9 +7,10 @@ import { SparkIcon } from "@/components/nuclea/SparkIcon";
 
 interface MemoriesClientProps {
   memories: Memory[];
+  readOnly?: boolean;
 }
 
-export function MemoriesClient({ memories }: MemoriesClientProps) {
+export function MemoriesClient({ memories, readOnly = false }: MemoriesClientProps) {
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
 
   if (memories.length === 0) {
@@ -34,6 +35,7 @@ export function MemoriesClient({ memories }: MemoriesClientProps) {
             <MemoryCard
               memory={memory}
               onClick={() => setSelectedMemory(memory)}
+              readOnly={readOnly}
             />
           </div>
         ))}
@@ -42,6 +44,7 @@ export function MemoriesClient({ memories }: MemoriesClientProps) {
       <MemoryViewerDrawer
         memory={selectedMemory}
         onClose={() => setSelectedMemory(null)}
+        readOnly={readOnly}
       />
     </>
   );

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart, Calendar, Clock } from "lucide-react";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
+import { LocalDate, LocalTime } from "@/components/nuclea/LocalTime";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -15,16 +16,8 @@ export default async function EntregarSuccessPage({
   await params; // capsuleId no needed — both buttons redirect to /dashboard
   const { name } = await searchParams;
 
-  const now = new Date();
-  const formattedDate = now.toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  const formattedTime = now.toLocaleTimeString("es-ES", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // Date/time is rendered client-side via LocalDate/LocalTime to use the user's
+  // local timezone rather than the server's UTC timezone.
 
   return (
     <div className="flex flex-col items-center pb-16 px-6 min-h-screen">
@@ -112,14 +105,20 @@ export default async function EntregarSuccessPage({
               strokeWidth={1.5}
             />
             <span className="text-[13px] text-foreground/60">
-              {formattedDate}
+              <LocalDate
+                date={new Date()}
+                options={{ day: "numeric", month: "long", year: "numeric" }}
+              />
             </span>
           </div>
           <div className="h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-foreground/30" strokeWidth={1.5} />
             <span className="text-[13px] text-foreground/60">
-              {formattedTime}
+              <LocalTime
+                date={new Date()}
+                options={{ hour: "2-digit", minute: "2-digit" }}
+              />
             </span>
           </div>
         </div>
