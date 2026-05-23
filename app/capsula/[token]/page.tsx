@@ -33,8 +33,6 @@ type Phase = "opening" | "bienvenida" | "dentro";
 const DEFAULT_DESCRIPTION =
   "Elegimos seguir escribiendo nuestra historia, cada día, juntos.";
 
-const isUnlocked = (unlocksAt: string) => new Date(unlocksAt) <= new Date();
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CapsuleTokenPage() {
@@ -151,7 +149,6 @@ export default function CapsuleTokenPage() {
   // ── Dentro ────────────────────────────────────────────────────────────────
   const { capsule } = delivery;
   const futureMessageMarkers: FutureMessageMarker[] = capsule.futureMessages;
-  const unlockedCount = capsule.futureMessages.filter((fm) => isUnlocked(fm.unlocksAt)).length;
   const favoritesCount = capsule.memories.filter((m) => m.isFavorite).length;
 
   return (
@@ -245,11 +242,6 @@ export default function CapsuleTokenPage() {
             </div>
             <span className="text-[10px] font-medium tracking-wide uppercase text-foreground/40 group-hover:text-foreground/70 transition-colors">
               Mensajes futuros
-              {unlockedCount > 0 && (
-                <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground text-background text-[9px] px-1">
-                  {unlockedCount}
-                </span>
-              )}
             </span>
           </Link>
         </div>
