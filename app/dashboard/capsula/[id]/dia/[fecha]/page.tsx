@@ -207,7 +207,7 @@ export default async function DiaPage({ params }: PageProps) {
                 return (
                   <Link
                     key={fm.id}
-                    href={`/dashboard/mensajes-futuros/${fm.id}`}
+                    href={`/dashboard/capsula/${capsuleId}/mensajes-futuros/${fm.id}`}
                     className="group flex items-center gap-4 rounded-3xl border border-border bg-surface/30 p-4 transition-all hover:bg-surface active:scale-[0.99]"
                   >
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-background border border-border">
