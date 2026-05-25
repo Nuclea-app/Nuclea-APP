@@ -101,7 +101,11 @@ export const MemoryUploader = ({
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      if (type === MemoryType.PHOTO || type === MemoryType.DRAWING) {
+      if (
+        type === MemoryType.PHOTO ||
+        type === MemoryType.DRAWING ||
+        type === MemoryType.VIDEO
+      ) {
         setPreview(URL.createObjectURL(selectedFile));
       }
       if (type === MemoryType.AUDIO) {
@@ -431,7 +435,15 @@ export const MemoryUploader = ({
                     </button>
                   ) : (
                     <div className="relative w-full aspect-square rounded-3xl overflow-hidden bg-surface group">
-                      {preview ? (
+                      {preview && type === MemoryType.VIDEO ? (
+                        <video
+                          src={preview}
+                          className="w-full h-full object-cover"
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                      ) : preview ? (
                         <Image
                           src={preview}
                           alt="Preview"
