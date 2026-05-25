@@ -229,7 +229,7 @@ export const MemoryUploader = ({
   const isAudio = type === MemoryType.AUDIO;
 
   return (
-    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()} dismissible={false}>
+    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()} dismissible={false} fixed>
       <DrawerContent className="max-w-[430px] bg-white mx-auto rounded-t-[32px] px-6">
         <DrawerHeader className="px-0 pt-8 shrink-0">
           <div className="flex items-center justify-between">

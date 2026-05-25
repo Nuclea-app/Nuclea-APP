@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Lock, LockOpen, Mic, Video, FileText, Calendar } from "lucide-react";
 import { isFutureMessageUnlocked } from "@/lib/futureMessages";
+import { toProxiedMediaUrl } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ id: string; messageId: string }>;
@@ -75,13 +76,20 @@ export default async function MensajeFuturoDetailPage({ params }: PageProps) {
         </div>
 
         {message.type === "AUDIO" && message.fileUrl && (
-          <audio src={message.fileUrl} controls className="w-full" />
+          <audio
+            src={toProxiedMediaUrl(message.fileUrl) ?? message.fileUrl}
+            controls
+            className="w-full"
+            style={{ colorScheme: "light" }}
+          />
         )}
 
         {message.type === "VIDEO" && message.fileUrl && (
           <video
-            src={message.fileUrl}
+            src={toProxiedMediaUrl(message.fileUrl) ?? message.fileUrl}
             controls
+            playsInline
+            preload="metadata"
             className="w-full rounded-2xl"
           />
         )}
