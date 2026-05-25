@@ -77,7 +77,7 @@ export function MemoryCard({
       {/* Thumbnail — clicable para abrir en grande */}
       <button
         onClick={onClick}
-        className="relative aspect-square w-full bg-surface focus:outline-none"
+        className="relative aspect-square w-full bg-surface focus:outline-none overflow-hidden"
       >
         {/* Icono tipo — arriba izquierda */}
         <div className="absolute top-2 left-2 z-10 h-7 w-7 rounded-full bg-white/90 shadow-sm flex items-center justify-center">
