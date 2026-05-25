@@ -12,7 +12,7 @@ import { NextResponse } from "next/server";
  * The first segment of the key must match the authenticated user's ID.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ key: string[] }> }
 ) {
   try {
@@ -31,9 +31,12 @@ export async function GET(
       return new NextResponse("Forbidden", { status: 403 });
     }
 
+    const rangeHeader = req.headers.get("Range");
+
     const command = new GetObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME!,
       Key: key,
+      ...(rangeHeader ? { Range: rangeHeader } : {}),
     });
 
     const object = await r2Client.send(command);
@@ -42,19 +45,25 @@ export async function GET(
       return new NextResponse("Not Found", { status: 404 });
     }
 
+    const isPartial = !!(rangeHeader && object.ContentRange);
+    const status = isPartial ? 206 : 200;
+
     const headers = new Headers({
       "Content-Type": object.ContentType ?? "application/octet-stream",
       "Access-Control-Allow-Origin": "*",
       "Cache-Control": "private, max-age=3600",
+      "Accept-Ranges": "bytes",
     });
 
     if (object.ContentLength) {
       headers.set("Content-Length", String(object.ContentLength));
     }
+    if (isPartial) {
+      headers.set("Content-Range", object.ContentRange!);
+    }
 
     const stream = object.Body.transformToWebStream();
-
-    return new NextResponse(stream, { headers });
+    return new NextResponse(stream, { status, headers });
   } catch (error) {
     console.error("[media-proxy] Error:", error);
     return new NextResponse("Error", { status: 500 });

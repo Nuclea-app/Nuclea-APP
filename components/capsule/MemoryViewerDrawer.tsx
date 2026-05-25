@@ -117,6 +117,8 @@ export function MemoryViewerDrawer({
                   src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
                   controls
                   autoPlay={false}
+                  preload="metadata"
+                  playsInline
                   className="w-full h-full"
                 />
               </div>

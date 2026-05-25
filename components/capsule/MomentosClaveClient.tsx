@@ -111,7 +111,7 @@ export function MemoryCard({
           (memory.fileUrl ? (
             <>
               <video
-                src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
+                src={`${toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}#t=0.001`}
                 className="w-full h-full object-cover"
                 preload="metadata"
                 muted
