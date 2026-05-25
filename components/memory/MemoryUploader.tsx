@@ -97,6 +97,19 @@ export const MemoryUploader = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Prevent iOS Safari from scrolling the window when the keyboard opens
+  // inside the drawer, which creates blank space at the top of the screen.
+  // vaul scrolls the internal overflow container — not the window — so this
+  // listener does not conflict with its repositionInputs behaviour.
+  useEffect(() => {
+    if (!isOpen) return;
+    const lock = () => {
+      if (window.scrollY > 0) window.scrollTo(0, 0);
+    };
+    window.addEventListener("scroll", lock, { passive: true });
+    return () => window.removeEventListener("scroll", lock);
+  }, [isOpen]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -233,7 +246,7 @@ export const MemoryUploader = ({
   const isAudio = type === MemoryType.AUDIO;
 
   return (
-    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()} dismissible={false} fixed>
+    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()} dismissible={false}>
       <DrawerContent className="max-w-[430px] bg-white mx-auto rounded-t-[32px] px-6">
         <DrawerHeader className="px-0 pt-8 shrink-0">
           <div className="flex items-center justify-between">
