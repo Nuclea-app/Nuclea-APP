@@ -1,3 +1,32 @@
+// ===========================================================================
+// ESPEJO DEL ESQUEMA DE nuclea-servidor. NO ES LA FUENTE.
+//
+// Esta webapp está CONGELADA y comparte base con el servidor y la app. Este
+// fichero existe por una sola razón: que un `prisma db push` lanzado desde
+// aquí no proponga BORRAR las columnas y tablas de la Fase 2 que este repo no
+// usa. Antes no las conocía —ni OPEN, ni WE, ni notifications, ni
+// device_tokens, ni rate_limits, ni postal_address, ni storage_used— y se
+// salvaba de milagro.
+//
+// Se copia de nuclea-servidor/prisma/schema.prisma con dos cambios, y solo dos:
+//
+//   1. runtime = "vercel-edge" en el generador.
+//   2. Los BigInt y los Bytes van como Unsupported(). La columna sigue
+//      existiendo para el diff, pero el cliente de ESTE repo no la selecciona.
+//      Hace falta porque la webapp lee modelos enteros y se los pasa a
+//      componentes de cliente: un BigInt ahí revienta la serialización de
+//      React, y un Bytes mandaría criptograma al navegador.
+//
+// Si hay que cambiar algo del modelo, se cambia en el servidor y se vuelve a
+// copiar. Nunca al revés.
+//
+// Lo comprobado: con este fichero, un diff contra la base no propone BORRAR
+// nada —ni una tabla, ni una columna—, que es para lo que existe. Sí propone
+// «type changed» en las columnas Unsupported, porque Prisma no sabe comparar
+// un Unsupported("bigint") con un bigint. Es ruido inofensivo, y de todos
+// modos desde este repo NO se lanza db push: la regla está en AGENTS.md.
+// ===========================================================================
+
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
@@ -7,6 +36,35 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ===========================================================================
+// ESQUEMA DE LA FASE 2
+//
+// Esta base la comparten tres despliegues: la webapp de la beta (congelada y
+// VIVA, con gente dentro), este servidor y la app. Por eso hay una regla sin
+// excepcion en todo lo que sigue:
+//
+//   NINGUNA COLUMNA NUEVA ES NOT NULL SIN @default, Y NO SE BORRA NI SE
+//   RENOMBRA NADA QUE EL CODIGO YA DESPLEGADO LEA.
+//
+// El motivo de la segunda mitad, comprobado y no supuesto: Prisma no emite
+// SELECT *, emite la lista de columnas que conoce. Se verifico con el log de
+// consultas sobre esta misma base:
+//
+//   SELECT "users"."id", ... , "users"."storage_used" FROM "users" WHERE ...
+//
+// De ahi salen las dos consecuencias que ordenan este fichero:
+//
+//   1. ANADIR es invisible para el build viejo de Vercel: una columna que su
+//      cliente no conoce no entra en su SELECT, asi que ni la lee ni puede
+//      romperse al serializarla. Por eso este esquema se puede aplicar ANTES
+//      de que el servidor de la Fase 2 este desplegado.
+//   2. BORRAR no lo es: storage_used SI esta en ese SELECT, y soltar la
+//      columna con el build viejo corriendo deja en 500 el login, el registro,
+//      Google y la recuperacion de contrasena, que hacen findUnique sin
+//      select. Por eso User.storageUsed sigue aqui abajo, sin usarse, hasta
+//      que el despliegue permita retirarla. Esta anotado en el README.
+// ===========================================================================
 
 model Account {
   id                 String  @id @default(cuid())
@@ -21,23 +79,25 @@ model Account {
   scope              String?
   id_token           String? @db.Text
   session_state      String?
- 
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
- 
+
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique @map("session_token")
   userId       String   @map("user_id")
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
+  @@index([userId])
   @@map("sessions")
 }
- 
+
 model User {
   id                  String               @id @default(cuid())
   name                String?
@@ -46,28 +106,125 @@ model User {
   image               String?
   password            String?
   birthdate           DateTime?
+  /// CONGELADA. No se usa: la cuota se mide por capsula, en
+  /// Capsule.storageUsedBytes. No se puede borrar todavia: ver la cabecera.
+  storageUsed         Unsupported("bigint") @default(dbgenerated("0")) @map("storage_used")
+  /// Senal del protocolo de inactividad. Es de la PERSONA, no de la capsula:
+  /// inactividad es no entrar, no «no subir», y si viviera en la capsula,
+  /// abrir la A no reiniciaria el contador de la B. El plazo si se cuenta por
+  /// capsula, porque el protocolo se ejecuta por capsula.
+  lastActivityAt      DateTime             @default(now())
+  /// No existia. Hace falta para la primera notificacion y para auditoria.
+  createdAt           DateTime             @default(now())
+  /// Corte de sesiones: los JWT emitidos antes de esta fecha dejan de valer.
+  /// Se toca al cambiar la contrasena y al cerrar sesion en todos los sitios;
+  /// null = nunca se ha cortado.
+  sessionsValidFrom   DateTime?
   accounts            Account[]
   sessions            Session[]
   passwordResetToken  PasswordResetToken[]
   capsules            Capsule[]
   receivedDeliveries  CapsuleDelivery[]
+  notifications       Notification[]
+  deviceTokens        DeviceToken[]
+  authoredMemories    Memory[]
+  participations      CapsuleParticipant[]
+  purchases           Purchase[]
 
+  @@index([lastActivityAt])
   @@map("users")
 }
 
+/// Los once estados de la seccion 29. El estado manda sobre lo que se puede
+/// hacer con la capsula: subir, entregar, borrar y cobrar miran aqui primero.
+enum CapsuleStatus {
+  PRUEBA
+  PENDIENTE_ACTIVACION
+  ACTIVA
+  PENDIENTE_DECISION
+  PROTOCOLO_INACTIVIDAD
+  EN_PROCESO_ENTREGA
+  ENTREGADA_PENDIENTE_APERTURA
+  RECIBIDA_ABIERTA
+  MANTENIMIENTO
+  LEGACY_EN_ESPERA
+  CERRADA_EN_ELIMINACION
+}
+
+/// Escalones del protocolo: 3 meses sin entrar, aviso, 15 dias, aviso final,
+/// 7 dias, entrega automatica. No se puede desactivar (regla de la llamada).
+enum InactivityStage {
+  NINGUNA
+  AVISO_1
+  AVISO_FINAL
+  ENTREGA
+}
+
 model Capsule {
-  id             String            @id @default(cuid())
+  id             String               @id @default(cuid())
   type           CapsuleType
   name           String
   description    String?
   coverUrl       String?
   userId         String
-  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Restrict, no Cascade: en una capsula We el organizador borrando su
+  /// cuenta se llevaba por delante lo que subieron los otros nueve. Borrar la
+  /// cuenta pasa a ser un procedimiento (E9), no el efecto de una clave ajena.
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
   memories       Memory[]
   deliveries     CapsuleDelivery[]
   futureMessages FutureMessage[]
-  createdAt      DateTime          @default(now())
+  participants   CapsuleParticipant[]
+  keys           CapsuleKey[]
+  subscriptions  Subscription[]
+  purchases      Purchase[]
+  createdAt      DateTime             @default(now())
 
+  // -- Ciclo de vida -------------------------------------------------------
+  status               CapsuleStatus @default(PRUEBA)
+  statusChangedAt      DateTime?
+  trialStartedAt       DateTime?
+  trialEndsAt          DateTime?
+  activatedAt          DateTime?
+  planExpiresAt        DateTime?
+  pendingDecisionUntil DateTime?
+  deliveryStartedAt    DateTime?
+  /// Desnormalizado a proposito: el cron de entregas barre capsules por estado
+  /// y fecha, y no puede unir con capsule_deliveries en cada pasada.
+  deliveredAt          DateTime?
+  firstOpenedAt        DateTime?
+  /// Hasta cuando la tiene gratis quien la recibe.
+  receiverFreeUntil    DateTime?
+  closedAt             DateTime?
+
+  // -- Cuota ---------------------------------------------------------------
+  /// Lo que trae el plan. En bytes y con defecto: una columna de cuota nula se
+  /// lee como «sin limite» en cuanto alguien olvida un ?? 0.
+  storageIncludedBytes Unsupported("bigint") @default(dbgenerated("0"))
+  /// Ampliaciones compradas (25/50 GB).
+  storageExtraBytes    Unsupported("bigint") @default(dbgenerated("0"))
+  /// Lo ocupado de verdad, sumado del tamano MEDIDO en R2, nunca del que dice
+  /// el cliente.
+  storageUsedBytes     Unsupported("bigint") @default(dbgenerated("0"))
+  /// Lo que ocupaba al congelarse, para poder ensenarlo sin recalcular.
+  storageFrozenBytes   Unsupported("bigint")?
+
+  // -- Inactividad ---------------------------------------------------------
+  inactivityStage      InactivityStage @default(NINGUNA)
+  inactivityStageAt    DateTime?
+  inactivityDeadlineAt DateTime?
+
+  /// 0 = contenido heredado de la beta, sin cifrar. 1 = sobre SSE-C (marca e1
+  /// en la clave de R2). Lo heredado NO se recifra: ver lib/clavesR2.ts.
+  encryptionVersion Int @default(0)
+
+  @@index([userId, createdAt])
+  // El estado va DELANTE en los cuatro: los crons barren por estado y luego
+  // por fecha, y un indice que empieza por la fecha no les sirve.
+  @@index([status, trialEndsAt])
+  @@index([status, planExpiresAt])
+  @@index([status, pendingDecisionUntil])
+  @@index([status, inactivityDeadlineAt])
   @@map("capsules")
 }
 
@@ -75,6 +232,9 @@ model Memory {
   id          String     @id @default(cuid())
   type        MemoryType
   content     String?    @db.Text
+  /// CONGELADA. La beta guardo aqui URLs publicas absolutas de R2. No cambia
+  /// de tipo ni se reutiliza: lo nuevo escribe storageKey. La normalizacion de
+  /// lo heredado vive en scripts/backfill-fase2.mjs.
   fileUrl     String?
   title       String?
   description String?
@@ -82,9 +242,41 @@ model Memory {
   date        DateTime   @default(now())
   isFavorite  Boolean    @default(false)
   capsuleId   String
+  /// Se QUEDA en Cascade a proposito: borrar la capsula debe llevarse sus
+  /// recuerdos. AVISO: por eso el borrado de capsula tiene que descontar la
+  /// cuota y vaciar el prefijo de R2 ANTES de borrar la fila; la clave ajena
+  /// no avisa de los objetos que quedan huerfanos en el bucket.
   capsule     Capsule    @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
   createdAt   DateTime   @default(now())
 
+  /// Clave relativa en R2: la columna canonica desde la Fase 2.
+  storageKey        String?
+  /// Tamano MEDIDO con HeadObject despues de subir. Con SSE-C, R2 devuelve el
+  /// tamano del claro, asi que la cuota no depende de lo que diga el cliente.
+  sizeBytes         Unsupported("bigint") @default(dbgenerated("0"))
+  mimeType          String?
+  durationMs        Int?
+  originalName      String?
+  /// Quien lo subio (capsula We). SetNull: si esa persona se va, el recuerdo
+  /// se queda con el nombre y sin cuenta detras.
+  authorId          String?
+  author            User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName        String?
+  /// Reintento de la app: el mismo recuerdo subido dos veces no se duplica ni
+  /// cuenta dos veces en la cuota.
+  idempotencyKey    String?
+  encryptionVersion Int     @default(0)
+  capsuleKeyId      String?
+  /// Los campos que no queremos poder leer en claro en la base (titulo, texto,
+  /// ubicacion) cuando la capsula este cifrada. Bytes, nunca String.
+  secretsEnc        Unsupported("bytea")?
+  secretsVersion    Int     @default(0)
+
+  @@unique([capsuleId, idempotencyKey])
+  @@index([capsuleId, createdAt])
+  /// El calendario agrupa por la fecha DEL RECUERDO, no por la de subida.
+  @@index([capsuleId, date])
+  @@index([authorId])
   @@map("memories")
 }
 
@@ -93,6 +285,8 @@ enum CapsuleType {
   TOGETHER
   PET
   ORIGIN
+  OPEN
+  WE
 }
 
 enum MemoryType {
@@ -104,21 +298,61 @@ enum MemoryType {
 }
 
 model CapsuleDelivery {
-  id              String    @id @default(cuid())
+  id              String         @id @default(cuid())
   capsuleId       String
-  capsule         Capsule   @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
-  token           String    @unique @default(cuid())
-  recipientName   String
-  relation        String
+  capsule         Capsule        @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+  /// Nulable y SIN @default: el token deja de nacer con la fila. Se emite al
+  /// entregar, aleatorio y con caducidad (E6). Un token que existe desde el
+  /// primer dia es un enlace de acceso repartido por ahi durante meses.
+  token           String?        @unique
+  tokenIssuedAt   DateTime?
+  tokenExpiresAt  DateTime?
+  /// Nulables para que el sobre pueda vaciarlas cuando el contenido este
+  /// cifrado. Quitar el NOT NULL ensancha: no pide --accept-data-loss.
+  recipientName   String?
+  relation        String?
   relationCustom  String?
+  /// EN CLARO a proposito, y con su indice: es la direccion a la que escribe
+  /// el cron de entregas y la clave con la que linkOrphanDeliveries une una
+  /// entrega con la cuenta que se registra despues.
   email           String?
   phone           String?
+  postalAddress   String?        @map("postal_address")
+  deliveryMethod  DeliveryMethod @default(DECIDE_LATER) @map("delivery_method")
   deliveredAt     DateTime?
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime       @default(now())
   recipientUserId String?
-  recipientUser   User?     @relation(fields: [recipientUserId], references: [id], onDelete: SetNull)
+  recipientUser   User?          @relation(fields: [recipientUserId], references: [id], onDelete: SetNull)
 
+  // -- Quien recibe, comprobado --------------------------------------------
+  recipientVerifiedAt  DateTime?
+  deliveryCodeHash     String?
+  deliveryCodeExpires  DateTime?
+  deliveryCodeAttempts Int       @default(0)
+
+  // -- Apertura y entrega fisica -------------------------------------------
+  activationCode String?
+  codeExpiresAt  DateTime?
+  codeAttempts   Int       @default(0)
+  lockedUntil    DateTime?
+  verifiedAt     DateTime?
+  firstOpenedAt  DateTime?
+  qrId           String?   @unique
+  physicalPaidAt DateTime?
+  /// La carta que acompana a la entrega, cifrada con la clave de la capsula.
+  letterEnc      Unsupported("bytea")?
+  secretsEnc     Unsupported("bytea")?
+  secretsVersion Int       @default(0)
+
+  @@index([capsuleId])
+  @@index([email])
   @@map("capsule_deliveries")
+}
+
+enum DeliveryMethod {
+  DIGITAL
+  PHYSICAL_DIGITAL
+  DECIDE_LATER
 }
 
 model FutureMessage {
@@ -127,19 +361,267 @@ model FutureMessage {
   capsule    Capsule    @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
   type       MemoryType
   content    String?    @db.Text
+  /// CONGELADA, igual que Memory.fileUrl.
   fileUrl    String?
   unlocksAt  DateTime
   isUnlocked Boolean    @default(false)
   createdAt  DateTime   @default(now())
 
+  /// Cinco de los mensajes futuros de la beta tienen fichero real en R2. Sin
+  /// esto quedan fuera de la cuota y sin clave canonica.
+  storageKey     String?
+  sizeBytes      Unsupported("bigint") @default(dbgenerated("0"))
+  mimeType       String?
+  durationMs     Int?
+  secretsEnc     Unsupported("bytea")?
+  secretsVersion Int     @default(0)
+
+  @@index([capsuleId, unlocksAt])
   @@map("future_messages")
+}
+
+// ===========================================================================
+// Capsula We
+// ===========================================================================
+
+enum ParticipantRole {
+  ORGANIZADOR
+  PARTICIPANTE
+}
+
+enum ParticipantStatus {
+  INVITADO
+  ACEPTADO
+  RECHAZADO
+  RETIRADO
+}
+
+/// De 2 a 10 personas EN TOTAL, organizador incluido. Una sola persona de
+/// respaldo por capsula: eso no lo puede decir Prisma (indice unico parcial),
+/// lo pone prisma/db-extras.sql.
+model CapsuleParticipant {
+  id          String            @id @default(cuid())
+  capsuleId   String
+  capsule     Capsule           @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+  /// SetNull: quien se da de baja desaparece de la cuenta, no de la capsula.
+  userId      String?
+  user        User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// Nombre visible para el resto. El organizador gestiona sin ver lo ajeno.
+  displayName String?
+  email       String?
+  role        ParticipantRole   @default(PARTICIPANTE)
+  status      ParticipantStatus @default(INVITADO)
+  isBackup    Boolean           @default(false)
+  /// Invitacion por enlace: se guarda el HASH, nunca el token. De un solo uso.
+  inviteHash    String?   @unique
+  inviteExpires DateTime?
+  invitedAt     DateTime  @default(now())
+  acceptedAt    DateTime?
+  removedAt     DateTime?
+
+  @@unique([capsuleId, email])
+  @@index([capsuleId])
+  @@index([userId])
+  @@map("capsule_participants")
+}
+
+// ===========================================================================
+// Claves de cifrado
+// ===========================================================================
+
+/// Una fila por clave de datos (DEK) envuelta por la maestra del KMS. Vive en
+/// tabla aparte para poder quitarle el permiso de lectura al rol del panel con
+/// un solo REVOKE: esa es la justificacion entera de sacarla de capsules.
+///
+/// contributorId null = clave de la capsula. Con valor = clave por aportante
+/// (We). El @@unique de abajo NO cubre el caso null (en Postgres dos NULL son
+/// distintos): el indice unico parcial que lo cierra esta en db-extras.sql.
+model CapsuleKey {
+  id            String    @id @default(cuid())
+  capsuleId     String
+  /// Restrict: una clave no se borra por arrastre. Destruirla es un acto
+  /// explicito y queda registrado en deletion_logs.
+  capsule       Capsule   @relation(fields: [capsuleId], references: [id], onDelete: Restrict)
+  contributorId String?
+  /// La DEK cifrada por el KMS. Bytes: nunca texto, nunca base64 en una
+  /// columna que se pueda copiar en un volcado sin darse cuenta.
+  wrappedKey    Unsupported("bytea")
+  /// MD5 del claro, que es lo que R2 pide como cabecera de SSE-C. No sirve
+  /// para reconstruir la clave.
+  keyMd5        String
+  kmsKeyId      String
+  /// Formato del sobre, por si cambia el esquema de envoltura.
+  format        String    @default("e1")
+  createdAt     DateTime  @default(now())
+  rotatedAt     DateTime?
+  destroyedAt   DateTime?
+
+  @@unique([capsuleId, contributorId])
+  @@index([capsuleId])
+  @@map("capsule_keys")
+}
+
+// ===========================================================================
+// Dinero
+// ===========================================================================
+
+enum PlanPeriod {
+  MENSUAL
+  TRIMESTRAL
+  SEMESTRAL
+  ANUAL
+  UNICO
+}
+
+enum PlanKind {
+  SUSCRIPCION
+  AMPLIACION
+  PACK
+  FISICO
+}
+
+enum Store {
+  APPLE
+  GOOGLE
+  MANUAL
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  GRACE
+  EXPIRED
+  CANCELED
+}
+
+/// Catalogo. La tabla de cuotas vive aqui y no en el cliente: un cupo que vive
+/// en el cliente no es un cupo (lib/capsule-data.ts lo tenia en la app).
+model Plan {
+  id              String         @id
+  kind            PlanKind       @default(SUSCRIPCION)
+  capsuleType     CapsuleType?
+  period          PlanPeriod     @default(MENSUAL)
+  name            String
+  priceCents      Int            @default(0)
+  currency        String         @default("EUR")
+  storageBytes    Unsupported("bigint") @default(dbgenerated("0"))
+  appleProductId  String?
+  googleProductId String?
+  active          Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  subscriptions   Subscription[]
+
+  @@map("plans")
+}
+
+/// Una viva por capsula: el indice unico parcial (ended_at IS NULL) esta en
+/// db-extras.sql.
+model Subscription {
+  id                    String             @id @default(cuid())
+  capsuleId             String?
+  capsule               Capsule?           @relation(fields: [capsuleId], references: [id], onDelete: SetNull)
+  planId                String?
+  plan                  Plan?              @relation(fields: [planId], references: [id], onDelete: SetNull)
+  status                SubscriptionStatus @default(TRIALING)
+  store                 Store              @default(MANUAL)
+  /// Identificador de la tienda. Es la defensa contra procesar dos veces la
+  /// misma renovacion.
+  originalTransactionId String?            @unique
+  startedAt             DateTime           @default(now())
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean            @default(false)
+  /// null = viva. La regla «una sola viva por capsula» se apoya en esto.
+  endedAt               DateTime?
+  updatedAt             DateTime           @default(now()) @updatedAt
+
+  @@index([capsuleId])
+  @@index([status, currentPeriodEnd])
+  @@map("subscriptions")
+}
+
+/// Compras de un solo pago: ampliaciones de almacenamiento, packs y el envio
+/// fisico. La ampliacion suma en Capsule.storageExtraBytes.
+model Purchase {
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  capsuleId     String?
+  capsule       Capsule? @relation(fields: [capsuleId], references: [id], onDelete: SetNull)
+  kind          PlanKind @default(AMPLIACION)
+  store         Store    @default(MANUAL)
+  productId     String?
+  /// De la tienda: unico, para no acreditar dos veces el mismo recibo.
+  transactionId String?  @unique
+  storageBytes  Unsupported("bigint") @default(dbgenerated("0"))
+  amountCents   Int      @default(0)
+  currency      String   @default("EUR")
+  purchasedAt   DateTime @default(now())
+
+  @@index([capsuleId])
+  @@index([userId])
+  @@map("purchases")
+}
+
+// ===========================================================================
+// Operacion
+// ===========================================================================
+
+enum NoticeChannel {
+  EMAIL
+  PUSH
+}
+
+/// Lo ya enviado. dedupeKey es lo que impide que un cron que se reintenta
+/// mande dos veces el mismo aviso de inactividad a la misma persona.
+model SentNotice {
+  id        String        @id @default(cuid())
+  dedupeKey String        @unique
+  channel   NoticeChannel @default(EMAIL)
+  kind      String
+  userId    String?
+  capsuleId String?
+  sentAt    DateTime      @default(now())
+  /// Si el envio fallo, aqui queda por que. Una fila con error NO bloquea el
+  /// reintento del siguiente ciclo.
+  error     String?
+
+  @@index([kind, sentAt])
+  @@map("sent_notices")
+}
+
+enum DeletionSubject {
+  MEMORY
+  CAPSULE
+  ACCOUNT
+}
+
+/// Que se borro, cuanto pesaba y si se destruyo la clave. SIN UN SOLO NOMBRE
+/// DE FICHERO ni titulo: un registro de borrado que conserva el contenido no
+/// es un registro de borrado.
+model DeletionLog {
+  id           String          @id @default(cuid())
+  subject      DeletionSubject
+  subjectId    String
+  capsuleId    String?
+  actorUserId  String?
+  objectCount  Int             @default(0)
+  bytes        Unsupported("bigint") @default(dbgenerated("0"))
+  keyDestroyed Boolean         @default(false)
+  reason       String?
+  createdAt    DateTime        @default(now())
+
+  @@index([subject, createdAt])
+  @@index([capsuleId])
+  @@map("deletion_logs")
 }
 
 model VerificationToken {
   identifier String
   token      String
   expires    DateTime
- 
+  /// Intentos fallidos: un código de 6 dígitos sin tope se rompe a fuerza bruta.
+  attempts   Int      @default(0)
+
   @@unique([identifier, token])
   @@map("verification_tokens")
 }
@@ -149,6 +631,57 @@ model PasswordResetToken {
   userId    String
   token     String   @unique
   expires   DateTime
+  /// Intentos fallidos: un código de 6 dígitos sin tope se rompe a fuerza bruta.
+  attempts  Int      @default(0)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Ventanas de rate limiting. Vive en la base y no en memoria porque en
+/// serverless cada peticion puede caer en una instancia distinta, y un
+/// contador local no limitaria nada.
+model RateLimit {
+  key       String   @id
+  count     Int      @default(1)
+  expiresAt DateTime
+
+  @@index([expiresAt])
+  @@map("rate_limits")
+}
+
+enum NotificationCategory {
+  IDEA
+  PROGRESS
+  SUCCESS
+  WARNING
+}
+
+model Notification {
+  id          String               @id @default(cuid())
+  userId      String               @map("user_id")
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  capsuleId   String?              @map("capsule_id")
+  category    NotificationCategory
+  title       String
+  body        String               @db.Text
+  actionRoute String?              @map("action_route")
+  readAt      DateTime?            @map("read_at")
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expoToken String   @unique @map("expo_token")
+  platform  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("device_tokens")
 }

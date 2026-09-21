@@ -18,17 +18,28 @@ export async function GET(
     const { token, key: keySegments } = await params;
     const key = keySegments.join("/");
 
-    // Validate delivery token exists and get capsule owner's userId
-    const delivery = await prisma.capsuleDelivery.findUnique({
-      where: { token },
-      select: { capsule: { select: { userId: true } } },
+    // Entregada de verdad y con el enlace vivo. Sin esto, el token que nacía
+    // con el BORRADOR de destinatario servía los recuerdos de una cápsula que
+    // todavía no se había enviado, y sin caducar nunca.
+    const delivery = await prisma.capsuleDelivery.findFirst({
+      where: {
+        token,
+        deliveredAt: { not: null },
+        tokenExpiresAt: { not: null, gt: new Date() },
+      },
+      select: { capsuleId: true, capsule: { select: { userId: true } } },
     });
     if (!delivery) {
       return new NextResponse("Not Found", { status: 404 });
     }
 
-    // R2 key starts with ownerId — verify it belongs to this capsule
-    if (keySegments[0] !== delivery.capsule.userId) {
+    // La clave es userId/capsuleId/tipo/archivo. Comprobar solo el userId
+    // dejaba que quien recibía una cápsula leyera los archivos de CUALQUIER
+    // otra cápsula de la misma persona cambiando el segundo segmento.
+    if (
+      keySegments[0] !== delivery.capsule.userId ||
+      keySegments[1] !== delivery.capsuleId
+    ) {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
@@ -48,10 +59,14 @@ export async function GET(
     const isPartial = !!(rangeHeader && object.ContentRange);
     const status = isPartial ? 206 : 200;
 
+    // Nada de comodín y nada de caché pública: con `public, max-age=3600` un
+    // recuerdo seguía sirviéndose desde cualquier caché intermedia una hora
+    // después de retirarle el acceso, y con `*` lo leía cualquier web.
     const headers = new Headers({
       "Content-Type": object.ContentType ?? "application/octet-stream",
-      "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "public, max-age=3600",
+      "Access-Control-Allow-Origin": origenDeEntrega(),
+      Vary: "Origin",
+      "Cache-Control": "private, no-store",
       "Accept-Ranges": "bytes",
     });
     if (object.ContentLength) {
@@ -71,9 +86,22 @@ export async function GET(
 export async function OPTIONS() {
   return new NextResponse(null, {
     headers: {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": origenDeEntrega(),
       "Access-Control-Allow-Methods": "GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
+      Vary: "Origin",
     },
   });
+}
+
+/**
+ * El único sitio que puede leer estos medios desde el navegador.
+ *
+ * Se lee de NEXT_PUBLIC_APP_URL y, si no está, del sitio público: un comodín
+ * aquí significa «cualquier web puede pedir los recuerdos de alguien con el
+ * enlace», que es justo lo que había.
+ */
+function origenDeEntrega(): string {
+  const origen = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.nuclea.app";
+  return origen.replace(/\/+$/, "");
 }
