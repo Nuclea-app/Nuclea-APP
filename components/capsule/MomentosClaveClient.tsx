@@ -95,7 +95,7 @@ export function MemoryCard({
         {(memory.type === "PHOTO" || memory.type === "DRAWING") &&
           (memory.fileUrl ? (
             <Image
-              src={memory.fileUrl}
+              src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
               alt="Recuerdo"
               fill
               className="object-cover"

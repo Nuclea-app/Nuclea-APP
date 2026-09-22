@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { deleteCapsule } from "@/lib/actions/user.actions";
+import { toProxiedMediaUrl } from "@/lib/utils";
 
 const TogetherIcon = () => (
   <div className="relative flex items-center justify-center w-5 h-5">
@@ -198,7 +199,7 @@ export const DashboardClient = ({
                 >
                   <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-surface border-2 border-background shadow-sm">
                     {capsule.coverUrl ? (
-                      <Image src={capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
+                      <Image src={toProxiedMediaUrl(capsule.coverUrl) ?? capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
                         {config.icon}
@@ -306,7 +307,7 @@ export const DashboardClient = ({
                 >
                   <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-background border-2 border-background shadow-sm opacity-80">
                     {capsule.coverUrl ? (
-                      <Image src={capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
+                      <Image src={toProxiedMediaUrl(capsule.coverUrl) ?? capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
                         {config.icon}
@@ -358,7 +359,7 @@ export const DashboardClient = ({
                 >
                   <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-background border-2 border-background shadow-sm opacity-80">
                     {delivery.capsule.coverUrl ? (
-                      <Image src={delivery.capsule.coverUrl} alt={delivery.capsule.name} fill className="object-cover" />
+                      <Image src={toProxiedMediaUrl(delivery.capsule.coverUrl) ?? delivery.capsule.coverUrl} alt={delivery.capsule.name} fill className="object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
                         {config.icon}

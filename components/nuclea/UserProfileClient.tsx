@@ -26,6 +26,7 @@ import {
   updateUserBirthdate,
 } from "@/lib/actions/user.actions";
 import { signOut } from "next-auth/react";
+import { toProxiedMediaUrl } from "@/lib/utils";
 
 interface UserProfileClientProps {
   userId: string;
@@ -161,7 +162,7 @@ export const UserProfileClient = ({
                 </div>
               )}
               {avatarUrl ? (
-                <Image src={avatarUrl} alt={name || "Avatar"} fill className="object-cover" />
+                <Image src={toProxiedMediaUrl(avatarUrl) ?? avatarUrl} alt={name || "Avatar"} fill className="object-cover" />
               ) : (
                 <span className="font-serif text-4xl text-foreground/30">{initial}</span>
               )}
