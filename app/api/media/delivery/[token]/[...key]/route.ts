@@ -64,7 +64,7 @@ export async function GET(
     // después de retirarle el acceso, y con `*` lo leía cualquier web.
     const headers = new Headers({
       "Content-Type": object.ContentType ?? "application/octet-stream",
-      "Access-Control-Allow-Origin": origenDeEntrega(),
+      "Access-Control-Allow-Origin": origenDeEntrega(req.headers.get("Origin")),
       Vary: "Origin",
       "Cache-Control": "private, no-store",
       "Accept-Ranges": "bytes",
@@ -83,10 +83,10 @@ export async function GET(
   }
 }
 
-export async function OPTIONS() {
+export async function OPTIONS(req: Request) {
   return new NextResponse(null, {
     headers: {
-      "Access-Control-Allow-Origin": origenDeEntrega(),
+      "Access-Control-Allow-Origin": origenDeEntrega(req.headers.get("Origin")),
       "Access-Control-Allow-Methods": "GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
       Vary: "Origin",
@@ -95,13 +95,22 @@ export async function OPTIONS() {
 }
 
 /**
- * El único sitio que puede leer estos medios desde el navegador.
+ * Los sitios que pueden leer estos medios desde el navegador.
  *
- * Se lee de NEXT_PUBLIC_APP_URL y, si no está, del sitio público: un comodín
- * aquí significa «cualquier web puede pedir los recuerdos de alguien con el
- * enlace», que es justo lo que había.
+ * Admite varios separados por comas porque `https://nuclea.app` y
+ * `https://www.nuclea.app` son orígenes DISTINTOS para el navegador, y los
+ * enlaces del correo se arman sin `www`. Con un único valor fijo, la mitad de
+ * los destinatarios vería su cápsula sin fotos y el error solo aparecería en
+ * la consola de su navegador.
+ *
+ * Nunca un comodín: eso significa «cualquier web puede pedir los recuerdos de
+ * alguien que tenga el enlace», que es justo lo que había.
  */
-function origenDeEntrega(): string {
-  const origen = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.nuclea.app";
-  return origen.replace(/\/+$/, "");
+function origenDeEntrega(pedido?: string | null): string {
+  const lista = (process.env.NEXT_PUBLIC_APP_URL ?? "https://www.nuclea.app,https://nuclea.app")
+    .split(",")
+    .map((o) => o.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+  if (pedido && lista.includes(pedido)) return pedido;
+  return lista[0];
 }
