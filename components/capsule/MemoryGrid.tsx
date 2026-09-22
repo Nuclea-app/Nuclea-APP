@@ -2,6 +2,7 @@ import { Play, Mic, FileText, Image as ImageIcon, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { FavoriteButton } from "./FavoriteButton";
+import { toProxiedMediaUrl } from "@/lib/utils";
 
 export interface Memory {
   id: string;
@@ -61,7 +62,7 @@ export const MemoryGrid = ({
                 (memory.fileUrl ? (
                   <>
                     <Image
-                      src={memory.fileUrl}
+                      src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
                       alt="Recuerdo"
                       fill
                       className="object-cover"
@@ -81,7 +82,7 @@ export const MemoryGrid = ({
                 (memory.fileUrl ? (
                   <div className="relative w-full h-full bg-slate-200">
                     <video
-                      src={memory.fileUrl}
+                      src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-linear-to-t from-black/70 via-black/20 to-transparent">
@@ -113,7 +114,7 @@ export const MemoryGrid = ({
                       <span>AUDIO ✦</span>
                       {memory.duration && <span>{memory.duration}</span>}
                     </div>
-                    <audio src={memory.fileUrl} className="hidden" />
+                    <audio src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl} className="hidden" />
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full">

@@ -149,7 +149,7 @@ export default async function GuestDiaPage({ params }: PageProps) {
                         <div className="w-[3px] h-5 bg-foreground/35 rounded-full" />
                         <div className="w-[3px] h-2 bg-foreground/20 rounded-full animate-pulse" />
                       </div>
-                      <audio src={memory.fileUrl} controls className="w-full h-8 mt-1" />
+                      <audio src={memory.fileUrl ?? undefined} controls className="w-full h-8 mt-1" />
                     </div>
                   )}
 

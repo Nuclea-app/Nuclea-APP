@@ -22,6 +22,7 @@ import {
   updateCapsuleName,
   updateCapsuleDescription,
 } from "@/lib/actions/capsuleActions";
+import { toProxiedMediaUrl } from "@/lib/utils";
 
 const DEFAULT_DESCRIPTION =
   "Elegimos seguir escribiendo nuestra historia, cada día, juntos.";
@@ -154,7 +155,7 @@ export const CapsuleProfile = ({ capsule }: CapsuleProfileProps) => {
           )}
           {coverUrl ? (
             <Image
-              src={coverUrl}
+              src={toProxiedMediaUrl(coverUrl) ?? coverUrl}
               alt={capsuleName}
               fill
               className="object-cover"

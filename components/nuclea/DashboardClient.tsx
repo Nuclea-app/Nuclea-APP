@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { deleteCapsule } from "@/lib/actions/user.actions";
+import { toProxiedMediaUrl } from "@/lib/utils";
 
 const TogetherIcon = () => (
   <div className="relative flex items-center justify-center w-5 h-5">
@@ -52,8 +53,14 @@ interface Capsule {
 
 interface ReceivedCapsule {
   id: string;
-  token: string;
-  recipientName: string;
+  /**
+   * Nulables desde la Fase 2: el token ya no nace con el borrador —se emite al
+   * entregar y caduca— y el nombre puede vaciarse cuando el contenido esta
+   * cifrado. Una entrega sin token no tiene enlace que abrir, asi que no se
+   * pinta como enlace.
+   */
+  token: string | null;
+  recipientName: string | null;
   capsule: {
     id: string;
     name: string;
@@ -192,7 +199,7 @@ export const DashboardClient = ({
                 >
                   <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-surface border-2 border-background shadow-sm">
                     {capsule.coverUrl ? (
-                      <Image src={capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
+                      <Image src={toProxiedMediaUrl(capsule.coverUrl) ?? capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
                         {config.icon}
@@ -300,7 +307,7 @@ export const DashboardClient = ({
                 >
                   <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-background border-2 border-background shadow-sm opacity-80">
                     {capsule.coverUrl ? (
-                      <Image src={capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
+                      <Image src={toProxiedMediaUrl(capsule.coverUrl) ?? capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
                         {config.icon}
@@ -341,6 +348,9 @@ export const DashboardClient = ({
             {receivedCapsules.map((delivery) => {
               const config = TYPE_CONFIG[delivery.capsule.type] ?? TYPE_CONFIG.LEGACY;
               const senderName = delivery.capsule.user?.name ?? "Alguien especial";
+              // Sin token no hay enlace que abrir: una entrega que todavía no
+              // se ha enviado no se pinta como si se pudiera entrar.
+              if (!delivery.token) return null;
               return (
                 <Link
                   key={delivery.id}
@@ -349,7 +359,7 @@ export const DashboardClient = ({
                 >
                   <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden bg-background border-2 border-background shadow-sm opacity-80">
                     {delivery.capsule.coverUrl ? (
-                      <Image src={delivery.capsule.coverUrl} alt={delivery.capsule.name} fill className="object-cover" />
+                      <Image src={toProxiedMediaUrl(delivery.capsule.coverUrl) ?? delivery.capsule.coverUrl} alt={delivery.capsule.name} fill className="object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
                         {config.icon}

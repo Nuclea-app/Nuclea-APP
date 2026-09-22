@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerClose,
-} from "@/components/ui/drawer";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { PrimaryButton } from "@/components/nuclea/PrimaryButton";
@@ -96,19 +90,6 @@ export const MemoryUploader = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Prevent iOS Safari from scrolling the window when the keyboard opens
-  // inside the drawer, which creates blank space at the top of the screen.
-  // vaul scrolls the internal overflow container — not the window — so this
-  // listener does not conflict with its repositionInputs behaviour.
-  useEffect(() => {
-    if (!isOpen) return;
-    const lock = () => {
-      if (window.scrollY > 0) window.scrollTo(0, 0);
-    };
-    window.addEventListener("scroll", lock, { passive: true });
-    return () => window.removeEventListener("scroll", lock);
-  }, [isOpen]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -246,27 +227,32 @@ export const MemoryUploader = ({
   const isAudio = type === MemoryType.AUDIO;
 
   return (
-    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()} dismissible={false}>
-      <DrawerContent className="max-w-[430px] bg-white mx-auto rounded-t-[32px] px-6">
-        <DrawerHeader className="px-0 pt-8 shrink-0">
-          <div className="flex items-center justify-between">
-            <DrawerTitle className="font-serif text-2xl">
-              {type === MemoryType.PHOTO && "Subir foto"}
-              {type === MemoryType.VIDEO && "Subir vídeo"}
-              {type === MemoryType.AUDIO && "Añadir audio"}
-              {type === MemoryType.NOTE && "Escribir nota"}
-              {type === MemoryType.DRAWING && "Subir dibujo"}
-            </DrawerTitle>
-            <DrawerClose
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-surface"
-            >
-              <X className="h-6 w-6 opacity-40" />
-            </DrawerClose>
-          </div>
-        </DrawerHeader>
+    <BottomSheet
+      open={isOpen}
+      onClose={onClose}
+      dismissible={false}
+      className="px-6"
+    >
+      <div className="px-0 pt-6 pb-2 shrink-0">
+        <div className="flex items-center justify-between">
+          <h2 className="font-serif text-2xl text-foreground">
+            {type === MemoryType.PHOTO && "Subir foto"}
+            {type === MemoryType.VIDEO && "Subir vídeo"}
+            {type === MemoryType.AUDIO && "Añadir audio"}
+            {type === MemoryType.NOTE && "Escribir nota"}
+            {type === MemoryType.DRAWING && "Subir dibujo"}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-surface"
+          >
+            <X className="h-6 w-6 opacity-40" />
+          </button>
+        </div>
+      </div>
 
-        <div className="space-y-6 py-4 pb-12 overflow-y-auto flex-1 min-h-0">
+      <div className="space-y-6 py-4 pb-12 overflow-y-auto flex-1 min-h-0">
           {success ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <CheckCircle2 className="h-16 w-16 text-green-500 animate-in zoom-in duration-300" />
@@ -600,7 +586,6 @@ export const MemoryUploader = ({
             </>
           )}
         </div>
-      </DrawerContent>
-    </Drawer>
+    </BottomSheet>
   );
 };

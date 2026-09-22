@@ -16,7 +16,12 @@ import { Heart, BookOpen, Mail } from "lucide-react";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type DeliveryData = {
-  recipientName: string;
+  /**
+   * Nulable desde la Fase 2: el nombre de quien recibe pasa a poder vaciarse
+   * cuando el contenido de la capsula esta cifrado, asi que aqui puede llegar
+   * sin el. La cabecera dice «Para ti» en ese caso, que es verdad igual.
+   */
+  recipientName: string | null;
   capsule: {
     name: string;
     type: string;
@@ -111,7 +116,7 @@ export default function CapsuleTokenPage() {
         <div className="relative mb-10">
           <div className="h-[140px] w-[140px] rounded-full overflow-hidden bg-surface border border-border">
             {avatar ? (
-              <Image src={avatar} alt={senderName} width={140} height={140} className="h-full w-full object-cover" />
+              <Image src={toDeliveryMediaUrl(avatar, token) ?? avatar} alt={senderName} width={140} height={140} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-4xl font-serif text-foreground/20 uppercase">
                 {senderName.charAt(0)}
@@ -166,7 +171,7 @@ export default function CapsuleTokenPage() {
         <div className="relative mb-6">
           <div className="h-[120px] w-[120px] rounded-full bg-surface overflow-hidden border-4 border-background shadow-sm relative">
             {capsule.coverUrl ? (
-              <Image src={capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
+              <Image src={toDeliveryMediaUrl(capsule.coverUrl, token) ?? capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-3xl font-serif text-foreground/20 uppercase">
                 {capsule.name.charAt(0)}
@@ -182,7 +187,7 @@ export default function CapsuleTokenPage() {
 
         {/* Recipient */}
         <p className="text-[13px] text-foreground/50 mb-4">
-          Para: {delivery.recipientName}
+          {delivery.recipientName ? `Para: ${delivery.recipientName}` : "Para ti"}
         </p>
 
         <div className="flex gap-2 items-center justify-center w-full mb-4">

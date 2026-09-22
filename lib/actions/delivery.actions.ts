@@ -1,5 +1,7 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
+
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { resend, buildCapsuleEmailHtml, buildCapsuleEmailText } from "@/lib/resend";
@@ -27,6 +29,19 @@ export async function createDelivery(data: {
     const senderName = capsule.user?.name ?? undefined;
 
     // 1. Create all delivery records in the DB first
+    //
+    // El token y las tres fechas se escriben AQUÍ, a mano. Antes el token lo
+    // ponía la base (@default(cuid())) y deliveredAt no se escribía nunca: la
+    // fila que esta función crea es una entrega de verdad —el correo con el
+    // enlace sale en el mismo paso— pero en la base parecía un borrador, y un
+    // borrador es justo lo que ya no abre nada.
+    //
+    // El token es aleatorio de 32 bytes, no un cuid: un cuid lleva dentro la
+    // marca de tiempo y un contador, así que dos seguidos se parecen, y eso
+    // es lo único que separa a un desconocido del contenido de la cápsula.
+    const ahora = new Date();
+    const caduca = new Date(ahora.getTime() + 30 * 24 * 60 * 60 * 1000);
+
     const deliveries = await Promise.all(
       data.emails
         .map((e) => e.trim())
@@ -40,6 +55,10 @@ export async function createDelivery(data: {
               relationCustom: data.relationCustom,
               email,
               phone: data.phone,
+              token: randomBytes(32).toString("base64url"),
+              deliveredAt: ahora,
+              tokenIssuedAt: ahora,
+              tokenExpiresAt: caduca,
             },
           })
         )
@@ -102,10 +121,30 @@ async function sendBatchCapsuleEmails(
   }
 }
 
+/**
+ * La cápsula que abre quien recibe el enlace.
+ *
+ * Las tres condiciones del where NO son de adorno:
+ *
+ *  - deliveredAt no nulo: hasta la Fase 2, el token nacía con el BORRADOR de
+ *    destinatario (`token String @unique @default(cuid())`), así que cualquiera
+ *    con ese enlace abría una cápsula que su dueña todavía no había enviado.
+ *  - tokenExpiresAt no nulo Y EN EL FUTURO, las dos cosas. «No nulo» a secas
+ *    deja pasar al borrador, que lo tiene nulo; y sin la segunda, el enlace no
+ *    caduca nunca.
+ *
+ * Esta webapp está congelada, pero es una SEGUNDA PUERTA a la misma base y al
+ * mismo bucket: arreglarlo solo en nuclea-servidor deja el agujero abierto.
+ */
 export async function getDeliveryByToken(token: string) {
   try {
-    const delivery = await prisma.capsuleDelivery.findUnique({
-      where: { token },
+    const ahora = new Date();
+    const delivery = await prisma.capsuleDelivery.findFirst({
+      where: {
+        token,
+        deliveredAt: { not: null },
+        tokenExpiresAt: { not: null, gt: ahora },
+      },
       include: {
         capsule: {
           include: {

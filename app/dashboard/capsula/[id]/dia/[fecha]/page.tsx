@@ -143,7 +143,7 @@ export default async function DiaPage({ params }: PageProps) {
                     memory.fileUrl && (
                       <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-surface mb-2">
                         <Image
-                          src={memory.fileUrl}
+                          src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
                           alt="Recuerdo guardado"
                           fill
                           className="object-cover"

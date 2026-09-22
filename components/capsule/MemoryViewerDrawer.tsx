@@ -102,7 +102,7 @@ export function MemoryViewerDrawer({
               memory.fileUrl && (
                 <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-surface">
                   <Image
-                    src={memory.fileUrl}
+                    src={toProxiedMediaUrl(memory.fileUrl) ?? memory.fileUrl}
                     alt="Recuerdo"
                     fill
                     className="object-contain"
