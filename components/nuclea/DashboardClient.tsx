@@ -52,8 +52,14 @@ interface Capsule {
 
 interface ReceivedCapsule {
   id: string;
-  token: string;
-  recipientName: string;
+  /**
+   * Nulables desde la Fase 2: el token ya no nace con el borrador —se emite al
+   * entregar y caduca— y el nombre puede vaciarse cuando el contenido esta
+   * cifrado. Una entrega sin token no tiene enlace que abrir, asi que no se
+   * pinta como enlace.
+   */
+  token: string | null;
+  recipientName: string | null;
   capsule: {
     id: string;
     name: string;
@@ -341,6 +347,9 @@ export const DashboardClient = ({
             {receivedCapsules.map((delivery) => {
               const config = TYPE_CONFIG[delivery.capsule.type] ?? TYPE_CONFIG.LEGACY;
               const senderName = delivery.capsule.user?.name ?? "Alguien especial";
+              // Sin token no hay enlace que abrir: una entrega que todavía no
+              // se ha enviado no se pinta como si se pudiera entrar.
+              if (!delivery.token) return null;
               return (
                 <Link
                   key={delivery.id}
