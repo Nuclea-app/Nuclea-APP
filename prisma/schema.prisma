@@ -62,8 +62,12 @@ datasource db {
 //   2. BORRAR no lo es: storage_used SI esta en ese SELECT, y soltar la
 //      columna con el build viejo corriendo deja en 500 el login, el registro,
 //      Google y la recuperacion de contrasena, que hacen findUnique sin
-//      select. Por eso User.storageUsed sigue aqui abajo, sin usarse, hasta
-//      que el despliegue permita retirarla. Esta anotado en el README.
+//      select. Por eso la retirada va en DOS entregas y en este orden: primero
+//      el campo fuera del esquema y DESPLEGADO, y solo despues el ALTER TABLE
+//      sobre la base (T2.1 y T2.2). El primer paso ya esta hecho en los dos
+//      repos; el ALTER vive en nuclea-servidor/scripts/soltar-storage-used.mjs
+//      y se niega a ejecutarse si el login de produccion todavia responde 500,
+//      que es la senal de que el build desplegado sigue pidiendo la columna.
 // ===========================================================================
 
 model Account {
@@ -106,9 +110,10 @@ model User {
   image               String?
   password            String?
   birthdate           DateTime?
-  /// CONGELADA. No se usa: la cuota se mide por capsula, en
-  /// Capsule.storageUsedBytes. No se puede borrar todavia: ver la cabecera.
-  storageUsed         Unsupported("bigint") @default(dbgenerated("0")) @map("storage_used")
+  /// storage_used ya NO se declara: se retiro en T2.2. Este fichero es un
+  /// espejo del esquema del servidor y existe para que un diff desde aqui no
+  /// proponga tocar nada; dejarla declarada haria que, en cuanto la columna no
+  /// este en la base, este repo propusiera CREARLA otra vez.
   /// Senal del protocolo de inactividad. Es de la PERSONA, no de la capsula:
   /// inactividad es no entrar, no «no subir», y si viviera en la capsula,
   /// abrir la A no reiniciaria el contador de la B. El plazo si se cuenta por

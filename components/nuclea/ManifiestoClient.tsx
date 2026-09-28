@@ -121,9 +121,34 @@ export function ManifiestoClient({ isLoggedIn }: ManifiestoClientProps) {
         </div>
       )}
 
-      <footer className="mt-12 opacity-30 flex items-center gap-2 text-[10px] tracking-[0.3em] font-sans">
-        <SparkIcon />
-        <span>NUCLEA</span>
+      {/*
+        Los dos textos legales se enlazan desde aquí porque esta es la única
+        pantalla pública del sitio: quien llega a nuclea.app sin cuenta no ve
+        ninguna otra. Hasta ahora solo los enlazaba la casilla de registro de
+        la app móvil, y apuntaban a dos URLs que devolvían 404.
+      */}
+      <footer className="mt-12 flex flex-col items-center gap-4 font-sans">
+        <nav className="flex items-center gap-4 text-[11px] text-foreground/50">
+          <Link
+            href="/condiciones"
+            className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
+          >
+            Condiciones de uso
+          </Link>
+          <span aria-hidden="true" className="text-foreground/20">
+            ·
+          </span>
+          <Link
+            href="/privacidad"
+            className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
+          >
+            Privacidad
+          </Link>
+        </nav>
+        <div className="flex items-center gap-2 text-[10px] tracking-[0.3em] opacity-30">
+          <SparkIcon />
+          <span>NUCLEA</span>
+        </div>
       </footer>
     </motion.div>
   );
