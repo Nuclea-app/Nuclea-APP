@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { updateUserImage } from "@/lib/actions/user.actions";
+import { toProxiedMediaUrl } from "@/lib/utils";
 
 export const useUploadAvatar = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -49,11 +50,18 @@ export const useUploadAvatar = () => {
       });
 
       // 3. Actualizar en DB
-      const fileUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`;
-      const result = await updateUserImage(fileUrl);
+      // Se guarda la CLAVE relativa, no la URL del dominio publico del bucket.
+      // Ese dominio sirve cualquier objeto a quien tenga el enlace, sin
+      // autenticarse (comprobado: devuelve 200 y el contenido en claro), asi
+      // que esta a punto de apagarse; lo que se guardara con la URL puesta
+      // naceria roto. La clave se resuelve al pintar con toProxiedMediaUrl, que
+      // ya admite las dos formas.
+      const result = await updateUserImage(key);
       if (!result.success) throw new Error(result.error);
 
-      return { success: true as const, url: fileUrl };
+      // Hacia fuera se devuelve ya resuelta: quien llama la pinta al momento
+      // como vista previa y una clave relativa a secas daria un 404.
+      return { success: true as const, url: toProxiedMediaUrl(key) ?? key };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error al subir la foto";
       setError(message);

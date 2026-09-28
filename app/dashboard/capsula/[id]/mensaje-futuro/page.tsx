@@ -160,7 +160,10 @@ export default function MensajeFuturoPage() {
       xhr.send(f);
     });
 
-    return `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`;
+    // La CLAVE relativa, no la URL del dominio publico: ese dominio sirve
+    // cualquier objeto sin autenticar y esta a punto de apagarse. Al pintar se
+    // resuelve con toProxiedMediaUrl, que admite las dos formas.
+    return key;
   };
 
   const handleSubmit = async () => {

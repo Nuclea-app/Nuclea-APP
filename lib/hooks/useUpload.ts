@@ -60,11 +60,16 @@ export const useUpload = (capsuleId: string) => {
       });
 
       // 3. Guardar en DB
-      const fileUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`;
+      // Se guarda la CLAVE relativa, no la URL del dominio publico del bucket.
+      // Ese dominio sirve cualquier objeto a quien tenga el enlace, sin
+      // autenticarse (comprobado: devuelve 200 y el contenido en claro), asi
+      // que esta a punto de apagarse; lo que se guardara con la URL puesta
+      // naceria roto. La clave se resuelve al pintar con toProxiedMediaUrl, que
+      // ya admite las dos formas.
       const dbResult = await createMemory({
         capsuleId,
         type: tipo,
-        fileUrl,
+        fileUrl: key,
         title: metadata?.title,
         description: metadata?.description,
         location: metadata?.location,
