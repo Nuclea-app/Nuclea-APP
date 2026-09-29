@@ -1,3 +1,4 @@
+import { CORREO_SOPORTE } from "@/lib/contacto";
 import { cn } from "@/lib/utils";
 
 /**
@@ -68,12 +69,11 @@ export function MarcaPendiente({
 }
 
 /**
- * El único correo de contacto del producto. Está centralizado aquí para que
- * no vuelva a pasar lo de `soporte@nuclea.com`: una dirección que no existe,
- * escrita a mano en una pantalla, enseñada durante meses a quien había
- * perdido la contraseña y no tenía otra forma de pedir ayuda.
+ * El único correo de contacto del producto. Se mudó a `lib/contacto.ts`
+ * —donde está el motivo— porque ahora lo lee también un server action; se
+ * reexporta aquí para no romper a quien ya lo importaba de estas piezas.
  */
-export const CORREO_SOPORTE = "hola@nuclea.app";
+export { CORREO_SOPORTE };
 
 export function CorreoSoporte({ className }: { className?: string }) {
   return (

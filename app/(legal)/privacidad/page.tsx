@@ -118,7 +118,11 @@ export default function PrivacidadPage() {
         <p>
           <strong>Técnicos:</strong> el identificador que tu dispositivo usa
           para recibir notificaciones, y los registros normales de
-          funcionamiento de nuestros servidores y proveedores.
+          funcionamiento de nuestros servidores y proveedores. En el formulario
+          público de eliminación de cuenta guardamos además un contador de
+          solicitudes por origen, para que nadie pueda inundarlo: de tu conexión
+          no guardamos la dirección tal cual, sino un resumen corto de ella, y el
+          contador se reinicia al cabo de una hora.
         </p>
         <p>
           <strong>De pago:</strong> ninguno. Hoy no se cobra y no tratamos
@@ -297,9 +301,16 @@ export default function PrivacidadPage() {
           </li>
         </Lista>
         <p>
-          La eliminación de cuenta desde la propia aplicación está en
-          construcción. Hasta que esté disponible se pide por correo a{" "}
-          <CorreoSoporte /> y la hacemos nosotros.
+          Puedes pedir la eliminación de tu cuenta desde la propia aplicación o
+          desde{" "}
+          <Link
+            href="/eliminar-cuenta"
+            className="font-semibold text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
+          >
+            nuclea.app/eliminar-cuenta
+          </Link>
+          , sin instalar nada. Ahí está explicado qué se borra y qué no antes de
+          que pidas nada. También puedes pedirlo por correo a <CorreoSoporte />.
         </p>
       </Seccion>
 
@@ -354,7 +365,15 @@ export default function PrivacidadPage() {
         <p>
           Escribe a <CorreoSoporte /> desde la dirección con la que te
           registraste. Podemos pedirte que acredites tu identidad si hay dudas
-          razonables de que eres tú.
+          razonables de que eres tú. Para la supresión hay además un camino
+          directo en{" "}
+          <Link
+            href="/eliminar-cuenta"
+            className="font-semibold text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
+          >
+            nuclea.app/eliminar-cuenta
+          </Link>
+          .
         </p>
         <p>
           Si crees que no te hemos atendido bien, puedes reclamar ante la

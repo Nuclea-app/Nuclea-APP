@@ -155,6 +155,31 @@ export default function RegisterPage() {
         <PrimaryButton type="submit" disabled={loading}>
           {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : "Crear cuenta"}
         </PrimaryButton>
+
+        {/*
+          Los legales se enlazan JUNTO al botón, no en un pie lejano: aquí es
+          donde se acepta, y tanto Apple como Google piden que las condiciones
+          estén accesibles en el punto en el que se crea la cuenta. El enlace
+          está debajo del botón de correo y por encima del de Google porque
+          cubre a los dos caminos.
+        */}
+        <p className="text-center text-[12px] leading-relaxed text-foreground/50">
+          Al crear tu cuenta aceptas las{" "}
+          <Link
+            href="/condiciones"
+            className="font-semibold text-foreground/70 underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
+          >
+            condiciones de uso
+          </Link>{" "}
+          y la{" "}
+          <Link
+            href="/privacidad"
+            className="font-semibold text-foreground/70 underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
+          >
+            política de privacidad
+          </Link>
+          .
+        </p>
       </form>
 
       <div className="w-full flex items-center gap-4 my-8">

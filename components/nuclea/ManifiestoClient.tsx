@@ -126,9 +126,13 @@ export function ManifiestoClient({ isLoggedIn }: ManifiestoClientProps) {
         pantalla pública del sitio: quien llega a nuclea.app sin cuenta no ve
         ninguna otra. Hasta ahora solo los enlazaba la casilla de registro de
         la app móvil, y apuntaban a dos URLs que devolvían 404.
+
+        Por el mismo motivo está aquí la eliminación de cuenta: Play pide que se
+        pueda pedir el borrado sin instalar la app, y quien ya la desinstaló
+        llega por esta pantalla y por ninguna otra.
       */}
       <footer className="mt-12 flex flex-col items-center gap-4 font-sans">
-        <nav className="flex items-center gap-4 text-[11px] text-foreground/50">
+        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-foreground/50">
           <Link
             href="/condiciones"
             className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
@@ -143,6 +147,15 @@ export function ManifiestoClient({ isLoggedIn }: ManifiestoClientProps) {
             className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
           >
             Privacidad
+          </Link>
+          <span aria-hidden="true" className="text-foreground/20">
+            ·
+          </span>
+          <Link
+            href="/eliminar-cuenta"
+            className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
+          >
+            Eliminar cuenta
           </Link>
         </nav>
         <div className="flex items-center gap-2 text-[10px] tracking-[0.3em] opacity-30">

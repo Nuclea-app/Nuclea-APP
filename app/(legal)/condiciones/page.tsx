@@ -271,10 +271,17 @@ export default function CondicionesPage() {
         <Lista>
           <li>Puedes dejar de usar NÚCLEA cuando quieras.</li>
           <li>
-            Para eliminar tu cuenta, escríbenos a <CorreoSoporte /> desde la
-            dirección con la que te registraste. Estamos construyendo la opción
-            para hacerlo desde la propia aplicación; hasta que esté disponible,
-            este es el camino.
+            Para eliminar tu cuenta tienes dos caminos: dentro de la aplicación,
+            en Ajustes, o desde{" "}
+            <Link
+              href="/eliminar-cuenta"
+              className="font-semibold text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
+            >
+              nuclea.app/eliminar-cuenta
+            </Link>
+            , que funciona con el navegador y sin instalar nada. También puedes
+            escribirnos a <CorreoSoporte /> desde la dirección con la que te
+            registraste.
           </li>
           <li>
             Una cápsula que ya se entregó no se puede eliminar: la copia

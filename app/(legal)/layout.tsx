@@ -47,6 +47,18 @@ export default function LegalLayout({
             >
               Política de privacidad
             </Link>
+            {/*
+              La vía web para eliminar la cuenta se enlaza desde el pie de los
+              dos documentos porque Play exige que sea accesible, no solo que
+              exista: la URL se declara en la ficha, y un enlace suelto que no
+              esté en ninguna página se pierde en la primera revisión.
+            */}
+            <Link
+              href="/eliminar-cuenta"
+              className="text-foreground/70 underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
+            >
+              Eliminar tu cuenta
+            </Link>
             <Link
               href="/"
               className="text-foreground/70 underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
