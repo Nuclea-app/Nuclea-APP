@@ -312,6 +312,10 @@ model CapsuleDelivery {
   token           String?        @unique
   tokenIssuedAt   DateTime?
   tokenExpiresAt  DateTime?
+  /// ESPEJO de nuclea-servidor: el código que va escrito en el correo para
+  /// «Abrir una cápsula». La columna la creó prisma/codigo-de-acceso.sql del
+  /// servidor; aquí solo se declara para poder escribirla al entregar.
+  accessCode      String?        @unique @map("access_code")
   /// Nulables para que el sobre pueda vaciarlas cuando el contenido este
   /// cifrado. Quitar el NOT NULL ensancha: no pide --accept-data-loss.
   recipientName   String?

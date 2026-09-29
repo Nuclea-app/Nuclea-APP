@@ -55,7 +55,10 @@ export default function EntregarPage() {
   };
 
   const getValidationMessage = () => {
-    if (!recipientName.trim()) return "Escribe el nombre de la persona";
+    if (!recipientName.trim()) return "Escribe el nombre y apellidos de la persona";
+    // Se le va a pedir que lo escriba para abrir la cápsula (Andrea, 01:04:04):
+    // con «Mamá» sola, la persona tendría que adivinar qué pusimos.
+    if (recipientName.trim().split(/\s+/).length < 2) return "Escribe también sus apellidos";
     if (!relation) return "Elige tu relación con ella";
     if (relation === "otro" && !relationCustom.trim()) return "Especifica cuál es tu relación";
     if (validEmails.length === 0) return "Añade al menos un email";
@@ -117,7 +120,7 @@ export default function EntregarPage() {
       {/* Sección: Nombre */}
       <div className="mb-8">
         <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground mb-3">
-          NOMBRE DE LA PERSONA
+          NOMBRE Y APELLIDOS DE LA PERSONA
         </p>
         <div className="relative">
           <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/30" />
@@ -125,7 +128,7 @@ export default function EntregarPage() {
             type="text"
             value={recipientName}
             onChange={(e) => setRecipientName(e.target.value)}
-            placeholder="Ej. Mamá, Alejandra..."
+            placeholder="Ej. Alejandra Pérez Gómez"
             className="w-full rounded-2xl border border-border bg-background px-4 py-3 pl-11 text-[15px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors"
           />
         </div>

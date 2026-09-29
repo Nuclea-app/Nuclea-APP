@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
@@ -9,29 +8,8 @@ import { CapsuleOpening } from "@/components/capsule/CapsuleOpening";
 import { MemoryCalendar, FutureMessageMarker } from "@/components/capsule/MemoryCalendar";
 import { MemoryCard, Memory } from "@/components/capsule/MomentosClaveClient";
 import { MemoryViewerDrawer } from "@/components/capsule/MemoryViewerDrawer";
-import { getDeliveryByToken } from "@/lib/actions/delivery.actions";
-import { toDeliveryMediaUrl } from "@/lib/utils";
+import { useEntrega } from "@/components/entrega/EntregaProvider";
 import { Heart, BookOpen, Mail } from "lucide-react";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type DeliveryData = {
-  /**
-   * Nulable desde la Fase 2: el nombre de quien recibe pasa a poder vaciarse
-   * cuando el contenido de la capsula esta cifrado, asi que aqui puede llegar
-   * sin el. La cabecera dice «Para ti» en ese caso, que es verdad igual.
-   */
-  recipientName: string | null;
-  capsule: {
-    name: string;
-    type: string;
-    description?: string | null;
-    coverUrl?: string | null;
-    memories: Memory[];
-    futureMessages: { id: string; unlocksAt: string }[];
-    user?: { name: string | null; image: string | null } | null;
-  };
-};
 
 type Phase = "opening" | "bienvenida" | "dentro";
 
@@ -40,67 +18,40 @@ const DEFAULT_DESCRIPTION =
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+/**
+ * Llega aquí solo quien ya pasó la puerta del layout (nombre y código del
+ * correo), y los datos vienen del servidor por `useEntrega`, con los ficheros
+ * ya descifrados.
+ */
 export default function CapsuleTokenPage() {
-  const { token } = useParams<{ token: string }>();
-  const [delivery, setDelivery] = useState<DeliveryData | null>(null);
-  const [notFound, setNotFound] = useState(false);
+  const entrega = useEntrega();
+  const { token } = entrega;
   const [phase, setPhase] = useState<Phase>("opening");
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
 
-  useEffect(() => {
-    getDeliveryByToken(token).then((data) => {
-      if (!data) { setNotFound(true); return; }
-
-      const transformed: DeliveryData = {
-        recipientName: data.recipientName,
-        capsule: {
-          ...data.capsule,
-          memories: (data.capsule.memories as Memory[]).map((m) => ({
-            ...m,
-            fileUrl: m.fileUrl ? (toDeliveryMediaUrl(m.fileUrl, token) ?? m.fileUrl) : null,
-          })),
-          futureMessages: (data.capsule.futureMessages ?? []).map((fm) => {
-            const unlocksAt =
-              fm.unlocksAt instanceof Date
-                ? fm.unlocksAt.toISOString()
-                : String(fm.unlocksAt);
-            return { id: fm.id, unlocksAt };
-          }),
-        },
-      };
-
-      setDelivery(transformed);
-    });
-  }, [token]);
+  const delivery = {
+    recipientName: entrega.destinatario.nombre,
+    capsule: {
+      name: entrega.capsula.nombre,
+      type: entrega.capsula.tipo,
+      description: entrega.capsula.descripcion,
+      coverUrl: entrega.portada,
+      memories: entrega.recuerdos,
+      futureMessages: entrega.mensajes.map((m) => ({ id: m.id, unlocksAt: m.unlocksAt })),
+      user: { name: entrega.remitente.nombre, image: entrega.remitente.foto },
+    },
+  };
 
   // ── Opening animation plays immediately while data loads in background ───
   if (phase === "opening") {
     return <CapsuleOpening onComplete={() => setPhase("bienvenida")} />;
   }
 
-  // ── Loading / not found (after animation completes) ───────────────────────
-  if (notFound) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
-        <SparkIcon className="text-2xl opacity-20 mb-4" />
-        <p className="font-serif text-2xl text-foreground mb-2">Esta cápsula no existe.</p>
-        <p className="text-[13px] text-foreground/50">El enlace puede haber expirado o ser incorrecto.</p>
-      </div>
-    );
-  }
-
-  // In the unlikely case data hasn't loaded by the time the animation finishes
-  if (!delivery) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="h-6 w-6 rounded-full border-2 border-foreground/20 border-t-foreground animate-spin" />
-      </div>
-    );
-  }
-
   // ── Welcome screen ────────────────────────────────────────────────────────
   if (phase === "bienvenida") {
     const senderName = delivery.capsule.user?.name ?? "Alguien especial";
+    // La foto de quien la manda, o la portada. La primera viene de Google (una
+    // URL pública); la segunda ya es una URL de objeto con el fichero dentro.
     const avatar = delivery.capsule.user?.image ?? delivery.capsule.coverUrl;
 
     return (
@@ -116,7 +67,7 @@ export default function CapsuleTokenPage() {
         <div className="relative mb-10">
           <div className="h-[140px] w-[140px] rounded-full overflow-hidden bg-surface border border-border">
             {avatar ? (
-              <Image src={toDeliveryMediaUrl(avatar, token) ?? avatar} alt={senderName} width={140} height={140} className="h-full w-full object-cover" />
+              <Image src={avatar} alt={senderName} width={140} height={140} unoptimized className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-4xl font-serif text-foreground/20 uppercase">
                 {senderName.charAt(0)}
@@ -171,7 +122,7 @@ export default function CapsuleTokenPage() {
         <div className="relative mb-6">
           <div className="h-[120px] w-[120px] rounded-full bg-surface overflow-hidden border-4 border-background shadow-sm relative">
             {capsule.coverUrl ? (
-              <Image src={toDeliveryMediaUrl(capsule.coverUrl, token) ?? capsule.coverUrl} alt={capsule.name} fill className="object-cover" />
+              <Image src={capsule.coverUrl} alt={capsule.name} fill unoptimized className="object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-3xl font-serif text-foreground/20 uppercase">
                 {capsule.name.charAt(0)}

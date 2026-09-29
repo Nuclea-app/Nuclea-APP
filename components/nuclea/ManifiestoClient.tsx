@@ -8,7 +8,14 @@ import { SparkIcon } from "@/components/nuclea/SparkIcon";
 import { PrimaryButton } from "@/components/nuclea/PrimaryButton";
 import Link from "next/link";
 import Image from "next/image";
-import { MessageCircle, Heart, Layers } from "lucide-react";
+import { CirclePlus, Gift, Image as ImageIcon } from "lucide-react";
+
+/** Las mismas tres tarjetas que el manifiesto de la app. */
+const CARACTERISTICAS = [
+  { icono: ImageIcon, titulo: "Guarda tus recuerdos", texto: "Fotos, vídeos, audios y palabras" },
+  { icono: CirclePlus, titulo: "Constrúyela poco a poco", texto: "Añade momentos a tu ritmo" },
+  { icono: Gift, titulo: "Entrégala a alguien especial", texto: "Decide quién la recibirá" },
+] as const;
 
 interface ManifiestoClientProps {
   isLoggedIn: boolean;
@@ -35,86 +42,87 @@ export function ManifiestoClient({ isLoggedIn }: ManifiestoClientProps) {
     >
       <OnboardingHeader />
 
-      <div className="py-8 w-full max-w-[320px]">
-        <div className="h-40 w-full relative">
-          <Image
-            fill
-            src="/nuclea-logo.png"
-            alt="Nuclea Logo"
-            className="object-contain"
-            priority
-          />
-        </div>
+      {/*
+        IGUAL QUE EL MANIFIESTO DE LA APP (nuclea-app, F1-01): la cápsula con
+        su halo, el mismo titular, los mismos tres párrafos y las mismas tres
+        tarjetas. Antes esta portada contaba otra cosa con otras palabras, y
+        quien pasaba de la web a la app encontraba dos productos distintos.
+      */}
+      <div className="relative mt-4 mb-8 flex h-44 w-full items-center justify-center">
+        <div className="absolute h-44 w-72 rounded-full border border-border/60" />
+        <Image
+          src="/capsula-nuclea.png"
+          alt="Cápsula NUCLEA"
+          width={240}
+          height={80}
+          className="relative h-20 w-60 object-contain"
+          priority
+        />
       </div>
 
-      <h1 className="font-serif text-4xl leading-tight text-foreground max-w-[280px]">
+      <h1 className="font-serif text-[34px] leading-tight text-foreground max-w-[300px]">
         Somos las historias que recordamos.
       </h1>
 
-      <div className="py-6">
-        <SparkIcon className="text-sm opacity-60" />
-      </div>
-
-      <h2 className="font-sans text-[11px] font-medium tracking-[0.3em] uppercase text-foreground/60 mb-8">
+      <h2 className="mt-5 font-sans text-[11px] font-semibold tracking-[0.22em] uppercase text-foreground">
         Haz que las tuyas permanezcan.
       </h2>
 
-      <div className="space-y-6 text-[15px] leading-relaxed text-foreground/80 px-4 mb-12">
+      <div className="mt-8 max-w-[330px] space-y-5 text-[15px] leading-6 text-foreground/80">
         <p>
-          La vida está hecha de momentos que nos marcan, personas que nos
-          acompañan y recuerdos que merecen quedarse.
+          NÚCLEA es un espacio para crear una cápsula de recuerdos destinada a
+          alguien especial.
         </p>
         <p>
-          NUCLEA guarda todo aquello que de verdad importa: lo que vives, lo que
-          sientes, lo que compartes.
+          Reúne fotografías, vídeos, audios, cartas y mensajes para el futuro.
+          Constrúyela poco a poco y decide cuándo y cómo entregarla.
         </p>
-        <p>Para que lo más valioso de tu historia permanezca en el tiempo.</p>
+        <p>Porque lo que hoy guardas, algún día puede significarlo todo.</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 w-full mb-10">
-        <div className="flex flex-col items-center gap-2">
-          <MessageCircle className="h-6 w-6 text-foreground/40" />
-          <h3 className="text-[10px] font-bold tracking-wider uppercase">
-            Mensajes Futuros
-          </h3>
-          <p className="text-[9px] text-foreground/60">
-            Palabras para otro momento
-          </p>
-        </div>
-        <div className="flex flex-col items-center gap-2">
-          <Heart className="h-6 w-6 text-foreground/40" />
-          <h3 className="text-[10px] font-bold tracking-wider uppercase">
-            Herencia Emocional
-          </h3>
-          <p className="text-[9px] text-foreground/60">
-            Lo que dejas en quienes amas
-          </p>
-        </div>
-        <div className="flex flex-col items-center gap-2">
-          <Layers className="h-6 w-6 text-foreground/40" />
-          <h3 className="text-[10px] font-bold tracking-wider uppercase">
-            Memoria Compartida
-          </h3>
-          <p className="text-[9px] text-foreground/60">
-            Recuerdos que unen tu historia
-          </p>
-        </div>
+      <div className="mt-9 grid w-full grid-cols-3 rounded-2xl border border-border bg-background">
+        {CARACTERISTICAS.map((c, i) => (
+          <div
+            key={c.titulo}
+            className={`flex flex-col items-center gap-2 px-2 py-5 ${i > 0 ? "border-l border-border" : ""}`}
+          >
+            <c.icono className="h-6 w-6 text-foreground/70" strokeWidth={1.5} />
+            <h3 className="text-[9px] font-semibold tracking-wider uppercase text-foreground">
+              {c.titulo}
+            </h3>
+            <p className="text-[10px] leading-4 text-foreground/55">{c.texto}</p>
+          </div>
+        ))}
       </div>
 
-      {isLoggedIn ? (
-        <div className="w-full">
-          <Link href="/capsulas" className="w-full">
-            <PrimaryButton>CONTINUAR</PrimaryButton>
-          </Link>
-        </div>
-      ) : (
-        <div className="w-full flex flex-col gap-3">
-          <Link href="/capsulas" className="w-full">
-            <PrimaryButton>Continuar</PrimaryButton>
-          </Link>
+      {/*
+        LAS DOS PUERTAS DE NÚCLEA. Quien llega aquí viene a una de dos cosas:
+        a hacer una cápsula para alguien, o a recibir la que alguien le hizo
+        (Andrea, videollamada del 20/9: el botón para recibirla va en la
+        pantalla principal, «a lo mejor también en la web»). La segunda no
+        puede estar escondida detrás de «Continuar»: quien recibe una cápsula
+        no tiene cuenta ni la va a tener, y es la persona con menos ganas de
+        explorar un menú.
+      */}
+      <div className="mt-8 w-full flex flex-col gap-3">
+        <Link href="/capsulas" className="w-full">
+          <PrimaryButton>{isLoggedIn ? "Mis cápsulas" : "Crear una cápsula"}</PrimaryButton>
+        </Link>
+        <Link
+          href="/abrir"
+          className="w-full flex items-center justify-center gap-2 rounded-sm border-2 border-foreground/20 py-4 text-sm font-semibold tracking-wider uppercase text-foreground transition-all duration-200 hover:bg-foreground hover:text-background active:scale-[0.98]"
+        >
+          <Gift className="h-4 w-4" strokeWidth={1.75} />
+          Abrir una cápsula
+        </Link>
+      </div>
+
+      {!isLoggedIn && (
+        <div className="mt-6 flex items-center gap-2 text-sm">
+          <span className="text-foreground/55">¿Ya tienes una cuenta?</span>
           <Link
             href="/login"
-            className="w-full flex items-center justify-center rounded-sm border-2 border-foreground/20 py-4 text-sm font-semibold tracking-wider uppercase text-foreground transition-all duration-200 hover:bg-foreground hover:text-background active:scale-[0.98]"
+            className="font-semibold uppercase tracking-wide text-foreground underline underline-offset-4"
           >
             Iniciar sesión
           </Link>

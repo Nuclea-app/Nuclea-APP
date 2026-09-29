@@ -1,15 +1,11 @@
 /**
  * Lo que ve quien abre un enlace de cápsula que ya no sirve.
  *
- * Las cinco páginas de dentro llaman a notFound() cuando getDeliveryByToken
- * devuelve null, y eso pasa ahora en tres casos que antes abrían igual: la
- * cápsula no se ha entregado todavía, el enlace ha caducado, o el token no
- * existe. Sin este fichero, las tres caían en el 404 genérico de Next, en
- * inglés y sin explicar nada a alguien que acaba de recibir un regalo.
- *
- * El texto es el mismo que la portada (app/capsula/[token]/page.tsx) para que
- * las dos puertas digan lo mismo, y NO distingue entre los tres casos: a quien
- * está probando enlaces no se le cuenta cuál de ellos era de verdad.
+ * Hoy solo sale cuando se pide un mensaje futuro que no es de esta cápsula
+ * (la dirección de un mensaje escrita a mano). Los enlaces que no sirven —sin
+ * entregar, caducados o inventados— los contesta la puerta de la entrega
+ * (components/entrega/PuertaDeEntrega.tsx), con el mismo mensaje para los
+ * tres: a quien está probando enlaces no se le cuenta cuál era de verdad.
  */
 export default function EnlaceNoDisponible() {
   return (

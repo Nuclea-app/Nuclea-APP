@@ -1,25 +1,21 @@
-import { getDeliveryByToken } from "@/lib/actions/delivery.actions";
-import { toDeliveryMediaUrl } from "@/lib/utils";
-import { notFound } from "next/navigation";
+"use client";
+
 import Link from "next/link";
+import { notFound, useParams } from "next/navigation";
 import { ChevronLeft, Lock, LockOpen, Mic, Video, FileText, Calendar } from "lucide-react";
-import { isFutureMessageUnlocked } from "@/lib/futureMessages";
+import { useEntrega } from "@/components/entrega/EntregaProvider";
 
-interface PageProps {
-  params: Promise<{ token: string; messageId: string }>;
-}
+export default function GuestMensajeFuturoDetailPage() {
+  const { messageId } = useParams<{ messageId: string }>();
+  const { token, capsula, mensajes } = useEntrega();
 
-export default async function GuestMensajeFuturoDetailPage({ params }: PageProps) {
-  const { token, messageId } = await params;
-  const delivery = await getDeliveryByToken(token);
-  if (!delivery) notFound();
-
-  const message = (delivery.capsule.futureMessages ?? []).find((fm) => fm.id === messageId);
+  const message = mensajes.find((fm) => fm.id === messageId);
   if (!message) notFound();
 
-  const unlocksAt =
-    message.unlocksAt instanceof Date ? message.unlocksAt : new Date(message.unlocksAt);
-  const unlocked = isFutureMessageUnlocked(unlocksAt);
+  const unlocksAt = new Date(message.unlocksAt);
+  // Lo decide el servidor: de un mensaje cerrado no llega ni el texto.
+  const unlocked = message.unlocked;
+  const fileUrl = message.fileUrl;
 
   const formattedDate = unlocksAt.toLocaleDateString("es-ES", {
     day: "numeric",
@@ -29,10 +25,6 @@ export default async function GuestMensajeFuturoDetailPage({ params }: PageProps
 
   const typeLabel =
     message.type === "AUDIO" ? "Audio" : message.type === "VIDEO" ? "Vídeo" : "Nota";
-
-  const fileUrl = message.fileUrl
-    ? (toDeliveryMediaUrl(message.fileUrl, token) ?? message.fileUrl)
-    : null;
 
   return (
     <div className="flex flex-col min-h-screen pt-8 pb-20 px-6">
@@ -57,7 +49,7 @@ export default async function GuestMensajeFuturoDetailPage({ params }: PageProps
         <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/40 mb-2">
           MENSAJE FUTURO ✦
         </p>
-        <h1 className="font-serif text-3xl text-foreground mb-1">{delivery.capsule.name}</h1>
+        <h1 className="font-serif text-3xl text-foreground mb-1">{capsula.nombre}</h1>
         <p className="text-[13px] text-foreground/50 flex items-center gap-1.5 mt-1">
           <Calendar className="h-3.5 w-3.5" />
           {unlocked ? "Disponible desde" : "Se abre el"} {formattedDate}
@@ -95,7 +87,9 @@ export default async function GuestMensajeFuturoDetailPage({ params }: PageProps
 
           {message.type === "NOTE" && (
             <p className="font-sans italic text-[15px] text-foreground/70 leading-relaxed pl-3 border-l-2 border-foreground/10 py-1">
-              &ldquo;{message.content || "Sin contenido"}&rdquo;
+              {message.ilegible
+                ? "Este mensaje no se ha podido abrir. Escríbenos y lo revisamos."
+                : <>&ldquo;{message.texto || "Sin contenido"}&rdquo;</>}
             </p>
           )}
         </div>

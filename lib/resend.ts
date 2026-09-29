@@ -2,22 +2,34 @@ import { Resend } from "resend";
 
 export const resend = new Resend(process.env.RESEND_API_KEY);
 
+/**
+ * EL CORREO DE LA ENTREGA NO DICE NADA DE LO QUE HAY DENTRO, NI QUIÉN LO MANDA
+ * (Andrea, videollamada del 20/9, 01:03:31). Tampoco el nombre de quien lo
+ * recibe: ese nombre es lo que se le pide para abrir la cápsula, y si viniera
+ * escrito en el correo, cualquiera que lo leyera tendría ya la respuesta.
+ *
+ * Lleva dos formas de llegar, porque el botón no siempre funciona (otro
+ * dispositivo, un cliente de correo que rompe enlaces, alguien que lo apunta
+ * en un papel): el botón «Recibir mi cápsula» y el CÓDIGO, para teclearlo en
+ * «Abrir una cápsula» de la portada de la web.
+ */
 export function buildCapsuleEmailText(params: {
-  recipientName: string;
-  senderName?: string;
   capsuleUrl: string;
+  accessCode: string;
+  openUrl: string;
 }): string {
-  const sender = params.senderName ?? "Alguien especial";
   return [
     "NUCLEA",
     "",
-    `Hola ${params.recipientName},`,
+    "Si estás viendo esto... alguien quiso que llegara hasta ti.",
     "",
-    `${sender} te ha enviado una cápsula de recuerdos.`,
-    "",
-    "Abre tu cápsula aquí:",
+    "Recibe tu cápsula aquí:",
     params.capsuleUrl,
     "",
+    `O entra en ${params.openUrl}, elige «Abrir una cápsula» y escribe este código:`,
+    params.accessCode,
+    "",
+    "Te pediremos tu nombre y apellidos y te enviaremos un código a este correo.",
     "Este regalo es privado y personal. Solo tú puedes abrir esta cápsula.",
     "",
     "---",
@@ -27,11 +39,11 @@ export function buildCapsuleEmailText(params: {
 }
 
 export function buildCapsuleEmailHtml(params: {
-  recipientName: string;
-  senderName?: string;
   capsuleUrl: string;
+  accessCode: string;
+  openUrl: string;
 }): string {
-  const { capsuleUrl } = params;
+  const { capsuleUrl, accessCode, openUrl } = params;
 
   // La imagen del email debe apuntar SIEMPRE a una URL pública y estable.
   // No se deriva del origen de capsuleUrl porque en dev sería localhost
@@ -100,8 +112,24 @@ export function buildCapsuleEmailHtml(params: {
             <td align="center" style="padding-bottom:30px;">
               <a href="${capsuleUrl}"
                 style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;padding:17px 44px;border-radius:50px;font-family:'Inter',Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;">
-                &#10022;&nbsp;&nbsp;ABRIR CÁPSULA
+                &#10022;&nbsp;&nbsp;RECIBIR MI C&Aacute;PSULA
               </a>
+            </td>
+          </tr>
+
+          <!-- El código, para «Abrir una cápsula» sin el botón -->
+          <tr>
+            <td align="center" style="padding-bottom:10px;">
+              <p style="margin:0;font-family:'Inter',Helvetica,Arial,sans-serif;font-size:12px;color:#6b6b6b;line-height:1.7;text-align:center;">
+                &iquest;El bot&oacute;n no funciona? Entra en
+                <a href="${openUrl}" style="color:#0a0a0a;">${openUrl.replace(/^https?:\/\//, "")}</a>,
+                elige &laquo;Abrir una c&aacute;psula&raquo; y escribe este c&oacute;digo:
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding-bottom:30px;">
+              <span style="display:inline-block;font-family:'Courier New',Courier,monospace;font-size:20px;font-weight:700;letter-spacing:0.12em;color:#0a0a0a;background:#f4f3f1;border-radius:10px;padding:12px 20px;">${accessCode}</span>
             </td>
           </tr>
 
@@ -116,7 +144,7 @@ export function buildCapsuleEmailHtml(params: {
           <tr>
             <td align="center" style="padding-bottom:42px;">
               <p style="margin:0;font-family:'Inter',Helvetica,Arial,sans-serif;font-size:13px;color:#9a9a9a;line-height:1.7;text-align:center;">
-                Este regalo es privado y personal.<br/>Solo tú puedes abrir esta cápsula.
+                Te pediremos tu nombre y apellidos y te enviaremos<br/>un c&oacute;digo a este correo.<br/>Este regalo es privado y personal.
               </p>
             </td>
           </tr>

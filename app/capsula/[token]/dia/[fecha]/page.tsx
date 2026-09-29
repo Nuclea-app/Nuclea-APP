@@ -1,7 +1,7 @@
-import { getDeliveryByToken } from "@/lib/actions/delivery.actions";
-import { toDeliveryMediaUrl } from "@/lib/utils";
-import { notFound } from "next/navigation";
+"use client";
+
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import {
   ChevronLeft,
@@ -14,12 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { SparkIcon } from "@/components/nuclea/SparkIcon";
-import { isFutureMessageUnlocked } from "@/lib/futureMessages";
-import type { Memory } from "@/components/capsule/MomentosClaveClient";
-
-interface PageProps {
-  params: Promise<{ token: string; fecha: string }>;
-}
+import { useEntrega } from "@/components/entrega/EntregaProvider";
 
 function formatFechaElegante(dateStr: string) {
   try {
@@ -34,29 +29,23 @@ function formatFechaElegante(dateStr: string) {
   }
 }
 
-export default async function GuestDiaPage({ params }: PageProps) {
-  const { token, fecha } = await params;
-  const delivery = await getDeliveryByToken(token);
-  if (!delivery) notFound();
+/**
+ * El día EN LA HORA DE QUIEN MIRA, igual que el calendario de la portada de la
+ * cápsula, que marca los días con `getDate()` local. Antes esta página cortaba
+ * el día en UTC y el calendario en hora local: un recuerdo de las 00:30 salía
+ * marcado en un día y aparecía en el siguiente.
+ */
+function diaLocal(fecha: Date): string {
+  const dd = (n: number) => String(n).padStart(2, "0");
+  return `${fecha.getFullYear()}-${dd(fecha.getMonth() + 1)}-${dd(fecha.getDate())}`;
+}
 
-  // Filter memories for this day (UTC range — same approach as dashboard DiaPage)
-  const dayStart = new Date(`${fecha}T00:00:00.000Z`);
-  const dayEnd = new Date(`${fecha}T23:59:59.999Z`);
+export default function GuestDiaPage() {
+  const { fecha } = useParams<{ fecha: string }>();
+  const { token, recuerdos, mensajes } = useEntrega();
 
-  const memoriesDelDia: Memory[] = (delivery.capsule.memories as Memory[])
-    .filter((m) => {
-      const d = new Date(m.createdAt);
-      return d >= dayStart && d <= dayEnd;
-    })
-    .map((m) => ({
-      ...m,
-      fileUrl: m.fileUrl ? (toDeliveryMediaUrl(m.fileUrl, token) ?? m.fileUrl) : null,
-    }));
-
-  const futureMessagesDelDia = (delivery.capsule.futureMessages ?? []).filter((fm) => {
-    const d = fm.unlocksAt instanceof Date ? fm.unlocksAt : new Date(String(fm.unlocksAt));
-    return d >= dayStart && d <= dayEnd;
-  });
+  const memoriesDelDia = recuerdos.filter((m) => diaLocal(new Date(m.createdAt)) === fecha);
+  const futureMessagesDelDia = mensajes.filter((fm) => diaLocal(new Date(fm.unlocksAt)) === fecha);
 
   const fechaFormateada = formatFechaElegante(fecha);
 
@@ -123,6 +112,7 @@ export default async function GuestDiaPage({ params }: PageProps) {
                         src={memory.fileUrl}
                         alt="Recuerdo"
                         fill
+                        unoptimized
                         className="object-cover"
                         sizes="(max-width: 430px) 100vw, 400px"
                       />
@@ -172,8 +162,7 @@ export default async function GuestDiaPage({ params }: PageProps) {
             </p>
             <div className="space-y-3">
               {futureMessagesDelDia.map((fm) => {
-                const unlocksAt = fm.unlocksAt instanceof Date ? fm.unlocksAt : new Date(fm.unlocksAt);
-                const unlocked = isFutureMessageUnlocked(unlocksAt);
+                const unlocked = fm.unlocked;
                 return (
                   <Link
                     key={fm.id}

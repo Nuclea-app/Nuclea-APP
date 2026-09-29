@@ -1,34 +1,25 @@
-import { getDeliveryByToken } from "@/lib/actions/delivery.actions";
-import { notFound } from "next/navigation";
+"use client";
+
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import {
   FutureMessagesClient,
   type FutureMessageItem,
 } from "@/components/capsule/FutureMessagesClient";
-import { isFutureMessageUnlocked } from "@/lib/futureMessages";
+import { useEntrega } from "@/components/entrega/EntregaProvider";
 
-interface PageProps {
-  params: Promise<{ token: string }>;
-}
+export default function GuestMensajesFuturosPage() {
+  const { token, capsula, mensajes } = useEntrega();
 
-export default async function GuestMensajesFuturosPage({ params }: PageProps) {
-  const { token } = await params;
-  const delivery = await getDeliveryByToken(token);
-  if (!delivery) notFound();
-
-  const items: FutureMessageItem[] = (delivery.capsule.futureMessages ?? []).map((fm) => {
-    const unlocksAt =
-      fm.unlocksAt instanceof Date ? fm.unlocksAt.toISOString() : String(fm.unlocksAt);
-    return {
-      id: fm.id,
-      type: fm.type,
-      unlocksAt,
-      unlocked: isFutureMessageUnlocked(
-        fm.unlocksAt instanceof Date ? fm.unlocksAt : new Date(fm.unlocksAt)
-      ),
-    };
-  });
+  // Si está abierto lo decide el SERVIDOR (con su reloj, en la consulta), no
+  // el reloj de este navegador: el texto de un mensaje cerrado ni siquiera
+  // llega hasta aquí.
+  const items: FutureMessageItem[] = mensajes.map((m) => ({
+    id: m.id,
+    type: m.type,
+    unlocksAt: m.unlocksAt,
+    unlocked: m.unlocked,
+  }));
 
   return (
     <div className="flex flex-col pt-8">
@@ -45,7 +36,7 @@ export default async function GuestMensajesFuturosPage({ params }: PageProps) {
 
       <FutureMessagesClient
         messages={items}
-        capsuleName={delivery.capsule.name}
+        capsuleName={capsula.nombre}
         capsuleId={token}
         messageBasePath={`/capsula/${token}/mensajes-futuros`}
       />

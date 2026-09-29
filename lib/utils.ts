@@ -17,7 +17,13 @@ export function cn(...inputs: ClassValue[]) {
  * y salía un 404 en cada foto. Se admiten las dos formas a propósito: la vieja
  * sigue llegando de filas que nadie ha normalizado.
  */
-function claveDeMedios(valor: string): string | null {
+export function claveDeMedios(valor: string): string | null {
+  // URLs de objeto (la cápsula entregada descarga los ficheros con la sesión
+  // y los pinta así) y datos en línea: ya son el fichero, no hay nada que
+  // convertir. Sin esto, «blob:https://…» no empieza por http y se tomaba por
+  // una clave relativa: `/api/media/blob:https…`, y ni una foto.
+  if (/^(blob|data):/i.test(valor)) return null;
+
   // Ya es una dirección del proxy: se deja en paz. Las páginas del
   // destinatario mapean los recuerdos al cargarlos y los componentes vuelven a
   // mapearlos por su cuenta, así que sin esto salía
@@ -39,19 +45,6 @@ function claveDeMedios(valor: string): string | null {
     return null;
   }
   return null;
-}
-
-/**
- * Converts a direct R2 public URL to the delivery media proxy URL.
- * Used for recipients who don't have an account — validates via delivery token.
- */
-export function toDeliveryMediaUrl(
-  fileUrl: string | null | undefined,
-  token: string
-): string | null {
-  if (!fileUrl) return null;
-  const clave = claveDeMedios(fileUrl);
-  return clave ? `/api/media/delivery/${token}/${clave}` : fileUrl;
 }
 
 /**
