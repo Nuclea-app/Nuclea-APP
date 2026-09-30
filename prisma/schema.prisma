@@ -171,6 +171,12 @@ model Capsule {
   name           String
   description    String?
   coverUrl       String?
+  /// La CLAVE SECRETA de la cápsula (guía de Fase 2, §8: «clave secreta
+  /// obligatoria»; no se activa sin ella). Solo el hash: no se puede volver a
+  /// enseñar nunca, y NO abre nada por sí sola; sirve para acreditar ante
+  /// soporte que la cápsula es de quien dice (NUCLEA_Plan_Fase2.md §1).
+  secretKeyHash  String?              @map("secret_key_hash")
+  secretKeySetAt DateTime?            @map("secret_key_set_at")
   userId         String
   /// Restrict, no Cascade: en una capsula We el organizador borrando su
   /// cuenta se llevaba por delante lo que subieron los otros nueve. Borrar la
@@ -180,6 +186,7 @@ model Capsule {
   deliveries     CapsuleDelivery[]
   futureMessages FutureMessage[]
   participants   CapsuleParticipant[]
+  theme          CapsuleTheme?
   keys           CapsuleKey[]
   subscriptions  Subscription[]
   purchases      Purchase[]
@@ -693,4 +700,26 @@ model DeviceToken {
 
   @@index([userId])
   @@map("device_tokens")
+}
+
+/// La personalización de una cápsula (guía de Fase 2, §11: packs de
+/// tipografía, color del texto, color del fondo, foto detrás del perfil y
+/// emojis). Se guarda el ID DE LA OPCIÓN y no el color o la fuente: así el
+/// catálogo vive en un solo sitio (nuclea-app/lib/packs/catalogo.ts) y se
+/// puede afinar sin reescribir filas. Cada campo solo se puede poner si la
+/// cápsula tiene comprado su pack (`purchases` con kind PACK).
+model CapsuleTheme {
+  capsuleId        String   @id @map("capsule_id")
+  capsule          Capsule  @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+  tipografia       String?
+  colorDeTexto     String?  @map("color_de_texto")
+  colorDeFondo     String?  @map("color_de_fondo")
+  emojis           String?
+  /// Clave de R2 de la foto detrás del perfil. Es la única parte de un pack
+  /// que ocupa cuota: sus bytes suman en Capsule.storageUsedBytes.
+  fotoDeFondoKey   String?  @map("foto_de_fondo_key")
+  fotoDeFondoBytes BigInt   @default(0) @map("foto_de_fondo_bytes")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("capsule_themes")
 }
